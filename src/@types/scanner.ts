@@ -1,15 +1,16 @@
-declare enum ScannerResultType {
+export declare enum ScannerResult {
     OK,
     BAD,
+    FAILED,
 }
 
-export interface ScannerResult {
-    type: ScannerResultType,
+export interface ScannerResultRecord {
+    result: ScannerResult,
     timestamp: Date,
 }
 
 export interface Scanner {
-    results: ScannerResult[];
+    results: ScannerResultRecord[];
     // Methods:
     setup(): Promise<void>;
     scan(): Promise<boolean>;
