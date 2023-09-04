@@ -1,6 +1,3 @@
-// Internal.
-import type { Scanner } from './scanner';
-
 export declare enum PipelineStageStatus {
     READY,
     NOT_READY,
@@ -10,8 +7,8 @@ export declare enum PipelineStageStatus {
 }
 
 export interface PipelineStage {
-    scanners: Scanner[];
     status: PipelineStageStatus;
+    execute: () => Promise<void>;
 }
 
 export interface TrackingPipeline {
