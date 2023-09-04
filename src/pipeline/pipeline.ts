@@ -2,7 +2,7 @@
 // Internal.
 import type { TrackingPipeline } from '../@types/pipeline';
 import type { Scanner } from '../@types/scanner';
-import { PipelineStage } from './stage';
+import { PipelineStage, PipelineStageStatus } from './stage';
 
 export class Pipeline implements TrackingPipeline {
     private _stages: PipelineStage[];
@@ -35,8 +35,28 @@ export class Pipeline implements TrackingPipeline {
         return this._stages[this._stageIndex];
     }
 
+    private get isLastStage(): boolean {
+        return this._stageIndex === this._stages.length - 1;
+    }
+
+    private get isStageCompleted(): boolean {
+        return this.currentStage.status === PipelineStageStatus.DONE;
+    }
+
+    private get isPipelineCompleted(): boolean {
+        return this.isLastStage && this.isStageCompleted;
+    }
+
     public async execute(): Promise<void> {
+        if (this.isPipelineCompleted) {
+            return;
+        }
+
         await this.currentStage.execute();
-        // TODO: check advancing next stage.
+
+        if (this.isStageCompleted && !this.isLastStage) {
+            // Advance next stage.
+            this._stageIndex += 1;
+        }
     }
 }
