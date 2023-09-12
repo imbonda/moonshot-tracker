@@ -20,18 +20,21 @@ const uniswapV3FactoryAddress = '0x1F98431c8aD98523631AE4a59f267346ea31F984';
 const BURNT_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 export class TokenMonitor {
-    private provider: JsonRpcProvider;
-
     private newERC20Addresses: Set<string>;
 
     private lpAddresses: Set<string>;
 
+    private provider: JsonRpcProvider;
+
     constructor() {
-        this.provider = new JsonRpcProvider(
-            `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
-        );
         this.newERC20Addresses = new Set<string>();
         this.lpAddresses = new Set<string>();
+        this.provider = new JsonRpcProvider(this.providerURL);
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    private get providerURL() {
+        return `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`;
     }
 
     public monitor() {
