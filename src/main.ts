@@ -1,7 +1,7 @@
 // 3rd party.
 import dotenv from 'dotenv';
 // Internal.
-import { TokenMonitor } from './monitor';
+import { TokenMonitor } from './services/monitoring/monitor';
 
 dotenv.config();
 

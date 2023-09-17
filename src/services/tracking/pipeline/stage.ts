@@ -1,6 +1,6 @@
 // Internal.
-import type { PipelineStage as IPipelineStage } from '../@types/pipeline';
-import type { Scanner } from '../@types/scanner';
+import type { PipelineStage as IPipelineStage } from '../../../@types/pipeline';
+import type { Scanner } from '../../../@types/scanner';
 
 export enum PipelineStageStatus {
     READY,

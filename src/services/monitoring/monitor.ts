@@ -3,12 +3,12 @@ import { BigNumberish, Contract, JsonRpcProvider } from 'ethers';
 import { Pool, FeeAmount } from '@uniswap/v3-sdk';
 import { Token } from '@uniswap/sdk-core';
 // Internal.
-import uniswapV2PairABI from './abi/uniswap-v2-pair.json';
-import uniswapV2FactoryABI from './abi/uniswap-v2-factory.json';
-import uniswapV3FactoryABI from './abi/uniswap-v3-factory.json';
-import uniswapV3PoolABI from './abi/uniswap-v3-pool.json';
-import erc20ABI from './abi/erc20.json';
-import { throttle } from './lib/decorators';
+import uniswapV2PairABI from '../../abi/uniswap-v2-pair.json';
+import uniswapV2FactoryABI from '../../abi/uniswap-v2-factory.json';
+import uniswapV3FactoryABI from '../../abi/uniswap-v3-factory.json';
+import uniswapV3PoolABI from '../../abi/uniswap-v3-pool.json';
+import erc20ABI from '../../abi/erc20.json';
+import { throttle } from '../../lib/decorators';
 
 // Uniswap V2 Factory mainnet contract address.
 const uniswapV2FactoryAddress = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';

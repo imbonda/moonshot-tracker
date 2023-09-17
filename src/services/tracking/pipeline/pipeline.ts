@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
 // Internal.
-import type { TrackingPipeline } from '../@types/pipeline';
-import type { Scanner } from '../@types/scanner';
+import type { TrackingPipeline } from '../../../@types/pipeline';
+import type { Scanner } from '../../../@types/scanner';
 import { PipelineStage, PipelineStageStatus } from './stage';
 
 export class Pipeline implements TrackingPipeline {
