@@ -9,6 +9,7 @@ import uniswapV3FactoryABI from '../../abi/uniswap-v3-factory.json';
 import uniswapV3PoolABI from '../../abi/uniswap-v3-pool.json';
 import erc20ABI from '../../abi/erc20.json';
 import { throttle } from '../../lib/decorators';
+import { Logger } from '../../lib/logger';
 
 // Uniswap V2 Factory mainnet contract address.
 const uniswapV2FactoryAddress = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
@@ -26,10 +27,13 @@ export class TokenMonitor {
 
     private provider: JsonRpcProvider;
 
+    private logger: Logger;
+
     constructor() {
         this.newERC20Addresses = new Set<string>();
         this.lpAddresses = new Set<string>();
         this.provider = new JsonRpcProvider(this.providerURL);
+        this.logger = new Logger(this.constructor.name);
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -86,7 +90,7 @@ export class TokenMonitor {
             const symbol = await contract.symbol();
             if (symbol) {
                 this.newERC20Addresses.add(receipt.contractAddress);
-                console.log(`New ERC-20 token detected: ${receipt.contractAddress}`);
+                this.logger.info('New ERC20 token detected', { address: receipt.contractAddress });
             }
         } catch (err) {
             // Not an ERC-20 token.
@@ -103,7 +107,7 @@ export class TokenMonitor {
 
         uniswapV2Factory.on('PairCreated', (token1, token2, pair) => {
             if (this.newERC20Addresses.has(token1) || this.newERC20Addresses.has(token2)) {
-                console.log(`liquidty pair created for tracked token: ${pair}`);
+                this.logger.info('Liquidity pair created for tracked token', { pair });
                 this.lpAddresses.add(pair);
 
                 // Create a new contract instance for the LP token.
@@ -127,7 +131,6 @@ export class TokenMonitor {
             token1Addr,
             token2Addr,
             fee: FeeAmount,
-            _pool,
         ) => {
             if (this.newERC20Addresses.has(token1Addr) || this.newERC20Addresses.has(token2Addr)) {
                 // Compute the pool address using the Uniswap V3 SDK
@@ -147,7 +150,7 @@ export class TokenMonitor {
 
                 const poolAddress = Pool.getAddress(token1, token2, fee);
 
-                console.log(`Liquidity pool created for tracked token: ${poolAddress}`);
+                this.logger.info('Liquidity pool created for tracked token', { poolAddress });
                 this.lpAddresses.add(poolAddress);
 
                 // Create a new contract instance for the LP token (Uniswap V3 Pool).
@@ -163,7 +166,9 @@ export class TokenMonitor {
     private handleLPTokenTransfer(from: string, to: string, amount: BigNumberish) {
         // Function to handle LP token transfers
         if (to === BURNT_ADDRESS) {
-            console.log(`LP token moved to burnt address! From: ${from}, To: ${to}, Amount: ${amount.toString()}`);
+            this.logger.info('LP token moved to burned address!', {
+                from, to, amount: amount.toString(),
+            });
             // TODO - check if amount moved is a big percentage of totalsupply of lp token
         }
     }
