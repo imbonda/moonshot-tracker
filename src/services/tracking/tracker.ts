@@ -1,10 +1,10 @@
 // Internal.
-import type { TokenEvent } from '../../@types/models';
+import type { TokenUpdateEvent } from '../../@types/transfer';
 import type { TrackingPipeline } from '../../@types/pipeline';
 import type { TokenData, TokenTracker } from '../../@types/tracker';
 import { Pipeline } from './pipeline/pipeline';
 
-export enum TokenEventType {
+export enum TokenUpdateEventType {
     LP_TOKEN_CREATED = 1,
     LP_TOKEN_BURNED = 2,
 }
@@ -31,9 +31,9 @@ export class Tracker implements TokenTracker {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public ingest(event: TokenEvent): void {
+    public ingest(event: TokenUpdateEvent): void {
         switch (event.type) {
-            case TokenEventType.LP_TOKEN_BURNED:
+            case TokenUpdateEventType.LP_TOKEN_BURNED:
                 break;
             default:
                 break;
