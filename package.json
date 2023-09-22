@@ -16,9 +16,12 @@
         "@uniswap/v3-sdk": "^3.10.0",
         "bottleneck": "^2.19.5",
         "dotenv": "^16.3.1",
-        "ethers": "^6.7.1"
+        "ethers": "^6.7.1",
+        "lodash": "^4.17.21",
+        "winston": "^3.10.0"
     },
     "devDependencies": {
+        "@types/lodash": "^4.14.198",
         "@typescript-eslint/eslint-plugin": "^6.5.0",
         "eslint": "^8.20.0",
         "eslint-config-airbnb": "^19.0.4",
