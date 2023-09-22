@@ -18,7 +18,6 @@ const loggerConfig = {
         format.timestamp(),
         format.json(),
         format.prettyPrint(),
-
     ),
     transports: [
         new transports.Console({

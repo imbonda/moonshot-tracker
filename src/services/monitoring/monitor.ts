@@ -3,22 +3,9 @@ import { BigNumberish, Contract, JsonRpcProvider } from 'ethers';
 import { Pool, FeeAmount } from '@uniswap/v3-sdk';
 import { Token } from '@uniswap/sdk-core';
 // Internal.
-import uniswapV2PairABI from '../../abi/uniswap-v2-pair.json';
-import uniswapV2FactoryABI from '../../abi/uniswap-v2-factory.json';
-import uniswapV3FactoryABI from '../../abi/uniswap-v3-factory.json';
-import uniswapV3PoolABI from '../../abi/uniswap-v3-pool.json';
 import erc20ABI from '../../abi/erc20.json';
 import { throttle } from '../../lib/decorators';
 import { Logger } from '../../lib/logger';
-
-// Uniswap V2 Factory mainnet contract address.
-const uniswapV2FactoryAddress = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
-
-// Uniswap V3 Factory mainnet contract address.
-const uniswapV3FactoryAddress = '0x1F98431c8aD98523631AE4a59f267346ea31F984';
-
-// Addresses to check for burnt or locked tokens.
-const BURNT_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 export class TokenMonitor {
     private newERC20Addresses: Set<string>;
@@ -44,9 +31,9 @@ export class TokenMonitor {
     public monitor() {
         this.monitorNewERC20Creation();
 
-        this.monitorUniswapV2LPTokenCreation();
+        this.monitorV2LPTokenCreation();
 
-        this.monitorUniswapV3LPTokenCreation();
+        this.monitorV3LPTokenCreation();
     }
 
     private monitorNewERC20Creation() {
@@ -97,7 +84,7 @@ export class TokenMonitor {
         }
     }
 
-    private monitorUniswapV2LPTokenCreation() {
+    private monitorV2LPTokenCreation() {
         // Connect to Uniswap V2 Factory contract.
         const uniswapV2Factory = new Contract(
             uniswapV2FactoryAddress,
@@ -118,7 +105,7 @@ export class TokenMonitor {
         });
     }
 
-    private monitorUniswapV3LPTokenCreation() {
+    private monitorV3LPTokenCreation() {
         // Connect to Uniswap V3 Factory contract.
         const uniswapV3Factory = new Contract(
             uniswapV3FactoryAddress,
