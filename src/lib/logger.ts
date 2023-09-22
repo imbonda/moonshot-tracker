@@ -1,11 +1,13 @@
+/* eslint-disable max-classes-per-file */
 // Builtin.
-// eslint-disable-next-line max-classes-per-file
 import process from 'process';
 // 3rd party.
 import { isEmpty } from 'lodash';
 import {
     createLogger, config, format, transports, Logger as WinstonLogger,
 } from 'winston';
+// Internal.
+import { logConfig } from '../config';
 
 const loggerConfig = {
     level: 'info',
@@ -31,8 +33,8 @@ const loggerConfig = {
                 },
             ),
             handleExceptions: true,
-            level: 'info',
-            silent: false,
+            level: logConfig.LEVEL,
+            silent: logConfig.SILENT,
         }),
     ],
 };

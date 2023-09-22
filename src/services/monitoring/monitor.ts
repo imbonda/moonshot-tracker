@@ -4,6 +4,7 @@ import { Pool, FeeAmount } from '@uniswap/v3-sdk';
 import { Token } from '@uniswap/sdk-core';
 // Internal.
 import erc20ABI from '../../abi/erc20.json';
+import { web3Config } from '../../config';
 import { throttle } from '../../lib/decorators';
 import { Logger } from '../../lib/logger';
 
@@ -19,13 +20,8 @@ export class TokenMonitor {
     constructor() {
         this.newERC20Addresses = new Set<string>();
         this.lpAddresses = new Set<string>();
-        this.provider = new JsonRpcProvider(this.providerURL);
+        this.provider = new JsonRpcProvider(web3Config.RPC_ENDPOINT);
         this.logger = new Logger(this.constructor.name);
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    private get providerURL() {
-        return `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`;
     }
 
     public monitor() {
