@@ -11,6 +11,7 @@ function main() {
     if (tokenMonitor.type === 'provider') {
         tokenMonitor.monitorNewERC20Creation();
     } else {
+        tokenMonitor.monitorLPTokenCreation();
         tokenMonitor.monitorStages();
     }
 }

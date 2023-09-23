@@ -162,46 +162,49 @@ export class TokenMonitor {
                     token2Addr,
                     fee: FeeAmount,
                 ) => {
-                    // Compute the pool address using the Uniswap V3 SDK
-                    // Create contract instances for the tokens
-                    const token1Contract = new Contract(
-                        token1Addr,
-                        erc20ABI,
-                        this.getProvider(chain),
-                    );
+                    if (this.newERC20Addresses.has(token1Addr)
+                        || this.newERC20Addresses.has(token2Addr)) {
+                        // Compute the pool address using the Uniswap V3 SDK
+                        // Create contract instances for the tokens
+                        const token1Contract = new Contract(
+                            token1Addr,
+                            erc20ABI,
+                            this.getProvider(chain),
+                        );
 
-                    const token2Contract = new Contract(
-                        token2Addr,
-                        erc20ABI,
-                        this.getProvider(chain),
-                    );
+                        const token2Contract = new Contract(
+                            token2Addr,
+                            erc20ABI,
+                            this.getProvider(chain),
+                        );
 
-                    // Retrieve the number of decimals for each token
-                    const [token1Decimals, token2Decimals] = await Promise.all([
-                        token1Contract.decimals(),
-                        token2Contract.decimals(),
-                    ]);
+                        // Retrieve the number of decimals for each token
+                        const [token1Decimals, token2Decimals] = await Promise.all([
+                            token1Contract.decimals(),
+                            token2Contract.decimals(),
+                        ]);
 
-                    // Wrap the token addresses with the Token class.
-                    const token1 = new Token(1, token1Addr, token1Decimals);
-                    const token2 = new Token(1, token2Addr, token2Decimals);
+                        // Wrap the token addresses with the Token class.
+                        const token1 = new Token(1, token1Addr, token1Decimals);
+                        const token2 = new Token(1, token2Addr, token2Decimals);
 
-                    const poolAddress = Pool.getAddress(token1, token2, fee);
+                        const poolAddress = Pool.getAddress(token1, token2, fee);
 
-                    this.logger.info('Liquidity pool created for tracked token', { poolAddress });
-                    this.lpAddresses.add(poolAddress);
+                        this.logger.info('Liquidity pool created for tracked token', { poolAddress });
+                        this.lpAddresses.add(poolAddress);
 
-                    // Create a new contract instance for the LP token (Uniswap V3 Pool).
-                    const lpTokenContract = new Contract(
-                        poolAddress,
-                        lpABI,
-                        this.getProvider(chain),
-                    );
+                        // Create a new contract instance for the LP token (Uniswap V3 Pool).
+                        const lpTokenContract = new Contract(
+                            poolAddress,
+                            lpABI,
+                            this.getProvider(chain),
+                        );
 
-                    // Listen for Transfer events on the LP token
-                    lpTokenContract.on('Transfer', this.handleLPTokenTransfer);
-                    /* // TODO - check if amount moved is a big percentage of total supply of token
-                    (creator didn't keep alot of tokens for himself) */
+                        // Listen for Transfer events on the LP token
+                        lpTokenContract.on('Transfer', this.handleLPTokenTransfer);
+                        /* TODO - check if amount moved is a big percentage of total supply of token
+                        (creator didn't keep alot of tokens for himself) */
+                    }
                 });
             });
         });
@@ -234,13 +237,17 @@ export class TokenMonitor {
         });
     }
 
+    public monitorLPTokenCreation() {
+        this.monitorV2LPTokenCreation();
+        this.monitorV3LPTokenCreation();
+    }
+
     public monitorStages() {
         this.queue.process(async (job) => {
-            const { stage } = job.data;
+            const { stage, tokenAddress } = job.data;
 
             if (stage === MonitorStages.ERC20FOUND) {
-                this.monitorV2LPTokenCreation();
-                this.monitorV3LPTokenCreation();
+                this.newERC20Addresses.add(tokenAddress);
             }
         });
     }
