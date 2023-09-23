@@ -3,45 +3,33 @@ import uniswapV2FactoryABI from './abi/uniswap-v2-factory.json';
 import uniswapV3FactoryABI from './abi/uniswap-v3-factory.json';
 import uniswapV3PoolABI from './abi/uniswap-v3-pool.json';
 
+export enum MonitorStages {
+    ERC20FOUND = 'erc20found',
+    LPFOUND = 'lpfound',
+    ENOUGHLPBURNT = 'enoughlpburnt',
+}
+
 export enum FactoryTypes {
-    v1 = 'v1',
-    v2 = 'v2',
-    v3 = 'v3',
+    V1 = 'v1',
+    V2 = 'v2',
+    V3 = 'v3',
 }
 
 export enum Chains {
-    Ethereum = '1',
+    ETH = '1',
     BSC = '56',
-    Polygon = '137',
-    Fantom = '250',
+    POLYGON = '137',
+    FTM = '250',
 }
 
-export enum Providers {
-    Alchemy1 = 'alchemy1',
-    Infura1 = 'infura1',
-}
-
-const ALCHEMY_URL = 'https://eth-mainnet.g.alchemy.com/v2/';
-
-export const ProviderURLs = {
-    [Providers.Alchemy1]: {
-        [Chains.Ethereum]: `${ALCHEMY_URL}${process.env.ALCHEMY_API_KEY}`,
-    },
+export const PROVIDERS: Partial<Record<Chains, string[]>> = {
+    [Chains.ETH]: JSON.parse(process.env.ETH_PROVIDERS ?? '[]'),
+    [Chains.BSC]: JSON.parse(process.env.BSC_PROVIDERS ?? '[]'),
+    [Chains.FTM]: JSON.parse(process.env.FTM_PROVIDERS ?? '[]'),
+    [Chains.POLYGON]: JSON.parse(process.env.POLYGON_PROVIDERS ?? '[]'),
 };
 
-export const ProvidersByChain = Object.entries(ProviderURLs).reduce((acc, [provider, chains]) => {
-    Object.entries(chains).forEach(([chain, url]) => {
-        const chainKey = chain as Chains;
-        if (!acc[chainKey]) {
-            acc[chainKey] = {};
-        }
-        const providerKey = provider as Providers;
-        acc[chainKey][providerKey] = url;
-    });
-    return acc;
-}, {} as { [key in Chains]: { [provider in Providers]?: string } });
-
-export enum V2Factories {
+export enum V2FactoryNames {
     UniswapV2 = 'uniswapv2',
     SushiSwapV2 = 'sushiswapv2',
     PancakeSwapV2BSC = 'pancakeswapv2bsc',
@@ -50,81 +38,93 @@ export enum V2Factories {
     SpookySwap = 'spookyswap',
 }
 
-export enum V3Factories {
+export enum V3FactoryNames {
     UniswapV3 = 'uniswapv3',
 }
 
 export const FACTORIES = {
-    [V3Factories.UniswapV3]: {
+    [V3FactoryNames.UniswapV3]: {
         name: 'Uniswap V3 Factory',
-        id: V3Factories.UniswapV3,
-        address: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
-        chains: [Chains.Ethereum],
-        type: FactoryTypes.v3,
+        id: V3FactoryNames.UniswapV3,
+        address: '0x1f98431c8ad98523631ae4a59f267346ea31f984',
+        chains: [Chains.ETH],
+        type: FactoryTypes.V3,
         factoryABI: uniswapV3FactoryABI,
         lpABI: uniswapV3PoolABI,
     },
-    [V2Factories.UniswapV2]: {
+    [V2FactoryNames.UniswapV2]: {
         name: 'Uniswap V2 Factory',
-        id: V2Factories.UniswapV2,
-        address: '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f',
-        chains: [Chains.Ethereum],
-        type: FactoryTypes.v2,
+        id: V2FactoryNames.UniswapV2,
+        address: '0x5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f',
+        chains: [Chains.ETH],
+        type: FactoryTypes.V2,
         factoryABI: uniswapV2FactoryABI,
         lpABI: uniswapV2PairABI,
     },
-    [V2Factories.SushiSwapV2]: {
+    [V2FactoryNames.SushiSwapV2]: {
         name: 'SushiSwap V2 Factory',
-        id: V2Factories.SushiSwapV2,
-        address: '0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac',
-        chains: [Chains.Ethereum],
-        type: FactoryTypes.v2,
+        id: V2FactoryNames.SushiSwapV2,
+        address: '0xc0aee478e3658e2610c5f7a4a2e1777ce9e4f2ac',
+        chains: [Chains.ETH],
+        type: FactoryTypes.V2,
         factoryABI: uniswapV2FactoryABI,
         lpABI: uniswapV2PairABI,
     },
-    [V2Factories.PancakeSwapV2BSC]: {
+    [V2FactoryNames.PancakeSwapV2BSC]: {
         name: 'PancakeSwap V2 Factory',
-        id: V2Factories.PancakeSwapV2BSC,
-        address: '0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73',
+        id: V2FactoryNames.PancakeSwapV2BSC,
+        address: '0xca143ce32fe78f1f7019d7d551a6402fc5350c73',
         chains: [Chains.BSC],
-        type: FactoryTypes.v2,
+        type: FactoryTypes.V2,
         factoryABI: uniswapV2FactoryABI,
         lpABI: uniswapV2PairABI,
     },
-    [V2Factories.PancakeSwapV2ETH]: {
+    [V2FactoryNames.PancakeSwapV2ETH]: {
         name: 'PancakeSwap V2 Factory',
-        id: V2Factories.PancakeSwapV2ETH,
-        address: '0x1097053Fd2ea711dad45caCcc45EfF7548fCB362',
-        chains: [Chains.Ethereum],
-        type: FactoryTypes.v2,
+        id: V2FactoryNames.PancakeSwapV2ETH,
+        address: '0x1097053fd2ea711dad45caccc45eff7548fcb362',
+        chains: [Chains.ETH],
+        type: FactoryTypes.V2,
         factoryABI: uniswapV2FactoryABI,
         lpABI: uniswapV2PairABI,
     },
-    [V2Factories.QuickSwap]: {
+    [V2FactoryNames.QuickSwap]: {
         name: 'QuickSwap Factory',
-        id: V2Factories.QuickSwap,
-        address: '0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32',
-        chains: [Chains.Polygon],
-        type: FactoryTypes.v2,
+        id: V2FactoryNames.QuickSwap,
+        address: '0x5757371414417b8c6caad45baef941abc7d3ab32',
+        chains: [Chains.POLYGON],
+        type: FactoryTypes.V2,
         factoryABI: uniswapV2FactoryABI,
         lpABI: uniswapV2PairABI,
     },
-    [V2Factories.SpookySwap]: {
+    [V2FactoryNames.SpookySwap]: {
         name: 'SpookySwap Factory',
-        id: V2Factories.SpookySwap,
-        address: '0x152eE697f2E276fA89E96742e9bB9aB1F2E61bE3',
-        chains: [Chains.Fantom],
-        type: FactoryTypes.v2,
+        id: V2FactoryNames.SpookySwap,
+        address: '0x152ee697f2e276fa89e96742e9bb9ab1f2e61be3',
+        chains: [Chains.FTM],
+        type: FactoryTypes.V2,
         factoryABI: uniswapV2FactoryABI,
         lpABI: uniswapV2PairABI,
     },
 };
 
-export const DEAD_ADDRESSES = {
-    '0x0000000000000000000000000000000000000000': true,
-    '0x0000000000000000000000000000000000000001': true,
-    '0x000000000000000000000000000000000000dEaD': true,
-    '0x1111111111111111111111111111111111111111': true,
-    '0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA': true,
-    '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF': true,
-};
+export const V1Factories = Object.values(FACTORIES).filter(
+    ({ type }) => type === FactoryTypes.V1,
+);
+
+export const V2Factories = Object.values(FACTORIES).filter(
+    ({ type }) => type === FactoryTypes.V2,
+);
+
+export const V3Factories = Object.values(FACTORIES).filter(
+    ({ type }) => type === FactoryTypes.V3,
+);
+
+export const DEAD_ADDRESSES = Object.fromEntries([
+    '0x0000000000000000000000000000000000000000',
+    '0x0000000000000000000000000000000000000001',
+    '0x000000000000000000000000000000000000dead',
+    '0x1111111111111111111111111111111111111111',
+    '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    '0xffffffffffffffffffffffffffffffffffffffff',
+].map((address) => [address, true]));

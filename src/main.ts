@@ -1,12 +1,18 @@
 // 3rd party.
 import dotenv from 'dotenv';
 // Internal.
-import { TokenMonitor } from './services/monitoring/monitor';
+import { TokenMonitor } from './services/monitoring/TokenMonitor';
 
 dotenv.config();
 
 function main() {
-    new TokenMonitor().monitor();
+    const tokenMonitor = new TokenMonitor();
+
+    if (tokenMonitor.type === 'provider') {
+        tokenMonitor.monitorNewERC20Creation();
+    } else {
+        tokenMonitor.monitorStages();
+    }
 }
 
 main();
