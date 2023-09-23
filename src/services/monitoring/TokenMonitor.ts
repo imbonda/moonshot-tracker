@@ -200,19 +200,21 @@ export class TokenMonitor {
 
                     // Listen for Transfer events on the LP token
                     lpTokenContract.on('Transfer', this.handleLPTokenTransfer);
+                    /* // TODO - check if amount moved is a big percentage of total supply of token
+                    (creator didn't keep alot of tokens for himself) */
                 });
             });
         });
     }
 
-    // eslint-disable-next-line class-methods-use-this
     private handleLPTokenTransfer(from: string, to: string, amount: BigNumberish) {
         // Function to handle LP token transfers
         if (to in DEAD_ADDRESSES) {
             this.logger.info('LP token moved to burned address!', {
                 from, to, amount: amount.toString(),
             });
-            // TODO - check if amount moved is a big percentage of totalsupply of lp token
+            // TODO - check if amount moved is a big percentage of total supply of lp token
+            // TODO - check that liquidity is more then $10,000
         }
     }
 
