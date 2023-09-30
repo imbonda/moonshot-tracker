@@ -14,13 +14,20 @@
     "dependencies": {
         "@uniswap/sdk-core": "^4.0.6",
         "@uniswap/v3-sdk": "^3.10.0",
+        "amqplib": "^0.10.3",
         "bottleneck": "^2.19.5",
+        "bull": "^4.11.3",
+        "commander": "^11.0.0",
         "dotenv": "^16.3.1",
         "ethers": "^6.7.1",
+        "ioredis": "^5.3.2",
         "lodash": "^4.17.21",
+        "mongodb": "^6.1.0",
+        "mongoose": "^7.5.3",
         "winston": "^3.10.0"
     },
     "devDependencies": {
+        "@types/amqplib": "^0.10.2",
         "@types/lodash": "^4.14.198",
         "@typescript-eslint/eslint-plugin": "^6.5.0",
         "eslint": "^8.20.0",

@@ -2,12 +2,12 @@
 // Builtin.
 import process from 'process';
 // 3rd party.
-import { isEmpty } from 'lodash';
 import {
     createLogger, config, format, transports, Logger as WinstonLogger,
 } from 'winston';
 // Internal.
 import { logConfig } from '../config';
+import { isEmpty } from './utils';
 
 const loggerConfig = {
     level: 'info',
