@@ -1,6 +1,7 @@
 // Internal.
 import type { TrackedToken } from '../../@types/tracking';
 import { dal } from '../../dal/dal';
+import type { QueryRangeParams } from '../../dal/types';
 import { TRACKING_QUEUE } from '../../ipc/message-queue/constants';
 import { QueueProducer } from '../../ipc/message-queue/producer';
 import { safe } from '../../lib/decorators';
@@ -32,8 +33,8 @@ export class TrackingScheduler extends Service {
 
     @safe()
     async schedule(): Promise<void> {
-        const range = {
-            startDate: new Date(),
+        const range: QueryRangeParams = {
+            endDate: new Date(),
         };
 
         let paginated = await dal.models.trackedToken.findScheduledTrackedTokens({
