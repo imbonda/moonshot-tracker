@@ -78,13 +78,13 @@ export class PipelineExecutor {
             tasks.map((task) => task.insight),
         );
         const scheduledExecutionTime = Object.values(tasksData).reduce(
-            (soonest: Date | null, task) => {
+            (soonest: Date | undefined, task) => {
                 const scheduledTime = task.scheduledExecutionTime;
                 return (soonest && (soonest < scheduledTime))
                     ? soonest
                     : scheduledTime;
             },
-            null,
+            undefined,
         ) as Date;
 
         return {

@@ -9,6 +9,7 @@ import { dal } from '../../dal/dal';
 import { Service } from '../service';
 import { DEAD_ADDRESSES, LP_V2_FACTORIES, LP_V3_FACTORIES } from '../../lib/constants';
 import { Web3RpcProvider } from '../../lib/adapters/rpc-provider';
+import { PIPELINE_TEMPLATE, TASKS_TEMPLATE } from '../../templates/tracking';
 
 export class LPTokenCreationMonitor extends Service {
     private chainId: number;
@@ -139,5 +140,18 @@ export class LPTokenCreationMonitor extends Service {
         // TODO: add fallback to rpc (check if exists X blocks ago).
         const isNewInDB = dal.models.newErc20.isNewERC20(this.chainId, address);
         return isNewInDB;
+    }
+
+    private async saveTrackedToken(address: string): Promise<void> {
+        await dal.models.trackedToken.upsertTrackedToken({
+            uuid: `${this.chainId}_${address}`,
+            chainId: this.chainId,
+            address,
+            pipeline: PIPELINE_TEMPLATE,
+            tasks: TASKS_TEMPLATE,
+            insights: {},
+            currentStageIndex: 0,
+            scheduledExecutionTime: new Date(Date.now()),
+        });
     }
 }

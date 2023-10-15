@@ -24,11 +24,10 @@ export interface TrackedToken {
     uuid: string,
     chainId: number,
     address: string,
-    isMature: boolean,
     pipeline: PipelineStage[],
     tasks: Record<TaskData['taskId'], TaskData>,
     insights: {
-        project: {
+        project?: {
             marketCap: number,
             links: {
                 telegram: string,
@@ -37,6 +36,6 @@ export interface TrackedToken {
         },
     },
     currentStageIndex: number,
-    latestExecutionTime: Date,
     scheduledExecutionTime: Date,
+    latestExecutionTime?: Date,
 }
