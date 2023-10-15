@@ -43,12 +43,12 @@ export abstract class TaskExecutor {
     }
 
     private get nextScheduledTime(): TaskData['scheduledExecutionTime'] {
-        const { interval } = this.data.repetitions;
-        if (!interval) {
+        if (this.isCompleted) {
             return undefined;
         }
 
-        const repetitionIntervalMs = interval * 1000;
+        const { interval } = this.data.repetitions;
+        const repetitionIntervalMs = (interval ?? 0) * 1000;
         return new Date(Date.now() + repetitionIntervalMs);
     }
 
