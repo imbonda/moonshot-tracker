@@ -138,7 +138,7 @@ export class LPTokenCreationMonitor extends Service {
     private async isNewERC20(address: string): Promise<boolean> {
         // TODO: add cache.
         // TODO: add fallback to rpc (check if exists X blocks ago).
-        const isNewInDB = dal.models.newErc20.isNewERC20(this.chainId, address);
+        const isNewInDB = await dal.models.newErc20.isNewERC20(this.chainId, address);
         return isNewInDB;
     }
 
