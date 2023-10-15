@@ -81,7 +81,7 @@ export class TokenContractCreationMonitor extends Service {
         try {
             const symbol = await contract.symbol();
             if (symbol) {
-                await dal.modules.newErc20.saveNewERC20(this.chainId, tokenAddr);
+                await dal.models.newErc20.saveNewERC20(this.chainId, tokenAddr);
                 this.logger.info('New ERC20 token', { address: tokenAddr });
             }
         } catch (err) {

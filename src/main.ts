@@ -4,6 +4,8 @@ import { program, Option, OptionValues } from 'commander';
 import { LPTokenCreationMonitor } from './services/monitoring/lp-token-creation';
 import { TokenContractCreationMonitor } from './services/monitoring/token-contract-creation';
 import { Service, ServiceClass } from './services/service';
+import { TrackingAgent } from './services/tracking/agent';
+import { TrackingScheduler } from './services/scheduling/scheduler';
 
 class Launcher {
     private servicesByName: Record<string, ServiceClass>;
@@ -14,6 +16,8 @@ class Launcher {
         this.servicesByName = {
             monitorLPTokenCreation: LPTokenCreationMonitor,
             monitorTokenContractCreation: TokenContractCreationMonitor,
+            trackingAgent: TrackingAgent,
+            trackingScheduler: TrackingScheduler,
         };
         this.inputOptions = [
             new Option('-s, --service <name>', 'name of the service to start')

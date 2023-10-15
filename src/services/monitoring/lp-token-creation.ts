@@ -129,15 +129,15 @@ export class LPTokenCreationMonitor extends Service {
             this.logger.info('LP token moved to burned address', {
                 from, to, amount: amount.toString(),
             });
-            // TODO - check if amount moved is a big percentage of total supply of lp token
-            // TODO - check that liquidity is more then $10,000
+            // TODO: check if amount moved is a big percentage of total supply of lp token
+            // TODO: check that liquidity is more then $10,000
         }
     }
 
     private async isNewERC20(address: string): Promise<boolean> {
         // TODO: add cache.
-        // TODO add fallback to rpc (check if exists X blocks ago).
-        const isNewInDB = dal.modules.newErc20.isNewERC20(this.chainId, address);
+        // TODO: add fallback to rpc (check if exists X blocks ago).
+        const isNewInDB = dal.models.newErc20.isNewERC20(this.chainId, address);
         return isNewInDB;
     }
 }

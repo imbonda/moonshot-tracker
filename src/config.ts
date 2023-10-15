@@ -47,6 +47,7 @@ export const ipcConfig = {
     mq: {
         URL: process.env.MQ_URL as string,
         EXCHANGE: process.env.MQ_EXCHANGE as string,
+        TRACKING_QUEUE: process.env.MQ_TRACKING_QUEUE as string,
     },
     pubsub: {
         URL: process.env.PUBSUB_URL as string,

@@ -1,5 +1,5 @@
 // Internal.
-import QueueConsumerBullMQ from '../adapters/bullmq/message-queue/consumer';
+export { QueueConsumer } from '../adapters/bullmq/message-queue/consumer';
 
 export interface Message {
     content: Buffer;
@@ -17,5 +17,3 @@ export interface IQueueConsumer {
     init(): Promise<void>;
     consume(onConsume: ConsumeHandler): Promise<void>;
 }
-
-export default QueueConsumerBullMQ;

@@ -4,7 +4,7 @@ import amqp from 'amqplib/callback_api';
 import type { ConsumeHandler } from '../../../message-queue/consumer';
 import BaseQueueRole from './base';
 
-export default class QueueConsumer extends BaseQueueRole {
+export class QueueConsumer extends BaseQueueRole {
     protected async onExchangeReady(): Promise<void> {
         return new Promise((resolve, reject) => {
             this.channel.assertQueue(

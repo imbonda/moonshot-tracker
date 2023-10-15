@@ -4,7 +4,7 @@ import { DoneCallback } from 'bull';
 import type { ConsumeHandler } from '../../../message-queue/consumer';
 import BaseQueueRole from './base';
 
-export default class QueueConsumer extends BaseQueueRole {
+export class QueueConsumer extends BaseQueueRole {
     /**
      * Register a consumption callback handler.
      *
