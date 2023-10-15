@@ -9,7 +9,7 @@ import { dal } from '../../dal/dal';
 import { Service } from '../service';
 import { DEAD_ADDRESSES, LP_V2_FACTORIES, LP_V3_FACTORIES } from '../../lib/constants';
 import { Web3RpcProvider } from '../../lib/adapters/rpc-provider';
-import { PIPELINE_TEMPLATE, TASKS_TEMPLATE } from '../../templates/tracking';
+import { PIPELINE_TEMPLATE, TASKS_TEMPLATE } from '../../templates/tracking-pipeline';
 
 export class LPTokenCreationMonitor extends Service {
     private chainId: number;

@@ -1,16 +1,9 @@
 // Internal.
 import type { TrackedToken, PipelineStage } from '../../../@types/tracking';
 import { Logger } from '../../../lib/logger';
+import { StageState } from '../static';
 import { TaskFactory } from '../tasks/task-factory';
 import { type TasksById, TaskExecutor } from './task';
-
-const enum StageState {
-    LOCKED = 'locked',
-    UNLOCKED = 'unlocked',
-    IN_PROGRESS = 'inProgress',
-    DONE = 'done',
-    FAILED = 'failed',
-}
 
 const EXECUTABLE_STATES = new Set<string>([
     StageState.UNLOCKED,

@@ -3,15 +3,15 @@ export interface TaskData {
     state: string,
     repetitions: {
         count: number,
-        repeat: number,
-        interval: number,
-        deadline: Date,
+        repeat?: number,
+        interval?: number,
+        deadline?: Date,
     },
     retries: {
         maxTime: number,
-        maxRetryTime: number,
+        retryMaxTime: number,
     },
-    scheduledExecutionTime: Date,
+    scheduledExecutionTime?: Date,
 }
 
 export interface PipelineStage {

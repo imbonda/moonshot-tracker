@@ -1,13 +1,7 @@
 // Internal.
 import type { TaskData, TrackedToken } from '../../../@types/tracking';
 import { Logger } from '../../../lib/logger';
-
-const enum TaskState {
-    PENDING = 'pending',
-    IN_PROGRESS = 'inProgress',
-    DONE = 'done',
-    FAILED = 'failed',
-}
+import { TaskState } from '../static';
 
 export abstract class TaskExecutor {
     protected token: TrackedToken;
@@ -49,7 +43,12 @@ export abstract class TaskExecutor {
     }
 
     private get nextScheduledTime(): TaskData['scheduledExecutionTime'] {
-        const repetitionIntervalMs = this.data.repetitions.interval * 1000;
+        const { interval } = this.data.repetitions;
+        if (!interval) {
+            return undefined;
+        }
+
+        const repetitionIntervalMs = interval * 1000;
         return new Date(Date.now() + repetitionIntervalMs);
     }
 
@@ -59,8 +58,8 @@ export abstract class TaskExecutor {
         } = this.data.repetitions;
 
         const now = new Date();
-        const isExpired = (deadline <= now);
-        const isFinishedRepeating = (repeat <= this.repetition);
+        const isExpired = (!!deadline) && (deadline <= now);
+        const isFinishedRepeating = ((repeat ?? 0) <= this.repetition);
         return isExpired || isFinishedRepeating;
     }
 
