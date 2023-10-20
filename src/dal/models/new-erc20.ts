@@ -10,12 +10,12 @@ export class NewERC20Model extends BaseDalModule {
         const options = {
             ttlSeconds: NEW_ERC20_TTL_SECONDS,
         };
-        await this.dal.redis.setData(key, value, options);
+        await this.dal.redis.set(key, value, options);
     }
 
     public async isNewERC20(chainId: number, address: string): Promise<boolean> {
         const key = NewERC20Model.buildERC20uid(chainId, address);
-        return !!this.dal.redis.getData(key);
+        return !!this.dal.redis.get(key);
     }
 
     private static buildERC20uid(chainId: number, address: string): string {

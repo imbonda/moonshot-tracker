@@ -43,7 +43,7 @@ export class RedisAdapter {
     }
 
     @safe()
-    public async getData(
+    public async get(
         key: string,
         options?: {
             // Redis hashes are record types structured as collections of field-value pairs.
@@ -61,7 +61,7 @@ export class RedisAdapter {
     }
 
     @safe()
-    public async getAllData(hashKey: string): Promise<Record<string, any> | null> {
+    public async getAll(hashKey: string): Promise<Record<string, unknown> | null> {
         if (this.client.status !== 'ready') {
             return null;
         }
@@ -76,7 +76,7 @@ export class RedisAdapter {
     }
 
     @safe()
-    public async setData(
+    public async set(
         key: string,
         value: unknown,
         options?: {
@@ -97,12 +97,52 @@ export class RedisAdapter {
             pipeline.hset(options.hashKey, key, data);
 
             if (options?.ttlSeconds) {
-                pipeline.expire(options.hashKey, options.ttlSeconds);
+                pipeline.expire(options.hashKey, options.ttlSeconds!);
             }
         } else if (options?.ttlSeconds) {
-            pipeline.set(key, data, 'EX', options.ttlSeconds);
+            pipeline.set(key, data, 'EX', options.ttlSeconds!);
         } else {
             pipeline.set(key, data);
+        }
+
+        await pipeline.exec();
+    }
+
+    @safe()
+    public async setMultiple(
+        keyValues: { key: string, value: unknown }[],
+        options?: {
+            // Redis hashes are record types structured as collections of field-value pairs.
+            hashKey?: string,
+            ttlSeconds?: number
+        },
+    ) {
+        if (this.client.status !== 'ready') {
+            return;
+        }
+
+        const keyDataMap = keyValues.reduce(
+            (accum, { key, value }) => {
+                accum[key] = v8.serialize(value);
+                return accum;
+            },
+            {} as Record<string, Buffer>,
+        );
+
+        const pipeline = this.client.pipeline();
+
+        if (options?.hashKey) {
+            pipeline.hmset(options.hashKey, keyDataMap);
+
+            if (options?.ttlSeconds) {
+                pipeline.expire(options.hashKey, options.ttlSeconds!);
+            }
+        } else if (options?.ttlSeconds) {
+            Object.entries(keyDataMap).forEach(([key, data]) => {
+                pipeline.set(key, data, 'EX', options.ttlSeconds!);
+            });
+        } else {
+            pipeline.mset(keyDataMap);
         }
 
         await pipeline.exec();
