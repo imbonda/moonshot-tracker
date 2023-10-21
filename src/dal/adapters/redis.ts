@@ -18,9 +18,7 @@ export class RedisAdapter {
     }
 
     public async connect(): Promise<void> {
-        this.client = new Redis({
-            path: dbConfig.REDIS_URL,
-        });
+        this.client = new Redis(dbConfig.REDIS_URL);
 
         return new Promise((resolve, reject) => {
             // Register connection callbacks.
@@ -29,7 +27,7 @@ export class RedisAdapter {
                 resolve();
             }));
             this.client.on('reconnecting', ((params: any) => {
-                this.logger.info('Reconnecting to Redis', { attempt: params.attempt });
+                this.logger.info('Reconnecting to Redis', { attempt: params?.attempt });
             }));
             this.client.on('error', ((err) => {
                 this.logger.error('Error connecting to Redis', err);
