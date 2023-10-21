@@ -2,6 +2,10 @@
     "name": "moonshot-tracker",
     "version": "1.0.0",
     "description": "",
+    "engines": {
+        "node": "~18.18.2",
+        "npm": "9.8.1"
+    },
     "main": "main.ts",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
@@ -15,6 +19,7 @@
         "@uniswap/sdk-core": "^4.0.6",
         "@uniswap/v3-sdk": "^3.10.0",
         "amqplib": "^0.10.3",
+        "axios": "^1.5.1",
         "bottleneck": "^2.19.5",
         "bull": "^4.11.3",
         "commander": "^11.0.0",

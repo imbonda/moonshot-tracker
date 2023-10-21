@@ -14,12 +14,9 @@ import { PIPELINE_TEMPLATE, TASKS_TEMPLATE } from '../../templates/tracking-pipe
 export class LPTokenCreationMonitor extends Service {
     private chainId: number;
 
-    private web3RpcProvider: Web3RpcProvider;
-
     constructor() {
         super();
         this.chainId = web3Config.CHAIN_ID;
-        this.web3RpcProvider = new Web3RpcProvider(this.chainId);
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -44,7 +41,7 @@ export class LPTokenCreationMonitor extends Service {
     private monitorUniswapV2LPTokenCreation() {
         LP_V2_FACTORIES.forEach((factory) => {
             const { factoryABI, lpABI, address } = factory;
-            const provider = this.web3RpcProvider.alloc();
+            const provider = new Web3RpcProvider(this.chainId);
 
             // Connect to V2 Factory contract.
             const factoryContract = new Contract(
@@ -74,7 +71,7 @@ export class LPTokenCreationMonitor extends Service {
     private monitorUniswapV3LPTokenCreation() {
         LP_V3_FACTORIES.forEach((factory) => {
             const { factoryABI, lpABI, address } = factory;
-            const provider = this.web3RpcProvider.alloc();
+            const provider = new Web3RpcProvider(this.chainId);
 
             // Connect to V3 Factory contract.
             const factoryContract = new Contract(

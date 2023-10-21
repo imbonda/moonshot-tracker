@@ -32,10 +32,13 @@ export const dbConfig = {
  */
 export const web3Config = {
     CHAIN_ID: parseInt(process.env.CHAIN_ID as string),
-    RPC_ENDPOINTS_BY_CHAIN: Object.fromEntries(
+    RPC_CONFIG_BY_CHAIN: Object.fromEntries(
         Object.values(ChainId).map((chainId) => [
             chainId,
-            JSON.parse(process.env[`${chainId}_RPC_ENDPOINTS`] ?? process.env.RPC_ENDPOINTS ?? '[]'),
+            {
+                endpoints: JSON.parse(process.env[`${chainId}_RPC_ENDPOINTS`] ?? process.env.RPC_ENDPOINTS ?? '[]'),
+                pollingInterval: parseInt(process.env[`${chainId}_RPC_POLLING_INTERVAL_MS`] ?? process.env.RPC_POLLING_INTERVAL_MS ?? '4000'),
+            },
         ]),
     ),
 };

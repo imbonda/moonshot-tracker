@@ -1,22 +1,23 @@
 // 3rd party.
-import { Contract, JsonRpcProvider } from 'ethers';
+import { Contract, type TransactionReceipt } from 'ethers';
 // Internal.
 import erc20ABI from '../../abi/erc20.json';
 import { web3Config } from '../../config';
 import { safe, throttle } from '../../lib/decorators';
 import { dal } from '../../dal/dal';
-import { Service } from '../service';
 import { Web3RpcProvider } from '../../lib/adapters/rpc-provider';
+import { hexifyNumber } from '../../lib/utils';
+import { Service } from '../service';
 
 export class TokenContractCreationMonitor extends Service {
     private chainId: number;
 
-    private provider: JsonRpcProvider;
+    private provider: Web3RpcProvider;
 
     constructor() {
         super();
         this.chainId = web3Config.CHAIN_ID;
-        this.provider = new Web3RpcProvider(this.chainId).alloc();
+        this.provider = new Web3RpcProvider(this.chainId);
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -43,22 +44,20 @@ export class TokenContractCreationMonitor extends Service {
     }
 
     @safe()
-    private async processBlock(blockNumber: string) {
-        // Use Alchemy's alchemy_getTransactionReceipts method to get the transaction receipts
-        const block = await this.provider.getBlock(blockNumber);
-        if (!block) {
+    private async processBlock(blockNumber: number) {
+        const hexBlockNumber = hexifyNumber(blockNumber);
+        const receipts = await this.provider.getTransactionReceipts(hexBlockNumber);
+        if (!receipts) {
             return;
         }
 
         await Promise.all(
-            block.transactions.map(this.processERC20Creation.bind(this)),
+            receipts.map(this.processERC20Creation.bind(this)),
         );
     }
 
     @throttle({ delayMs: 10, maxConcurrent: 5 })
-    private async processERC20Creation(txHash: string): Promise<void> {
-        const receipt = await this.provider.getTransactionReceipt(txHash);
-
+    private async processERC20Creation(receipt: TransactionReceipt): Promise<void> {
         if (!receipt) {
             return;
         }
