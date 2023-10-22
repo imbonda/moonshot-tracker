@@ -10,6 +10,7 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "tsc",
+        "postbuild": "rsync -ar --prune-empty-dirs --include=*.proto --include=*.json --include=*.csv src/ build/src/ && cp .env ./build 2> /dev/null || :",
         "dev": "ts-node src/index.ts",
         "lint": "eslint . --ext .ts"
     },
@@ -30,6 +31,7 @@
         "mongodb": "^6.1.0",
         "mongoose": "^7.5.3",
         "node-cache": "^5.1.2",
+        "pm2": "^5.3.0",
         "winston": "^3.10.0"
     },
     "devDependencies": {
