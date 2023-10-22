@@ -166,7 +166,7 @@ export class BlockchainMonitor extends Service {
             return;
         }
         if (!this.newLPTokenCache.get(tokenAddress)) {
-            this.logger.info('Skipping transfer of untracked LP token');
+            this.logger.debug('Skipping transfer of untracked LP token');
             return;
         }
 
