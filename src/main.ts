@@ -14,8 +14,8 @@ class Launcher {
     constructor() {
         this.servicesByName = {
             monitor: BlockchainMonitor,
-            trackingAgent: TrackingAgent,
-            trackingScheduler: TrackingScheduler,
+            scheduler: TrackingScheduler,
+            agent: TrackingAgent,
         };
         this.inputOptions = [
             new Option('-s, --service <name>', 'name of the service to start')

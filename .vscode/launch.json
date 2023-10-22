@@ -7,7 +7,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Monitor Blockchain",
+            "name": "Monitor",
             "cwd": "${workspaceRoot}",
             "skipFiles": [
                 "<node_internals>/**"
@@ -27,6 +27,60 @@
             "env": {
                 "NODE_ENV": "dev",
                 "CHAIN_ID": 1,
+            },
+            "sourceMaps": true,
+            "outputCapture": "std"
+        },
+
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Scheduler",
+            "cwd": "${workspaceRoot}",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "./src/main.ts",
+            "runtimeArgs": [
+                // Tell V8 to compile ahead of time so breakpoints work correctly.
+                "--nolazy",
+                // Ensure ts-node is loaded before trying to execute.
+                "--require",
+                "ts-node/register",
+            ],
+            "args": [
+                "-s",
+                "scheduler"
+            ],
+            "env": {
+                "NODE_ENV": "dev",
+            },
+            "sourceMaps": true,
+            "outputCapture": "std"
+        },
+
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Agent",
+            "cwd": "${workspaceRoot}",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "./src/main.ts",
+            "runtimeArgs": [
+                // Tell V8 to compile ahead of time so breakpoints work correctly.
+                "--nolazy",
+                // Ensure ts-node is loaded before trying to execute.
+                "--require",
+                "ts-node/register",
+            ],
+            "args": [
+                "-s",
+                "agent"
+            ],
+            "env": {
+                "NODE_ENV": "dev",
             },
             "sourceMaps": true,
             "outputCapture": "std"
