@@ -12,8 +12,7 @@ import { Service } from '../service';
 import {
     DEAD_ADDRESSES,
     LP_V2_FACTORIES, LP_V3_FACTORIES,
-    uniswapV2FactoryInterface, uniswapV2PairInterface,
-    uniswapV3FactoryInterface, uniswapV3PoolInterface,
+    uniswapV2FactoryInterface, uniswapV3FactoryInterface,
 } from '../../lib/constants';
 import {
     parsePairAddress, parsePoolAddress, parseTokenAddresses, parseTransfer,
@@ -162,20 +161,17 @@ export class BlockchainMonitor extends Service {
 
     private async processLPTokenTransfer(log: Log): Promise<void> {
         const tokenAddress = log.address.toLowerCase();
-        const isV2Transfer = uniswapV2PairInterface.parseLog(log as never);
-        const isV3Transfer = !isV2Transfer && uniswapV3PoolInterface.parseLog(log as never);
-        const isLPTokenTransfer = isV2Transfer || isV3Transfer;
-
-        if (!isLPTokenTransfer) {
+        const parsed = parseTransfer(log);
+        if (!parsed) {
             return;
         }
-
         if (!this.newLPTokenCache.get(tokenAddress)) {
             this.logger.info('Skipping transfer of untracked LP token');
             return;
         }
 
-        const { from, to, amount } = parseTransfer(log);
+        const { from, to, amount } = parsed;
+
         // Function to handle LP token transfers
         if (DEAD_ADDRESSES.has(to)) {
             this.logger.info('LP token moved to burned address', {

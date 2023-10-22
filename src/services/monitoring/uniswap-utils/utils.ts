@@ -1,5 +1,7 @@
 // 3rd party.
 import { BigNumberish, Log } from 'ethers';
+// Internal.
+import { uniswapV2PairInterface, uniswapV3PoolInterface } from '../../../lib/constants';
 
 const ADDRESS_LENGTH = 20 * 2;
 
@@ -25,7 +27,19 @@ export function parseTransfer(log: Log): {
     from: string,
     to: string,
     amount: BigNumberish,
-} {
+} | null {
+    try {
+        let parsedTransfer = uniswapV2PairInterface.parseLog(log as never);
+        parsedTransfer ??= uniswapV3PoolInterface.parseLog(log as never);
+        const isLPTokenTransfer = parsedTransfer?.name === 'Transfer';
+
+        if (!isLPTokenTransfer) {
+            return null;
+        }
+    } catch (err) {
+        return null;
+    }
+
     const [from, to] = parseTokenAddresses(log);
     const amount = BigInt(log.data);
     return {
