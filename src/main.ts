@@ -1,11 +1,10 @@
 // 3rd party.
 import { program, Option, OptionValues } from 'commander';
 // Internal.
-import { LPTokenCreationMonitor } from './services/monitoring/lp-token-creation';
-import { TokenContractCreationMonitor } from './services/monitoring/token-contract-creation';
 import { Service, ServiceClass } from './services/service';
 import { TrackingAgent } from './services/tracking/agent';
 import { TrackingScheduler } from './services/scheduling/scheduler';
+import { BlockchainMonitor } from './services/monitoring/monitor';
 
 class Launcher {
     private servicesByName: Record<string, ServiceClass>;
@@ -14,8 +13,7 @@ class Launcher {
 
     constructor() {
         this.servicesByName = {
-            monitorLPTokenCreation: LPTokenCreationMonitor,
-            monitorTokenContractCreation: TokenContractCreationMonitor,
+            monitor: BlockchainMonitor,
             trackingAgent: TrackingAgent,
             trackingScheduler: TrackingScheduler,
         };

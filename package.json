@@ -29,6 +29,7 @@
         "lodash": "^4.17.21",
         "mongodb": "^6.1.0",
         "mongoose": "^7.5.3",
+        "node-cache": "^5.1.2",
         "winston": "^3.10.0"
     },
     "devDependencies": {

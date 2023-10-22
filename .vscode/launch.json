@@ -7,7 +7,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Monitor Token Contract Creation",
+            "name": "Monitor Blockchain",
             "cwd": "${workspaceRoot}",
             "skipFiles": [
                 "<node_internals>/**"
@@ -22,35 +22,7 @@
             ],
             "args": [
                 "-s",
-                "monitorTokenContractCreation"
-            ],
-            "env": {
-                "NODE_ENV": "dev",
-                "CHAIN_ID": 1,
-            },
-            "sourceMaps": true,
-            "outputCapture": "std"
-        },
-
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Monitor LP Token Creation",
-            "cwd": "${workspaceRoot}",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "./src/main.ts",
-            "runtimeArgs": [
-                // Tell V8 to compile ahead of time so breakpoints work correctly.
-                "--nolazy",
-                // Ensure ts-node is loaded before trying to execute.
-                "--require",
-                "ts-node/register",
-            ],
-            "args": [
-                "-s",
-                "monitorLPTokenCreation"
+                "monitor"
             ],
             "env": {
                 "NODE_ENV": "dev",

@@ -1,14 +1,12 @@
 // Internal.
 import { BaseDalModule } from './base';
 
-const NEW_ERC20_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days.
-
 export class NewERC20Model extends BaseDalModule {
-    public async saveNewERC20(chainId: number, address: string): Promise<void> {
+    public async saveNewERC20(chainId: number, address: string, ttl: number): Promise<void> {
         const key = NewERC20Model.buildERC20uid(chainId, address);
         const value = true;
         const options = {
-            ttlSeconds: NEW_ERC20_TTL_SECONDS,
+            ttlSeconds: ttl,
         };
         await this.dal.redis.set(key, value, options);
     }
