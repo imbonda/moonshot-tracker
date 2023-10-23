@@ -1,7 +1,7 @@
 // 3rd party.
 import { BigNumberish, Log } from 'ethers';
 // Internal.
-import { uniswapV2PairInterface, uniswapV3PoolInterface } from '../../../lib/constants';
+import { uniswapV2PairInterface, uniswapV3PoolInterface } from './constants';
 
 const ADDRESS_LENGTH = 20 * 2;
 

@@ -1,5 +1,6 @@
 // Internal.
 import type { TaskData, TrackedToken } from '../../../@types/tracking';
+import { MS_IN_SECOND } from '../../../lib/constants';
 import { Logger } from '../../../lib/logger';
 import { TaskState } from '../static';
 
@@ -48,7 +49,7 @@ export abstract class TaskExecutor {
         }
 
         const { interval } = this.data.repetitions;
-        const repetitionIntervalMs = (interval ?? 0) * 1000;
+        const repetitionIntervalMs = (interval ?? 0) * MS_IN_SECOND;
         return new Date(Date.now() + repetitionIntervalMs);
     }
 

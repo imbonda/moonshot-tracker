@@ -13,7 +13,7 @@ import {
     DEAD_ADDRESSES,
     LP_V2_FACTORIES, LP_V3_FACTORIES,
     uniswapV2FactoryInterface, uniswapV3FactoryInterface,
-} from '../../lib/constants';
+} from './uniswap-utils/constants';
 import {
     parsePairAddress, parsePoolAddress, parseTokenAddresses, parseTransfer,
 } from './uniswap-utils/utils';
