@@ -43,17 +43,18 @@ export class RedisAdapter {
     @safe()
     public async get(
         key: string,
-        options: {
+        options?: {
             // Redis hashes are record types structured as collections of field-value pairs.
             hashKey?: string,
             deserialize?: boolean,
-        } = { deserialize: true },
+        },
     ): Promise<unknown | null> {
         if (this.client.status !== 'ready') {
             return null;
         }
 
-        if (!options?.deserialize) {
+        const deserialize = options?.deserialize ?? true;
+        if (!deserialize) {
             const output = options?.hashKey
                 ? await this.client.hget(options.hashKey, key)
                 : await this.client.get(key);
@@ -69,15 +70,16 @@ export class RedisAdapter {
     @safe()
     public async getAll(
         hashKey: string,
-        options: {
+        options?: {
             deserialize?: boolean,
-        } = { deserialize: true },
+        },
     ): Promise<Record<string, unknown> | null> {
         if (this.client.status !== 'ready') {
             return null;
         }
 
-        if (!options?.deserialize) {
+        const deserialize = options?.deserialize ?? true;
+        if (!deserialize) {
             const result = await this.client.hgetall(hashKey);
             return isEmpty(result)
                 ? null
@@ -97,18 +99,19 @@ export class RedisAdapter {
     public async set(
         key: string,
         value: unknown,
-        options: {
+        options?: {
             // Redis hashes are record types structured as collections of field-value pairs.
             hashKey?: string,
             serialize?: boolean,
             ttlSeconds?: number
-        } = { serialize: true },
+        },
     ) {
         if (this.client.status !== 'ready') {
             return;
         }
 
-        const data = options?.serialize
+        const serialize = options?.serialize ?? true;
+        const data = serialize
             ? v8.serialize(value)
             : value as string | number | Buffer;
 
@@ -132,20 +135,21 @@ export class RedisAdapter {
     @safe()
     public async setMultiple(
         keyValues: { key: string, value: unknown }[],
-        options: {
+        options?: {
             // Redis hashes are record types structured as collections of field-value pairs.
             hashKey?: string,
             serialize?: boolean,
             ttlSeconds?: number
-        } = { serialize: true },
+        },
     ) {
         if (this.client.status !== 'ready') {
             return;
         }
 
+        const serialize = options?.serialize ?? true;
         const keyDataMap = keyValues.reduce(
             (accum, { key, value }) => {
-                accum[key] = options?.serialize
+                accum[key] = serialize
                     ? v8.serialize(value)
                     : value as string | number | Buffer;
                 return accum;
