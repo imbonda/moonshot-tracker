@@ -1,10 +1,9 @@
 // 3rd party.
-import { Contract, Log, type TransactionReceipt } from 'ethers';
+import type { Log, TransactionReceipt } from 'ethers';
 import NodeCache from 'node-cache';
 // Internal.
-import erc20ABI from '../../abi/erc20.json';
 import { web3Config } from '../../config';
-import { safe, throttle } from '../../lib/decorators';
+import { safe } from '../../lib/decorators';
 import { dal } from '../../dal/dal';
 import { Web3RpcProvider } from '../../lib/adapters/rpc-provider';
 import { hexifyNumber } from '../../lib/utils';
@@ -57,6 +56,7 @@ export class BlockchainMonitor extends Service {
 
     @safe()
     private async processBlock(blockNumber: number) {
+        this.logger.info('Starting handling block', { blockNumber });
         const hexBlockNumber = hexifyNumber(blockNumber);
         const receipts = await this.provider.getTransactionReceipts(hexBlockNumber);
         if (!receipts) {
@@ -66,6 +66,7 @@ export class BlockchainMonitor extends Service {
         await Promise.all(
             receipts.map(this.process.bind(this)),
         );
+        this.logger.info('Finished handling block', { blockNumber });
     }
 
     private async process(receipt: TransactionReceipt): Promise<void> {
@@ -75,7 +76,6 @@ export class BlockchainMonitor extends Service {
         ]);
     }
 
-    @throttle({ delayMs: 10, maxConcurrent: 5 })
     private async processERC20Creation(receipt: TransactionReceipt): Promise<void> {
         if (!receipt) {
             return;
@@ -90,22 +90,12 @@ export class BlockchainMonitor extends Service {
         }
 
         const tokenAddr = receipt.contractAddress.toLowerCase();
-        const contract = new Contract(
-            tokenAddr,
-            erc20ABI,
-            this.provider,
-        );
-
-        try {
-            const symbol = await contract.symbol();
-            if (symbol) {
-                const ttl = NEW_ERC20_TTL_SECONDS;
-                this.newERC20Cache.set(tokenAddr, 1);
-                await dal.models.newErc20.saveNewERC20(this.chainId, tokenAddr, ttl);
-                this.logger.info('New ERC20 token', { address: tokenAddr });
-            }
-        } catch (err) {
-            // Not an ERC-20 token.
+        const isERC20 = await this.provider.isERC20(tokenAddr);
+        if (isERC20) {
+            const ttl = NEW_ERC20_TTL_SECONDS;
+            this.newERC20Cache.set(tokenAddr, 1);
+            await dal.models.newErc20.saveNewERC20(this.chainId, tokenAddr, ttl);
+            this.logger.info('New ERC20 token', { address: tokenAddr });
         }
     }
 
@@ -175,7 +165,7 @@ export class BlockchainMonitor extends Service {
         // Function to handle LP token transfers
         if (DEAD_ADDRESSES.has(to)) {
             this.logger.info('LP token moved to burned address', {
-                from, to, amount: amount.toString(),
+                tokenAddress, from, to, amount: amount.toString(),
             });
             // TODO: check if amount moved is a big percentage of total supply of lp token
             // TODO: check that liquidity is more then $10,000
