@@ -2,7 +2,7 @@
 import { DoneCallback } from 'bull';
 // Internal.
 import type { ConsumeHandler } from '../../../message-queue/consumer';
-import BaseQueueRole from './base';
+import { BaseQueueRole } from './base';
 
 export class QueueConsumer extends BaseQueueRole {
     /**

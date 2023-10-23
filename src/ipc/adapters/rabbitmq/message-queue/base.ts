@@ -4,7 +4,7 @@ import amqp from 'amqplib/callback_api';
 import { ipcConfig } from '../../../../config';
 import { Logger } from '../../../../lib/logger';
 
-export default abstract class BaseQueueRole {
+export abstract class BaseQueueRole {
     protected brokerUrl: string;
 
     protected exchange: string;

@@ -1,7 +1,7 @@
 // 3rd party.
 import { PipelineStage } from 'mongoose';
 // Internal.
-import DalError from '../errors/dal-error';
+import { DalError } from '../errors/dal-error';
 import { DEFAULTS, RESTRICTIONS } from '../static';
 import type { QueryParams } from '../types';
 

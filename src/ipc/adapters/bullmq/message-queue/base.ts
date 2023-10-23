@@ -4,7 +4,7 @@ import Bull, { Queue as BullQueue } from 'bull';
 import { ipcConfig } from '../../../../config';
 import { Logger } from '../../../../lib/logger';
 
-export default abstract class BaseQueueRole {
+export abstract class BaseQueueRole {
     protected routingKey: string;
 
     protected queue: BullQueue<unknown>;

@@ -2,7 +2,7 @@
 import amqp from 'amqplib/callback_api';
 // Internal.
 import type { ConsumeHandler } from '../../../message-queue/consumer';
-import BaseQueueRole from './base';
+import { BaseQueueRole } from './base';
 
 export class QueueConsumer extends BaseQueueRole {
     protected async onExchangeReady(): Promise<void> {
