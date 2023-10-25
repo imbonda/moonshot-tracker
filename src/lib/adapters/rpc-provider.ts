@@ -3,13 +3,18 @@
 import axios from 'axios';
 import Bottleneck from 'bottleneck';
 import { Contract, JsonRpcProvider, TransactionReceipt } from 'ethers';
+import { Retryable } from 'typescript-retry-decorator';
 // Internal.
 import erc20ABI from '../../abi/erc20.json';
 import { web3Config } from '../../config';
 import { MS_IN_SECOND } from '../constants';
+import { wrapRpcError } from '../decorators';
+import { isRetryableError } from '../errors';
 
 let rotatingProviderIndex = 0;
 const providers: Record<string, JsonRpcProvider> = {};
+
+const NO_RETRY_METHODS = new Set(['on']);
 
 const JsonRpcProviderClass = (): new () => JsonRpcProvider => (class {} as never);
 
@@ -20,16 +25,49 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
 
     private handler = {
         get(target: Web3RpcProvider, prop: string, receiver: unknown) {
-            const value = Reflect.get(target._provider, prop, receiver);
-            if (!value) {
-                return target[prop as keyof Web3RpcProvider];
-            }
-            if (typeof value === 'function') {
-                return value.bind(target._provider);
-            }
-            return value;
+            return target.proxy(prop, receiver);
         },
     };
+
+    private proxy(prop: string, receiver: unknown) {
+        const reflectedValue = Reflect.get(this._provider, prop, receiver);
+        const selfValue = this[prop as keyof Web3RpcProvider];
+
+        let value = reflectedValue;
+        let bindTarget = this._provider;
+        if (!value) {
+            value = selfValue;
+            bindTarget = this as JsonRpcProvider;
+        }
+
+        if (typeof reflectedValue === 'function') {
+            value = reflectedValue.bind(bindTarget);
+        }
+
+        if (typeof value === 'function' && !NO_RETRY_METHODS.has(prop)) {
+            const original = value;
+            value = (...args: any[]) => (
+                this.withRetry(original.bind(bindTarget), ...args)
+            );
+        }
+
+        return value;
+    }
+
+    /**
+     * Used for wrapping every provider functions with a retryable decorator.
+     * Note that we retry only for appropriate errors.
+     */
+    // eslint-disable-next-line class-methods-use-this
+    @Retryable({
+        maxAttempts: 3,
+        backOff: 100,
+        doRetry: isRetryableError,
+    })
+    @wrapRpcError
+    private withRetry(func: typeof Function, ...args: any[]) {
+        return func(...args);
+    }
 
     constructor(chainId: number) {
         super();
@@ -114,6 +152,7 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
             method,
             params,
         });
+
         const result = await axios.post(
             url,
             body,
@@ -123,6 +162,12 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
                 },
             },
         );
+
+        const error = result?.data?.error;
+        if (error) {
+            throw new Error(error.message);
+        }
+
         return result?.data?.result ?? null;
     }
 }
