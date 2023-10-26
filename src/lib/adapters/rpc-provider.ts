@@ -11,6 +11,12 @@ import { MS_IN_SECOND } from '../constants';
 import { wrapRpcError } from '../decorators';
 import { isRetryableError } from '../errors';
 
+interface ProviderConfig {
+    endpoints: string[],
+    pollingInterval: number,
+    isAlchemy: boolean,
+}
+
 let rotatingProviderIndex = 0;
 const providers: Record<string, JsonRpcProvider> = {};
 
@@ -22,6 +28,8 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
     private chainId: number;
 
     private _provider: JsonRpcProvider;
+
+    private _nextReqId: number;
 
     private handler = {
         get(target: Web3RpcProvider, prop: string, receiver: unknown) {
@@ -74,8 +82,31 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         this.setRatelimit();
         this.chainId = chainId;
         this._provider = this.getProvider(this.endpoints[rotatingProviderIndex]);
+        this._nextReqId = 1;
         rotatingProviderIndex = (rotatingProviderIndex + 1) % this.endpoints.length;
         return new Proxy(this, this.handler);
+    }
+
+    public get config(): ProviderConfig {
+        return web3Config.RPC_CONFIG_BY_CHAIN[this.chainId];
+    }
+
+    public get endpoints(): string[] {
+        return this.config.endpoints;
+    }
+
+    public get pollingInterval(): number {
+        return this.config.pollingInterval;
+    }
+
+    public get isAlchemy(): boolean {
+        return this.config.isAlchemy;
+    }
+
+    private get nextId(): string {
+        const id = `i${this._nextReqId}`;
+        this._nextReqId = (this._nextReqId + 1) % 1000;
+        return id;
     }
 
     /**
@@ -100,18 +131,6 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         return provider;
     }
 
-    public get config(): { endpoints: string[], pollingInterval: number } {
-        return web3Config.RPC_CONFIG_BY_CHAIN[this.chainId];
-    }
-
-    public get endpoints(): string[] {
-        return this.config.endpoints;
-    }
-
-    public get pollingInterval(): number {
-        return this.config.pollingInterval;
-    }
-
     public async isERC20(address: string): Promise<boolean> {
         const contract = new Contract(
             address,
@@ -129,13 +148,19 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
     }
 
     public async getTransactionReceipts(blockNumber: string): Promise<TransactionReceipt[] | null> {
-        return this.getTransactionReceiptsAlchemy(blockNumber);
+        if (this.isAlchemy) {
+            return this.getTransactionReceiptsAlchemy(blockNumber);
+        }
+        return this._provider.send(
+            'eth_getBlockReceipts',
+            [blockNumber],
+        );
     }
 
     private async getTransactionReceiptsAlchemy(
         blockNumber: string,
     ): Promise<TransactionReceipt[] | null> {
-        const result = await this.sendNoBatch<{receipts: TransactionReceipt[]} | null>(
+        const result = await this.sendNoBatch<{ receipts: TransactionReceipt[] } | null>(
             'alchemy_getTransactionReceipts',
             [{ blockNumber }],
         );
@@ -144,13 +169,14 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
 
     private async sendNoBatch<T>(
         method: string,
-        params: Record<string, unknown>[],
+        params: unknown[],
     ): Promise<T | null> {
         const { url } = this._provider._getConnection();
         const body = JSON.stringify({
             jsonrpc: '2.0',
             method,
             params,
+            id: this.nextId,
         });
 
         const result = await axios.post(
