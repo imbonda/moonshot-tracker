@@ -18,6 +18,7 @@ import {
 } from './uniswap-utils/utils';
 
 const NEW_ERC20_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days.
+const NEW_LP_TOKEN_TTL_SECONDS = 14 * 24 * 60 * 60; // 14 days.
 
 export class BlockchainMonitor extends Service {
     private chainId: number;
@@ -126,7 +127,9 @@ export class BlockchainMonitor extends Service {
             this.isNewERC20(token2Addr),
         ]);
         if (isToken1New || isToken2New) {
+            const ttl = NEW_LP_TOKEN_TTL_SECONDS;
             this.newLPTokenCache.set(pair, 1);
+            await dal.models.newLpToken.saveNewLPToken(this.chainId, pair, ttl);
             this.logger.info('Liquidity pair created for tracked token', { pair });
         }
     }
@@ -144,7 +147,9 @@ export class BlockchainMonitor extends Service {
             this.isNewERC20(token2Addr),
         ]);
         if (isToken1New || isToken2New) {
+            const ttl = NEW_LP_TOKEN_TTL_SECONDS;
             this.newLPTokenCache.set(pool, 1);
+            await dal.models.newLpToken.saveNewLPToken(this.chainId, pool, ttl);
             this.logger.info('Liquidity pool created for tracked token', { pool });
         }
     }
