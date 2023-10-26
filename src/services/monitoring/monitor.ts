@@ -160,7 +160,7 @@ export class BlockchainMonitor extends Service {
         if (!parsed) {
             return;
         }
-        if (!this.newLPTokenCache.get(tokenAddress)) {
+        if (!this.isNewLPToken(tokenAddress)) {
             this.logger.debug('Skipping transfer of untracked LP token');
             return;
         }
@@ -178,9 +178,22 @@ export class BlockchainMonitor extends Service {
     }
 
     private async isNewERC20(address: string): Promise<boolean> {
-        // TODO: add fallback to rpc (check if exists X blocks ago).
+        // TODO: consider adding fallback to rpc (check if exists X blocks ago).
         const isInCache = !!this.newERC20Cache.get(address);
-        const isNewInDB = !isInCache && await dal.models.newErc20.isNewERC20(this.chainId, address);
+        const isNewInDB = !isInCache && await dal.models.newErc20.isNewERC20(
+            this.chainId,
+            address,
+        );
+        return isInCache ?? isNewInDB;
+    }
+
+    private async isNewLPToken(address: string): Promise<boolean> {
+        // TODO: consider adding fallback.
+        const isInCache = !!this.newLPTokenCache.get(address);
+        const isNewInDB = !isInCache && await dal.models.newLpToken.isNewLPToken(
+            this.chainId,
+            address,
+        );
         return isInCache ?? isNewInDB;
     }
 }
