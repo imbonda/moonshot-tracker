@@ -17,6 +17,21 @@ module.exports = {
         },
 
         {
+            name: 'monitor_bsc',
+            cwd: './',
+            script: 'node',
+            args: './build/src/main.js --service monitor',
+            env: {
+                NODE_ENV: 'dev',
+                CHAIN_ID: 56,
+            },
+            env_production: {
+                NODE_ENV: 'production',
+                CHAIN_ID: 56,
+            },
+        },
+
+        {
             name: 'scheduler',
             cwd: './',
             script: 'node',

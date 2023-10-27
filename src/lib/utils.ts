@@ -10,5 +10,10 @@ export async function sleep(timeMs: number): Promise<void> {
 }
 
 export function hexifyNumber(number: BigNumberish): string {
-    return toBeHex(number);
+    const hex = toBeHex(number);
+    const hasLeadingZero = (hex.charAt(2) === '0');
+    if (hasLeadingZero) {
+        return `0x${hex.slice(3)}`;
+    }
+    return hex;
 }
