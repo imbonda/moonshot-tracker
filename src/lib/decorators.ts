@@ -29,12 +29,23 @@ export function safe(
     ) => {
         const originalMethod = descriptor.value!;
         descriptor.value = async function wrapper(...args: unknown[]) {
+            let result;
+
             try {
-                return await originalMethod.apply(this, args);
+                result = originalMethod.apply(this, args);
             } catch (err) {
                 (this as { logger: Logger })?.logger.error(err);
                 return defaultValue;
             }
+
+            if (result.then) {
+                return result.catch((err: Error) => {
+                    (this as { logger: Logger })?.logger.error(err);
+                    return defaultValue;
+                });
+            }
+
+            return result;
         };
         return descriptor;
     };

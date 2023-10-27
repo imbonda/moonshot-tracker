@@ -1,69 +1,83 @@
 // 3rd party.
-import { BigNumberish, Contract, JsonRpcProvider } from 'ethers';
-import { Pool, FeeAmount } from '@uniswap/v3-sdk';
-import { Token } from '@uniswap/sdk-core';
+import type { Log, TransactionReceipt } from 'ethers';
+import NodeCache from 'node-cache';
 // Internal.
-import uniswapV2PairABI from '../../abi/uniswap-v2-pair.json';
-import uniswapV2FactoryABI from '../../abi/uniswap-v2-factory.json';
-import uniswapV3FactoryABI from '../../abi/uniswap-v3-factory.json';
-import uniswapV3PoolABI from '../../abi/uniswap-v3-pool.json';
-import erc20ABI from '../../abi/erc20.json';
 import { web3Config } from '../../config';
-import { throttle } from '../../lib/decorators';
-import { Logger } from '../../lib/logger';
+import { safe } from '../../lib/decorators';
+import { dal } from '../../dal/dal';
+import { Web3RpcProvider } from '../../lib/adapters/rpc-provider';
+import { hexifyNumber } from '../../lib/utils';
+import { Service } from '../service';
+import {
+    DEAD_ADDRESSES,
+    LP_V2_FACTORIES, LP_V3_FACTORIES,
+    uniswapV2FactoryInterface, uniswapV3FactoryInterface,
+} from './uniswap-utils/constants';
+import {
+    parsePairAddress, parsePoolAddress, parseTokenAddresses, parseTransfer,
+} from './uniswap-utils/utils';
 
-// Uniswap V2 Factory mainnet contract address.
-const uniswapV2FactoryAddress = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
+const NEW_ERC20_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days.
+const NEW_LP_TOKEN_TTL_SECONDS = 14 * 24 * 60 * 60; // 14 days.
 
-// Uniswap V3 Factory mainnet contract address.
-const uniswapV3FactoryAddress = '0x1F98431c8aD98523631AE4a59f267346ea31F984';
+export class BlockchainMonitor extends Service {
+    private chainId: number;
 
-// Addresses to check for burnt or locked tokens.
-const BURNT_ADDRESS = '0x0000000000000000000000000000000000000000';
+    private provider: Web3RpcProvider;
 
-export class TokenMonitor {
-    private newERC20Addresses: Set<string>;
+    private newERC20Cache: NodeCache;
 
-    private lpAddresses: Set<string>;
-
-    private provider: JsonRpcProvider;
-
-    private logger: Logger;
+    private newLPTokenCache: NodeCache;
 
     constructor() {
-        this.newERC20Addresses = new Set<string>();
-        this.lpAddresses = new Set<string>();
-        this.provider = new JsonRpcProvider(web3Config.RPC_ENDPOINT);
-        this.logger = new Logger(this.constructor.name);
+        super();
+        this.chainId = web3Config.CHAIN_ID;
+        this.provider = new Web3RpcProvider(this.chainId);
+        this.newERC20Cache = new NodeCache({ stdTTL: NEW_ERC20_TTL_SECONDS });
+        this.newLPTokenCache = new NodeCache();
     }
 
-    public monitor() {
-        this.monitorNewERC20Creation();
-
-        this.monitorUniswapV2LPTokenCreation();
-
-        this.monitorUniswapV3LPTokenCreation();
+    // eslint-disable-next-line class-methods-use-this
+    public async setup(): Promise<void> {
+        await dal.connect();
     }
 
-    private monitorNewERC20Creation() {
-        // Monitor all contract creations
-        this.provider.on('block', async (blockNumber) => {
-            // Use Alchemy's alchemy_getTransactionReceipts method to get the transaction receipts
-            const block = await this.provider.getBlock(blockNumber);
-            if (!block) {
-                return;
-            }
-
-            await Promise.all(
-                block.transactions.map(this.processERC20Creation.bind(this)),
-            );
-        });
+    // eslint-disable-next-line class-methods-use-this
+    public async teardown(): Promise<void> {
+        await dal.disconnect();
     }
 
-    @throttle({ delayMs: 10, maxConcurrent: 5 })
-    private async processERC20Creation(txHash: string) {
-        const receipt = await this.provider.getTransactionReceipt(txHash);
+    public async start(): Promise<void> {
+        this.monitor();
+    }
 
+    private monitor(): void {
+        this.provider.on('block', this.processBlock.bind(this));
+    }
+
+    @safe()
+    private async processBlock(blockNumber: number) {
+        this.logger.info('Starting handling block', { blockNumber });
+        const hexBlockNumber = hexifyNumber(blockNumber);
+        const receipts = await this.provider.getTransactionReceipts(hexBlockNumber);
+        if (!receipts) {
+            return;
+        }
+
+        await Promise.all(
+            receipts.map(this.process.bind(this)),
+        );
+        this.logger.info('Finished handling block', { blockNumber });
+    }
+
+    private async process(receipt: TransactionReceipt): Promise<void> {
+        await Promise.all([
+            this.processERC20Creation(receipt),
+            this.processLogs(receipt),
+        ]);
+    }
+
+    private async processERC20Creation(receipt: TransactionReceipt): Promise<void> {
         if (!receipt) {
             return;
         }
@@ -76,96 +90,110 @@ export class TokenMonitor {
             return;
         }
 
-        const contract = new Contract(
-            receipt.contractAddress,
-            erc20ABI,
-            this.provider,
-        );
-
-        try {
-            const symbol = await contract.symbol();
-            if (symbol) {
-                this.newERC20Addresses.add(receipt.contractAddress);
-                this.logger.info('New ERC20 token detected', { address: receipt.contractAddress });
-            }
-        } catch (err) {
-            // Not an ERC-20 token.
+        const tokenAddr = receipt.contractAddress.toLowerCase();
+        const isERC20 = await this.provider.isERC20(tokenAddr);
+        if (isERC20) {
+            const ttl = NEW_ERC20_TTL_SECONDS;
+            this.newERC20Cache.set(tokenAddr, 1);
+            await dal.models.newErc20.saveNewERC20(this.chainId, tokenAddr, ttl);
+            this.logger.info('New ERC20 token', { address: tokenAddr });
         }
     }
 
-    private monitorUniswapV2LPTokenCreation() {
-        // Connect to Uniswap V2 Factory contract.
-        const uniswapV2Factory = new Contract(
-            uniswapV2FactoryAddress,
-            uniswapV2FactoryABI,
-            this.provider,
+    private async processLogs(receipt: TransactionReceipt): Promise<void> {
+        await Promise.all(
+            receipt.logs.map(this.processLog.bind(this)),
         );
-
-        uniswapV2Factory.on('PairCreated', (token1, token2, pair) => {
-            if (this.newERC20Addresses.has(token1) || this.newERC20Addresses.has(token2)) {
-                this.logger.info('Liquidity pair created for tracked token', { pair });
-                this.lpAddresses.add(pair);
-
-                // Create a new contract instance for the LP token.
-                const lpTokenContract = new Contract(pair, uniswapV2PairABI, this.provider);
-                // Listen for Transfer events on the LP token.
-                lpTokenContract.on('Transfer', this.handleLPTokenTransfer);
-            }
-        });
     }
 
-    private monitorUniswapV3LPTokenCreation() {
-        // Connect to Uniswap V3 Factory contract.
-        const uniswapV3Factory = new Contract(
-            uniswapV3FactoryAddress,
-            uniswapV3FactoryABI,
-            this.provider,
-        );
-
-        // Listen for Uniswap V3 Pool creation
-        uniswapV3Factory.on('PoolCreated', async (
-            token1Addr,
-            token2Addr,
-            fee: FeeAmount,
-        ) => {
-            if (this.newERC20Addresses.has(token1Addr) || this.newERC20Addresses.has(token2Addr)) {
-                // Compute the pool address using the Uniswap V3 SDK
-                // Create contract instances for the tokens
-                const token1Contract = new Contract(token1Addr, erc20ABI, this.provider);
-                const token2Contract = new Contract(token2Addr, erc20ABI, this.provider);
-
-                // Retrieve the number of decimals for each token
-                const [token1Decimals, token2Decimals] = await Promise.all([
-                    token1Contract.decimals(),
-                    token2Contract.decimals(),
-                ]);
-
-                // Wrap the token addresses with the Token class.
-                const token1 = new Token(1, token1Addr, token1Decimals);
-                const token2 = new Token(1, token2Addr, token2Decimals);
-
-                const poolAddress = Pool.getAddress(token1, token2, fee);
-
-                this.logger.info('Liquidity pool created for tracked token', { poolAddress });
-                this.lpAddresses.add(poolAddress);
-
-                // Create a new contract instance for the LP token (Uniswap V3 Pool).
-                const lpTokenContract = new Contract(poolAddress, uniswapV3PoolABI, this.provider);
-
-                // Listen for Transfer events on the LP token
-                lpTokenContract.on('Transfer', this.handleLPTokenTransfer);
-            }
-        });
+    private async processLog(log: Log): Promise<void> {
+        await Promise.all([
+            this.processUniswapV2LPTokenCreation(log),
+            this.processUniswapV3LPTokenCreation(log),
+            this.processLPTokenTransfer(log),
+        ]);
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    private handleLPTokenTransfer(from: string, to: string, amount: BigNumberish) {
+    private async processUniswapV2LPTokenCreation(log: Log): Promise<void> {
+        const isV2factory = LP_V2_FACTORIES.has(log.address.toLowerCase());
+        const parsed = isV2factory && uniswapV2FactoryInterface.parseLog(log as never);
+        if (!parsed) {
+            return;
+        }
+        const [token1Addr, token2Addr] = parseTokenAddresses(log);
+        const pair = parsePairAddress(log);
+        const [isToken1New, isToken2New] = await Promise.all([
+            this.isNewERC20(token1Addr),
+            this.isNewERC20(token2Addr),
+        ]);
+        if (isToken1New || isToken2New) {
+            const ttl = NEW_LP_TOKEN_TTL_SECONDS;
+            this.newLPTokenCache.set(pair, 1);
+            await dal.models.newLpToken.saveNewLPToken(this.chainId, pair, ttl);
+            this.logger.info('Liquidity pair created for tracked token', { pair });
+        }
+    }
+
+    private async processUniswapV3LPTokenCreation(log: Log): Promise<void> {
+        const isV3factory = LP_V3_FACTORIES.has(log.address.toLowerCase());
+        const parsed = isV3factory && uniswapV3FactoryInterface.parseLog(log as never);
+        if (!parsed) {
+            return;
+        }
+        const [token1Addr, token2Addr] = parseTokenAddresses(log);
+        const pool = parsePoolAddress(log);
+        const [isToken1New, isToken2New] = await Promise.all([
+            this.isNewERC20(token1Addr),
+            this.isNewERC20(token2Addr),
+        ]);
+        if (isToken1New || isToken2New) {
+            const ttl = NEW_LP_TOKEN_TTL_SECONDS;
+            this.newLPTokenCache.set(pool, 1);
+            await dal.models.newLpToken.saveNewLPToken(this.chainId, pool, ttl);
+            this.logger.info('Liquidity pool created for tracked token', { pool });
+        }
+    }
+
+    private async processLPTokenTransfer(log: Log): Promise<void> {
+        const tokenAddress = log.address.toLowerCase();
+        const parsed = parseTransfer(log);
+        if (!parsed) {
+            return;
+        }
+        if (!this.isNewLPToken(tokenAddress)) {
+            this.logger.debug('Skipping transfer of untracked LP token');
+            return;
+        }
+
+        const { from, to, amount } = parsed;
+
         // Function to handle LP token transfers
-        if (to === BURNT_ADDRESS) {
-            this.logger.info('LP token moved to burned address!', {
-                from, to, amount: amount.toString(),
+        if (DEAD_ADDRESSES.has(to)) {
+            this.logger.info('LP token moved to burned address', {
+                tokenAddress, from, to, amount: amount.toString(),
             });
-            // TODO - check if amount moved is a big percentage of totalsupply of lp token
+            // TODO: check if amount moved is a big percentage of total supply of lp token
+            // TODO: check that liquidity is more then $10,000
         }
+    }
+
+    private async isNewERC20(address: string): Promise<boolean> {
+        // TODO: consider adding fallback to rpc (check if exists X blocks ago).
+        const isInCache = !!this.newERC20Cache.get(address);
+        const isNewInDB = !isInCache && await dal.models.newErc20.isNewERC20(
+            this.chainId,
+            address,
+        );
+        return isInCache ?? isNewInDB;
+    }
+
+    private async isNewLPToken(address: string): Promise<boolean> {
+        // TODO: consider adding fallback.
+        const isInCache = !!this.newLPTokenCache.get(address);
+        const isNewInDB = !isInCache && await dal.models.newLpToken.isNewLPToken(
+            this.chainId,
+            address,
+        );
+        return isInCache ?? isNewInDB;
     }
 }
