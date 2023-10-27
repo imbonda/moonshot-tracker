@@ -95,9 +95,7 @@ export class BlockchainMonitor extends Service {
         const tokenAddr = receipt.contractAddress.toLowerCase();
         const isERC20 = await this.provider.isERC20(tokenAddr);
         if (isERC20) {
-            const ttl = NEW_ERC20_TTL_SECONDS;
-            this.newERC20Cache.set(tokenAddr, 1);
-            await dal.models.newErc20.saveNewERC20(this.chainId, tokenAddr, ttl);
+            await this.saveNewERC20(tokenAddr);
             this.logger.info('New ERC20 token', { address: tokenAddr });
         }
     }
@@ -129,10 +127,7 @@ export class BlockchainMonitor extends Service {
             this.isNewERC20(token2Addr),
         ]);
         if (isToken1New || isToken2New) {
-            const ttl = NEW_LP_TOKEN_TTL_SECONDS;
-            this.newLPTokenCache.set(pair, 1);
-            // TODO: Make relations between new erc20s and new lp tokens.
-            await dal.models.newLpToken.saveNewLPToken(this.chainId, pair, ttl);
+            await this.saveNewLPToken(pair);
             this.logger.info('Liquidity pair created for tracked token', { pair });
             // TODO: Sum all amount of new token turned into LP.
         }
@@ -151,10 +146,7 @@ export class BlockchainMonitor extends Service {
             this.isNewERC20(token2Addr),
         ]);
         if (isToken1New || isToken2New) {
-            const ttl = NEW_LP_TOKEN_TTL_SECONDS;
-            this.newLPTokenCache.set(pool, 1);
-            // TODO: Make relations between new erc20s and new lp tokens.
-            await dal.models.newLpToken.saveNewLPToken(this.chainId, pool, ttl);
+            await this.saveNewLPToken(pool);
             this.logger.info('Liquidity pool created for tracked token', { pool });
             // TODO: Sum all amount of new token turned into LP.
         }
@@ -181,6 +173,19 @@ export class BlockchainMonitor extends Service {
             // TODO: check if amount moved is a big percentage of total supply of lp token
             // TODO: check that liquidity is more then $10,000
         }
+    }
+
+    private async saveNewERC20(address: string): Promise<void> {
+        const ttl = NEW_ERC20_TTL_SECONDS;
+        this.newERC20Cache.set(address, 1);
+        await dal.models.newErc20.saveNewERC20(this.chainId, address, ttl);
+    }
+
+    private async saveNewLPToken(address: string): Promise<void> {
+        const ttl = NEW_LP_TOKEN_TTL_SECONDS;
+        this.newLPTokenCache.set(address, 1);
+        // TODO: Make relations between new erc20s and new lp tokens.
+        await dal.models.newLpToken.saveNewLPToken(this.chainId, address, ttl);
     }
 
     private async isNewERC20(address: string): Promise<boolean> {
