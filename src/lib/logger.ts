@@ -2,12 +2,12 @@
 // Builtin.
 import process from 'process';
 // 3rd party.
-import { isEmpty } from 'lodash';
 import {
     createLogger, config, format, transports, Logger as WinstonLogger,
 } from 'winston';
 // Internal.
 import { logConfig } from '../config';
+import { isEmpty } from './utils';
 
 const loggerConfig = {
     level: 'info',
@@ -27,7 +27,12 @@ const loggerConfig = {
                 ({
                     level, message, timestamp, loggerName, err, stack, ...meta
                 }) => {
-                    const metaStr = isEmpty(meta) ? '' : ` ${JSON.stringify(meta)}`;
+                    let metaStr;
+                    try {
+                        metaStr = isEmpty(meta) ? '' : ` ${JSON.stringify(meta)}`;
+                    } catch (_err) {
+                        metaStr = '';
+                    }
                     const stackTrace = (err?.stack ?? stack) ? `\r\n${err?.stack ?? stack}` : '';
                     return `[${level.toUpperCase()}] ${timestamp} [${process.pid}]: [${loggerName}] ${message}${metaStr}${stackTrace}`;
                 },

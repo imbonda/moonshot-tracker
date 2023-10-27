@@ -2,12 +2,14 @@
 import path from 'path';
 // 3rd party.
 import dotenv from 'dotenv';
+// Internal.
+import { ChainId } from './lib/constants';
 
 export const nodeEnv = process.env.NODE_ENV?.toLowerCase();
 
 // Load dotenv variables.
 const dotEnvFilename = () => '.env';
-dotenv.config({ path: path.join(__dirname, '..', '..', dotEnvFilename()) });
+dotenv.config({ path: path.join(__dirname, '..', dotEnvFilename()) });
 
 /**
  * Mode.
@@ -21,14 +23,25 @@ export const envConfig = {
  * DB.
  */
 export const dbConfig = {
-    MONGO_URI: process.env.MONGO_URI as string,
+    MONGO_URL: process.env.MONGO_URL as string,
+    REDIS_URL: process.env.REDIS_URL as string,
 };
 
 /**
  * Web3.
  */
 export const web3Config = {
-    RPC_ENDPOINT: process.env.RPC_ENDPOINT as string,
+    CHAIN_ID: parseInt(process.env.CHAIN_ID as string),
+    RPC_CONFIG_BY_CHAIN: Object.fromEntries(
+        Object.values(ChainId).map((chainId) => [
+            chainId,
+            {
+                endpoints: JSON.parse(process.env[`${chainId}_RPC_ENDPOINTS`] ?? process.env.RPC_ENDPOINTS ?? '[]'),
+                pollingInterval: parseInt(process.env[`${chainId}_RPC_POLLING_INTERVAL_MS`] ?? process.env.RPC_POLLING_INTERVAL_MS ?? '4000'),
+                isAlchemy: (process.env[`${chainId}_RPC_IS_ALCHEMY`] ?? process.env.RPC_IS_ALCHEMY) === 'true',
+            },
+        ]),
+    ),
 };
 
 /**
@@ -36,15 +49,16 @@ export const web3Config = {
  */
 export const ipcConfig = {
     mq: {
-        URI: process.env.MQ_URI as string,
+        URL: process.env.MQ_URL as string,
         EXCHANGE: process.env.MQ_EXCHANGE as string,
+        TRACKING_QUEUE: process.env.MQ_TRACKING_QUEUE as string,
     },
     pubsub: {
-        URI: process.env.PUBSUB_URI as string,
+        URL: process.env.PUBSUB_URL as string,
         TOKEN_EVENTS: process.env.PUBSUB_TOKEN_EVENTS as string,
     },
     rpc: {
-        URI: process.env.RPC_URI as string,
+        URL: process.env.RPC_URL as string,
     },
 };
 
@@ -66,7 +80,7 @@ export const opentelemetryConfig = {
     SAMPLE_RATE: parseInt(process.env.OTEL_SAMPLE_RATE ?? '1'),
 };
 
-function validateSubConfig(subConfig: { [key: string]: unknown }) {
+function validateSubConfig(subConfig: Record<string, unknown>) {
     Object.entries(subConfig).forEach(([key, value]) => {
         if (value === undefined) {
             throw new Error(`Missing configuration for ${key}`);
@@ -74,13 +88,6 @@ function validateSubConfig(subConfig: { [key: string]: unknown }) {
     });
 }
 
-export function validateConfig() {
-    const configurations = [
-        envConfig,
-        dbConfig,
-        logConfig,
-        web3Config,
-    ];
-
-    configurations.forEach(validateSubConfig);
+export function validateConfigs(configs: Record<string, unknown>[]) {
+    configs.forEach(validateSubConfig);
 }
