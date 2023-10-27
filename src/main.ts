@@ -1,11 +1,21 @@
 // 3rd party.
 import { program, Option, OptionValues } from 'commander';
 // Internal.
+import { TokenMonitor } from './services/monitoring/TokenMonitor';
 import { Service, ServiceClass } from './services/service';
 import { TrackingAgent } from './services/tracking/agent';
 import { TrackingScheduler } from './services/scheduling/scheduler';
 import { BlockchainMonitor } from './services/monitoring/monitor';
 
+
+// const tokenMonitor = new TokenMonitor();
+
+//     if (tokenMonitor.type === 'provider') {
+//         tokenMonitor.monitorNewERC20Creation();
+//     } else {
+//         tokenMonitor.monitorLPTokenCreation();
+//         tokenMonitor.monitorStages();
+//     }
 class Launcher {
     private servicesByName: Record<string, ServiceClass>;
 
@@ -46,3 +56,4 @@ async function main() {
 }
 
 main();
+

@@ -60,18 +60,17 @@ export class BlockchainMonitor extends Service {
         this.logger.info('Starting handling block', { blockNumber });
         const hexBlockNumber = hexifyNumber(blockNumber);
         const receipts = await this.provider.getTransactionReceipts(hexBlockNumber);
-        // TODO check if getTransactionReceipts was successful
         if (!receipts) {
             return;
         }
 
         await Promise.all(
-            receipts.map(this.processReceipt.bind(this)),
+            receipts.map(this.process.bind(this)),
         );
         this.logger.info('Finished handling block', { blockNumber });
     }
 
-    private async processReceipt(receipt: TransactionReceipt): Promise<void> {
+    private async process(receipt: TransactionReceipt): Promise<void> {
         await Promise.all([
             this.processERC20Creation(receipt),
             this.processLogs(receipt),
@@ -130,10 +129,8 @@ export class BlockchainMonitor extends Service {
         if (isToken1New || isToken2New) {
             const ttl = NEW_LP_TOKEN_TTL_SECONDS;
             this.newLPTokenCache.set(pair, 1);
-            // TODO make relations between new erc20s and new lp tokens
             await dal.models.newLpToken.saveNewLPToken(this.chainId, pair, ttl);
             this.logger.info('Liquidity pair created for tracked token', { pair });
-            // TODO sum all amount of new token turned into LP
         }
     }
 
@@ -152,10 +149,8 @@ export class BlockchainMonitor extends Service {
         if (isToken1New || isToken2New) {
             const ttl = NEW_LP_TOKEN_TTL_SECONDS;
             this.newLPTokenCache.set(pool, 1);
-            // TODO make relations between new erc20s and new lp tokens
             await dal.models.newLpToken.saveNewLPToken(this.chainId, pool, ttl);
             this.logger.info('Liquidity pool created for tracked token', { pool });
-            // TODO sum all amount of new token turned into LP
         }
     }
 

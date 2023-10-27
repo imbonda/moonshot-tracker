@@ -22,7 +22,7 @@ const providers: Record<string, JsonRpcProvider> = {};
 
 const NO_RETRY_METHODS = new Set(['on']);
 
-const JsonRpcProviderClass = (): new () => JsonRpcProvider => (class { } as never);
+const JsonRpcProviderClass = (): new () => JsonRpcProvider => (class {} as never);
 
 export class Web3RpcProvider extends JsonRpcProviderClass() {
     private chainId: number;
@@ -54,7 +54,7 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
 
         if (typeof value === 'function' && !NO_RETRY_METHODS.has(prop)) {
             const original = value;
-            value = (...args: unknown[]) => (
+            value = (...args: any[]) => (
                 this.withRetry(original.bind(bindTarget), ...args)
             );
         }
@@ -73,7 +73,7 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         doRetry: isRetryableError,
     })
     @wrapRpcError
-    private withRetry<T extends unknown[], R>(func: (...args: T) => R, ...args: T): R {
+    private withRetry(func: typeof Function, ...args: any[]) {
         return func(...args);
     }
 
@@ -139,11 +139,8 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         );
 
         try {
-            const [symbol, decimals] = await Promise.all([
-                contract.symbol(),
-                contract.decimals(),
-            ]);
-            return !!symbol || !!decimals;
+            const symbol = await contract.symbol();
+            return !!symbol;
         } catch (err) {
             // Not an ERC-20 token.
             return false;
