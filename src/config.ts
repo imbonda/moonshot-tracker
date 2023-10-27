@@ -38,6 +38,7 @@ export const web3Config = {
             {
                 endpoints: JSON.parse(process.env[`${chainId}_RPC_ENDPOINTS`] ?? process.env.RPC_ENDPOINTS ?? '[]'),
                 pollingInterval: parseInt(process.env[`${chainId}_RPC_POLLING_INTERVAL_MS`] ?? process.env.RPC_POLLING_INTERVAL_MS ?? '4000'),
+                isAlchemy: (process.env[`${chainId}_RPC_IS_ALCHEMY`] ?? process.env.RPC_IS_ALCHEMY) === 'true',
             },
         ]),
     ),
