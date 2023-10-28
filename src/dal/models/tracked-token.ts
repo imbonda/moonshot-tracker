@@ -34,6 +34,7 @@ const TaskDataSchema = new Schema<TaskData>(
         state: { type: String },
         repetitions: { type: TaskRepetitionsSchema },
         retries: { type: TaskRetriesSchema },
+        delay: { type: Number, required: false },
         scheduledExecutionTime: { type: Date, required: false },
     },
     { _id: false },
