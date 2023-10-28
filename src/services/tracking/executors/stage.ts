@@ -70,12 +70,13 @@ export class StageExecutor {
             return;
         }
 
-        const unlocked = this.stage.prerequisiteTasks.every(
+        const isUnlocked = this.stage.prerequisiteTasks.every(
             (taskId) => tasksById[taskId]?.isCompleted,
         );
 
-        if (unlocked) {
+        if (isUnlocked) {
             this.stageState = StageState.UNLOCKED;
+            this.stageTasks.forEach((task) => task.setActivated());
         }
     }
 

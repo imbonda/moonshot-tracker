@@ -11,6 +11,7 @@ export interface TaskData {
         maxTime: number,
         retryMaxTime: number,
     },
+    delay?: number,
     scheduledExecutionTime?: Date,
 }
 

@@ -8,6 +8,7 @@ export const enum StageState {
 
 export const enum TaskState {
     PENDING = 'pending',
+    ACTIVATED = 'activated',
     IN_PROGRESS = 'inProgress',
     DONE = 'done',
     FAILED = 'failed',

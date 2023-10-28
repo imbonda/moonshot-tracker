@@ -27,8 +27,17 @@ export abstract class TaskExecutor {
         return this.taskData.taskId;
     }
 
+    public get isActivated(): boolean {
+        return (this.taskState === TaskState.ACTIVATED)
+            || (this.taskState === TaskState.IN_PROGRESS);
+    }
+
     public get isCompleted(): boolean {
         return this.taskState === TaskState.DONE;
+    }
+
+    public setActivated(): void {
+        this.taskState = TaskState.ACTIVATED;
     }
 
     protected setCompleted(): void {
@@ -44,13 +53,17 @@ export abstract class TaskExecutor {
     }
 
     private get nextScheduledTime(): TaskData['scheduledExecutionTime'] {
-        if (this.isCompleted) {
+        if (!this.isActivated) {
             return undefined;
         }
 
+        const { delay } = this.data;
+        const executionDelayMs = (delay ?? 0) * MS_IN_SECOND;
+
         const { interval } = this.data.repetitions;
         const repetitionIntervalMs = (interval ?? 0) * MS_IN_SECOND;
-        return new Date(Date.now() + repetitionIntervalMs);
+
+        return new Date(Date.now() + executionDelayMs + repetitionIntervalMs);
     }
 
     private get shouldNotRepeat(): boolean {
@@ -67,8 +80,8 @@ export abstract class TaskExecutor {
     private get shouldExecute(): boolean {
         const { scheduledExecutionTime } = this.data;
         const now = new Date();
-        const isScheduled = !scheduledExecutionTime || (scheduledExecutionTime <= now);
-        const shouldExecute = !this.isCompleted && !this.shouldNotRepeat && isScheduled;
+        const isScheduled = !!scheduledExecutionTime && (scheduledExecutionTime <= now);
+        const shouldExecute = this.isActivated && isScheduled && !this.shouldNotRepeat;
         return shouldExecute;
     }
 
