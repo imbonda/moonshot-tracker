@@ -25,6 +25,7 @@ export interface TrackedToken {
     uuid: string,
     chainId: number,
     address: string,
+    tracking: boolean,
     pipeline: PipelineStage[],
     tasks: Record<TaskData['taskId'], TaskData>,
     insights: {

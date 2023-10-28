@@ -54,6 +54,7 @@ const TrackedTokenSchema = new Schema<Timestamped<TrackedToken>>(
         uuid: { type: String },
         chainId: { type: Number },
         address: { type: String },
+        tracking: { type: Boolean, default: true },
         pipeline: { type: [PipelineStageSchema] },
         tasks: { type: Map, of: TaskDataSchema },
         insights: { type: Schema.Types.Mixed },
@@ -96,6 +97,7 @@ export class TrackedTokenModel extends BaseDalModule {
                 [
                     {
                         $match: {
+                            tracking: true,
                             ...createTimeRangeFilter(
                                 'scheduledExecutionTime',
                                 range?.startDate,

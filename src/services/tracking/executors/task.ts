@@ -15,12 +15,15 @@ export abstract class TaskExecutor {
 
     protected logger: Logger;
 
+    private _stopTracking: boolean;
+
     constructor(token: TrackedToken, taskData: TaskData) {
         this.token = token;
         this.taskData = taskData;
         this.taskState = taskData.state as TaskState;
         this.repetition = taskData.repetitions.count;
         this.logger = new Logger(this.constructor.name);
+        this._stopTracking = false;
     }
 
     public get id(): TaskData['taskId'] {
@@ -36,12 +39,23 @@ export abstract class TaskExecutor {
         return this.taskState === TaskState.DONE;
     }
 
+    public get shouldStopTracking(): boolean {
+        return this._stopTracking;
+    }
+
     public setActivated(): void {
         this.taskState = TaskState.ACTIVATED;
     }
 
     protected setCompleted(): void {
         this.taskState = TaskState.DONE;
+    }
+
+    /**
+     * Circuit breaker.
+     */
+    protected stopTracking(): void {
+        this._stopTracking = true;
     }
 
     private get state(): TaskData['state'] {
@@ -92,7 +106,9 @@ export abstract class TaskExecutor {
 
         this.taskState = TaskState.IN_PROGRESS;
 
+        this.logger.info('Execution started');
         await this.run();
+        this.logger.info('Execution ended');
 
         this.repetition += 1;
         if (this.isCompleted || this.shouldNotRepeat) {

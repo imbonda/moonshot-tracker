@@ -74,6 +74,7 @@ export class PipelineExecutor {
         const tasksData = Object.fromEntries(
             tasks.map((task) => [task.id, task.toJSON()]),
         );
+        const tracking = !tasks.some((task) => task.shouldStopTracking);
         const insights = mergeDeep(
             tasks.map((task) => task.insight),
         );
@@ -92,6 +93,7 @@ export class PipelineExecutor {
 
         return {
             ...this.token,
+            tracking,
             pipeline: stagesData,
             tasks: tasksData,
             insights,
