@@ -4,6 +4,18 @@ import { MS_IN_SECOND } from '../../../lib/constants';
 import { Logger } from '../../../lib/logger';
 import { TaskState } from '../static';
 
+/**
+ * The following describes the different task configurations:
+ * @delay Number of seconds by which the initial task execution would be delayed.
+ * @daemon Task can be asked to run even after completed.
+ * @repetitions Different options defining how many times (or until when) to repeat the task.
+ * @scheduledExecutionTime The next time the task should run.
+ *
+ * Important notes:
+ * * A task is completed when "setCompleted" was called, or when it is finished repeating.
+ * * A task can trigger a circuit-breaker to stop token tracking by calling "stopTracking".
+ * * A daemon can be disactivated by calling "setDisactivated".
+ */
 export abstract class TaskExecutor {
     protected token: TrackedToken;
 
@@ -30,11 +42,6 @@ export abstract class TaskExecutor {
         return this.taskData.taskId;
     }
 
-    public get isActivated(): boolean {
-        return (this.taskState === TaskState.ACTIVATED)
-            || (this.taskState === TaskState.IN_PROGRESS);
-    }
-
     public get isCompleted(): boolean {
         return this.taskState === TaskState.DONE;
     }
@@ -45,6 +52,10 @@ export abstract class TaskExecutor {
 
     public setActivated(): void {
         this.taskState = TaskState.ACTIVATED;
+    }
+
+    protected setDisactivated(): void {
+        this.taskState = TaskState.DISACTIVATED;
     }
 
     protected setCompleted(): void {
@@ -66,13 +77,37 @@ export abstract class TaskExecutor {
         return this.taskData;
     }
 
+    private get isActivated(): boolean {
+        return (this.taskState === TaskState.ACTIVATED)
+            || (this.taskState === TaskState.IN_PROGRESS)
+            || (this.isDaemon && !this.isDisactivated);
+    }
+
+    private get isDisactivated() {
+        return this.taskState === TaskState.DISACTIVATED;
+    }
+
+    private get isPending(): boolean {
+        return this.taskState === TaskState.PENDING;
+    }
+
+    private get isDaemon(): boolean {
+        return !!this.data.daemon;
+    }
+
+    private get isFirstRepetition(): boolean {
+        return this.repetition === 1;
+    }
+
     private get nextScheduledTime(): TaskData['scheduledExecutionTime'] {
         if (!this.isActivated) {
             return undefined;
         }
 
         const { delay } = this.data;
-        const executionDelayMs = (delay ?? 0) * MS_IN_SECOND;
+        const executionDelayMs = this.isFirstRepetition
+            ? (delay ?? 0) * MS_IN_SECOND
+            : 0;
 
         const { interval } = this.data.repetitions;
         const repetitionIntervalMs = (interval ?? 0) * MS_IN_SECOND;
@@ -94,7 +129,7 @@ export abstract class TaskExecutor {
     private get shouldExecute(): boolean {
         const { scheduledExecutionTime } = this.data;
         const now = new Date();
-        const isScheduled = !!scheduledExecutionTime && (scheduledExecutionTime <= now);
+        const isScheduled = !scheduledExecutionTime || (scheduledExecutionTime <= now);
         const shouldExecute = this.isActivated && isScheduled && !this.shouldNotRepeat;
         return shouldExecute;
     }
@@ -104,7 +139,9 @@ export abstract class TaskExecutor {
             return;
         }
 
-        this.taskState = TaskState.IN_PROGRESS;
+        if (this.isPending) {
+            this.taskState = TaskState.IN_PROGRESS;
+        }
 
         this.logger.info('Execution started');
         await this.run();
@@ -122,6 +159,10 @@ export abstract class TaskExecutor {
         return {
             ...this.data,
             state: this.state,
+            repetitions: {
+                ...this.data.repetitions,
+                count: this.repetition,
+            },
             scheduledExecutionTime: this.nextScheduledTime,
         };
     }

@@ -3,27 +3,20 @@ import type { TrackedToken } from '../@types/tracking';
 import { StageState, TaskState, TaskId } from '../services/tracking/static';
 
 export const TASKS_TEMPLATE: TrackedToken['tasks'] = {
-    // TODO: fill in tasks data, i.e.:
-    // [TaskId.XXX]: {
-    //     taskId: TaskId.XXX,
-    //     state: TaskState.PENDING,
-    //     repetitions: {
-    //         count: 0,
-    //         repeat: 999,
-    //         interval: 1000,
-    //         deadline: new Date(),
-    //     },
-    //     retries: {
-    //         maxTime: 10,
-    //         retryMaxTime: 60,
-    //     },
-    // },
+    [TaskId.DEX_TOOLS_AUDIT_CHECK]: {
+        taskId: TaskId.DEX_TOOLS_AUDIT_CHECK,
+        state: TaskState.ACTIVATED,
+        repetitions: {
+            count: 0,
+            interval: 3 * 60, // 3 hours.
+        },
+    },
 };
 
 export const PIPELINE_TEMPLATE: TrackedToken['pipeline'] = [
     {
         state: StageState.UNLOCKED,
-        taskIds: [],
+        taskIds: [TaskId.DEX_TOOLS_AUDIT_CHECK],
         prerequisiteTasks: [],
     },
 ];

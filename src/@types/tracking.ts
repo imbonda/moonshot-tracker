@@ -7,11 +7,12 @@ export interface TaskData {
         interval?: number,
         deadline?: Date,
     },
-    retries: {
-        maxTime: number,
-        retryMaxTime: number,
+    retries?: {
+        maxTime?: number,
+        retryMaxTime?: number,
     },
     delay?: number,
+    daemon?: boolean,
     scheduledExecutionTime?: Date,
 }
 

@@ -22,8 +22,8 @@ const TaskRepetitionsSchema = new Schema<TaskData['repetitions']>(
 
 const TaskRetriesSchema = new Schema<TaskData['retries']>(
     {
-        maxTime: { type: Number },
-        retryMaxTime: { type: Number },
+        maxTime: { type: Number, required: false },
+        retryMaxTime: { type: Number, required: false },
     },
     { _id: false },
 );
@@ -33,8 +33,9 @@ const TaskDataSchema = new Schema<TaskData>(
         taskId: { type: String },
         state: { type: String },
         repetitions: { type: TaskRepetitionsSchema },
-        retries: { type: TaskRetriesSchema },
+        retries: { type: TaskRetriesSchema, required: false },
         delay: { type: Number, required: false },
+        daemon: { type: Boolean, required: false },
         scheduledExecutionTime: { type: Date, required: false },
     },
     { _id: false },

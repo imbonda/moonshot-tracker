@@ -1,9 +1,11 @@
+// Internal.
 import type { TaskData, TrackedToken } from '../../../@types/tracking';
 import { TaskExecutor, TaskExecutorClass } from '../executors/task';
 import { TaskId } from '../static';
+import { DEXToolsAuditCheck } from './dex-tools-audit-check';
 
 const TASK_CLASS_BY_ID: Record<TaskData['taskId'], TaskExecutorClass> = {
-    // TODO: Add tasks here ..
+    [TaskId.DEX_TOOLS_AUDIT_CHECK]: DEXToolsAuditCheck,
 };
 
 export class TaskFactory {
