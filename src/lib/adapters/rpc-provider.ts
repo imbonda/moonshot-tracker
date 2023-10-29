@@ -2,9 +2,12 @@
 // 3rd party.
 import axios from 'axios';
 import Bottleneck from 'bottleneck';
-import { Contract, JsonRpcProvider, TransactionReceipt } from 'ethers';
+import {
+    Contract, JsonRpcProvider, TransactionReceipt,
+} from 'ethers';
 import { Retryable } from 'typescript-retry-decorator';
 // Internal.
+import type { ERC20 } from '../../@types/web3';
 import erc20ABI from '../../abi/erc20.json';
 import { web3Config } from '../../config';
 import { MS_IN_SECOND } from '../constants';
@@ -113,10 +116,10 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
      * Instance specific rate-limiting, rather than class specific (via a decorator).
      */
     private setRatelimit() {
-        this.isERC20 = new Bottleneck({
+        this.getERC20 = new Bottleneck({
             maxConcurrent: 1,
             minTime: MS_IN_SECOND / 3,
-        }).wrap(this.isERC20.bind(this));
+        }).wrap(this.getERC20.bind(this));
 
         this.getTransactionReceiptsAlchemy = new Bottleneck({
             maxConcurrent: 1,
@@ -131,7 +134,7 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         return provider;
     }
 
-    public async isERC20(address: string): Promise<boolean> {
+    public async getERC20(address: string): Promise<ERC20 | null> {
         const contract = new Contract(
             address,
             erc20ABI,
@@ -139,14 +142,26 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         );
 
         try {
-            const [symbol, decimals] = await Promise.all([
+            const { chainId } = this;
+            const [symbol, decimals, totalSupply] = await Promise.all([
                 contract.symbol(),
                 contract.decimals(),
+                contract.totalSupply(),
             ]);
-            return !!symbol && !!decimals;
+            const isValidERC20 = !!symbol && !!decimals && !!totalSupply;
+            if (isValidERC20) {
+                return {
+                    chainId,
+                    address,
+                    symbol,
+                    decimals,
+                    totalSupply,
+                };
+            }
+            return null;
         } catch (err) {
             // Not an ERC-20 token.
-            return false;
+            return null;
         }
     }
 

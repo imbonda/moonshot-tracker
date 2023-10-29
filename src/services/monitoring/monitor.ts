@@ -2,6 +2,7 @@
 import type { Log, TransactionReceipt } from 'ethers';
 import NodeCache from 'node-cache';
 // Internal.
+import type { ERC20 } from '../../@types/web3';
 import { web3Config } from '../../config';
 import { safe } from '../../lib/decorators';
 import { dal } from '../../dal/dal';
@@ -93,9 +94,9 @@ export class BlockchainMonitor extends Service {
         }
 
         const tokenAddr = receipt.contractAddress.toLowerCase();
-        const isERC20 = await this.provider.isERC20(tokenAddr);
-        if (isERC20) {
-            await this.saveNewERC20(tokenAddr);
+        const erc20 = await this.provider.getERC20(tokenAddr);
+        if (erc20) {
+            await this.saveNewERC20(erc20);
             this.logger.info('New ERC20 token', { address: tokenAddr });
         }
     }
@@ -122,11 +123,12 @@ export class BlockchainMonitor extends Service {
         }
         const [token1Addr, token2Addr] = parseTokenAddresses(log);
         const pair = parsePairAddress(log);
-        const [isToken1New, isToken2New] = await Promise.all([
-            this.isNewERC20(token1Addr),
-            this.isNewERC20(token2Addr),
+        const [token1, token2] = await Promise.all([
+            this.getNewERC20(token1Addr),
+            this.getNewERC20(token2Addr),
         ]);
-        if (isToken1New || isToken2New) {
+        const newToken = token1 || token2;
+        if (newToken) {
             await this.saveNewLPToken(pair);
             this.logger.info('Liquidity pair created for tracked token', { pair });
             // TODO: Sum all amount of new token turned into LP.
@@ -141,11 +143,12 @@ export class BlockchainMonitor extends Service {
         }
         const [token1Addr, token2Addr] = parseTokenAddresses(log);
         const pool = parsePoolAddress(log);
-        const [isToken1New, isToken2New] = await Promise.all([
-            this.isNewERC20(token1Addr),
-            this.isNewERC20(token2Addr),
+        const [token1, token2] = await Promise.all([
+            this.getNewERC20(token1Addr),
+            this.getNewERC20(token2Addr),
         ]);
-        if (isToken1New || isToken2New) {
+        const newToken = token1 || token2;
+        if (newToken) {
             await this.saveNewLPToken(pool);
             this.logger.info('Liquidity pool created for tracked token', { pool });
             // TODO: Sum all amount of new token turned into LP.
@@ -165,7 +168,6 @@ export class BlockchainMonitor extends Service {
 
         const { from, to, amount } = parsed;
 
-        // Function to handle LP token transfers
         if (DEAD_ADDRESSES.has(to)) {
             this.logger.info('LP token moved to burned address', {
                 tokenAddress, from, to, amount: amount.toString(),
@@ -175,10 +177,10 @@ export class BlockchainMonitor extends Service {
         }
     }
 
-    private async saveNewERC20(address: string): Promise<void> {
+    private async saveNewERC20(erc20: ERC20): Promise<void> {
         const ttl = NEW_ERC20_TTL_SECONDS;
-        this.newERC20Cache.set(address, 1);
-        await dal.models.newErc20.saveNewERC20(this.chainId, address, ttl);
+        this.newERC20Cache.set(erc20.address, erc20);
+        await dal.models.newErc20.saveNewERC20(erc20, ttl);
     }
 
     private async saveNewLPToken(address: string): Promise<void> {
@@ -188,14 +190,14 @@ export class BlockchainMonitor extends Service {
         await dal.models.newLpToken.saveNewLPToken(this.chainId, address, ttl);
     }
 
-    private async isNewERC20(address: string): Promise<boolean> {
+    private async getNewERC20(address: string): Promise<ERC20 | null> {
         // TODO: consider adding fallback to rpc (check if exists X blocks ago).
-        const isInCache = !!this.newERC20Cache.get(address);
-        const isNewInDB = !isInCache && await dal.models.newErc20.isNewERC20(
+        const cached = this.newERC20Cache.get<ERC20>(address);
+        const saved = !cached && await dal.models.newErc20.findNewERC20(
             this.chainId,
             address,
         );
-        return isInCache ?? isNewInDB;
+        return cached || saved || null;
     }
 
     private async isNewLPToken(address: string): Promise<boolean> {

@@ -41,14 +41,14 @@ export class RedisAdapter {
     }
 
     @safe()
-    public async get(
+    public async get<T>(
         key: string,
         options?: {
             // Redis hashes are record types structured as collections of field-value pairs.
             hashKey?: string,
             deserialize?: boolean,
         },
-    ): Promise<unknown | null> {
+    ): Promise<T | null> {
         if (this.client.status !== 'ready') {
             return null;
         }
@@ -58,7 +58,7 @@ export class RedisAdapter {
             const output = options?.hashKey
                 ? await this.client.hget(options.hashKey, key)
                 : await this.client.get(key);
-            return output;
+            return output as T;
         }
 
         const output = options?.hashKey
@@ -68,12 +68,12 @@ export class RedisAdapter {
     }
 
     @safe()
-    public async getAll(
+    public async getAll<T>(
         hashKey: string,
         options?: {
             deserialize?: boolean,
         },
-    ): Promise<Record<string, unknown> | null> {
+    ): Promise<Record<string, T> | null> {
         if (this.client.status !== 'ready') {
             return null;
         }
@@ -83,7 +83,7 @@ export class RedisAdapter {
             const result = await this.client.hgetall(hashKey);
             return isEmpty(result)
                 ? null
-                : result;
+                : result as Record<string, T>;
         }
 
         const result = await this.client.hgetallBuffer(hashKey);
