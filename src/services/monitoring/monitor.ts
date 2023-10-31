@@ -1,6 +1,5 @@
 // 3rd party.
 import type { Log, TransactionReceipt } from 'ethers';
-import NodeCache from 'node-cache';
 // Internal.
 import type { ERC20 } from '../../@types/web3';
 import { web3Config } from '../../config';
@@ -17,6 +16,7 @@ import {
 import {
     parsePairAddress, parsePoolAddress, parseTokenAddresses, parseTransfer,
 } from './uniswap-utils/utils';
+import { MonitorCache } from './cache';
 
 const NEW_ERC20_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days.
 const NEW_LP_TOKEN_TTL_SECONDS = 14 * 24 * 60 * 60; // 14 days.
@@ -26,16 +26,16 @@ export class BlockchainMonitor extends Service {
 
     private provider: Web3RpcProvider;
 
-    private newERC20Cache: NodeCache;
-
-    private newLPTokenCache: NodeCache;
+    private cache: MonitorCache;
 
     constructor() {
         super();
         this.chainId = web3Config.CHAIN_ID;
         this.provider = new Web3RpcProvider(this.chainId);
-        this.newERC20Cache = new NodeCache({ stdTTL: NEW_ERC20_TTL_SECONDS });
-        this.newLPTokenCache = new NodeCache();
+        this.cache = new MonitorCache(
+            NEW_ERC20_TTL_SECONDS,
+            NEW_LP_TOKEN_TTL_SECONDS,
+        );
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -179,20 +179,20 @@ export class BlockchainMonitor extends Service {
 
     private async saveNewERC20(erc20: ERC20): Promise<void> {
         const ttl = NEW_ERC20_TTL_SECONDS;
-        this.newERC20Cache.set(erc20.address, erc20);
+        this.cache.saveNewERC20(erc20);
         await dal.models.newErc20.saveNewERC20(erc20, ttl);
     }
 
     private async saveNewLPToken(address: string): Promise<void> {
         const ttl = NEW_LP_TOKEN_TTL_SECONDS;
-        this.newLPTokenCache.set(address, 1);
+        this.cache.saveNewLPToken(address);
         // TODO: Make relations between new erc20s and new lp tokens.
         await dal.models.newLpToken.saveNewLPToken(this.chainId, address, ttl);
     }
 
     private async getNewERC20(address: string): Promise<ERC20 | null> {
         // TODO: consider adding fallback to rpc (check if exists X blocks ago).
-        const cached = this.newERC20Cache.get<ERC20>(address);
+        const cached = this.cache.getNewERC20(address);
         const saved = !cached && await dal.models.newErc20.findNewERC20(
             this.chainId,
             address,
@@ -202,7 +202,7 @@ export class BlockchainMonitor extends Service {
 
     private async isNewLPToken(address: string): Promise<boolean> {
         // TODO: consider adding fallback.
-        const isInCache = !!this.newLPTokenCache.get(address);
+        const isInCache = this.cache.isNewLPToken(address);
         const isNewInDB = !isInCache && await dal.models.newLpToken.isNewLPToken(
             this.chainId,
             address,
