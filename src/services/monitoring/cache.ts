@@ -8,17 +8,17 @@ export class MonitorCache {
 
     private newLPTokenCache: NodeCache;
 
-    constructor(ttlERC20: number, ttlLPToken: number) {
-        this.newERC20Cache = new NodeCache({ stdTTL: ttlERC20 });
-        this.newLPTokenCache = new NodeCache({ stdTTL: ttlLPToken });
+    constructor() {
+        this.newERC20Cache = new NodeCache();
+        this.newLPTokenCache = new NodeCache();
     }
 
-    public saveNewERC20(erc20: ERC20): void {
-        this.newERC20Cache.set(erc20.address, erc20);
+    public saveNewERC20(erc20: ERC20, ttl: number): void {
+        this.newERC20Cache.set(erc20.address, erc20, ttl);
     }
 
-    public saveNewLPToken(address: string): void {
-        this.newLPTokenCache.set(address, 1);
+    public saveNewLPToken(address: string, ttl: number): void {
+        this.newLPTokenCache.set(address, 1, ttl);
     }
 
     public getNewERC20(address: string): ERC20 | null {

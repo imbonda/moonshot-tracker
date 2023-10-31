@@ -28,7 +28,7 @@ const NO_RETRY_METHODS = new Set(['on']);
 const JsonRpcProviderClass = (): new () => JsonRpcProvider => (class {} as never);
 
 export class Web3RpcProvider extends JsonRpcProviderClass() {
-    private chainId: number;
+    public chainId: number;
 
     private _provider: JsonRpcProvider;
 
