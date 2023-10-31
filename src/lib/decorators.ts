@@ -6,8 +6,13 @@ import { RawRpcError, rpcErrorFactory } from './errors/rpc';
 import { httpErrorFactory } from './errors/http';
 import { RawNetworkingError } from './errors/networking-error';
 
+interface ThrottleOptions {
+    delayMs?: number,
+    maxConcurrent?: number,
+}
+
 export function throttle(
-    { delayMs, maxConcurrent }: {delayMs: number, maxConcurrent?: number},
+    { delayMs, maxConcurrent }: ThrottleOptions,
 ) {
     return (
         _target: unknown,
