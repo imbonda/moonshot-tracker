@@ -131,6 +131,10 @@ export interface TokenPairResponse {
 export interface Audit {
     is_open_source?: boolean,
     is_honeypot?: boolean,
+    buy_tax?: number,
+    sell_tax?: number,
+    is_proxy?: boolean,
+    owner_percent?: number,
     creator_percent?: number,
 }
 
