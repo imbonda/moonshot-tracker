@@ -13,6 +13,7 @@
     },
     "include": [
         "ecosystem.config.js",
+        "puppeteer.config.cjs",
         "src/**/*.ts",
         "src/**/*.d.ts"
     ],

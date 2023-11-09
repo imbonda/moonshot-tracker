@@ -7,7 +7,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Monitor",
+            "name": "Monitor ETH",
             "cwd": "${workspaceRoot}",
             "skipFiles": [
                 "<node_internals>/**"
@@ -27,6 +27,34 @@
             "env": {
                 "NODE_ENV": "dev",
                 "CHAIN_ID": 1,
+            },
+            "sourceMaps": true,
+            "outputCapture": "std"
+        },
+
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Monitor BSC",
+            "cwd": "${workspaceRoot}",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "./src/main.ts",
+            "runtimeArgs": [
+                // Tell V8 to compile ahead of time so breakpoints work correctly.
+                "--nolazy",
+                // Ensure ts-node is loaded before trying to execute.
+                "--require",
+                "ts-node/register",
+            ],
+            "args": [
+                "-s",
+                "monitor"
+            ],
+            "env": {
+                "NODE_ENV": "dev",
+                "CHAIN_ID": 56,
             },
             "sourceMaps": true,
             "outputCapture": "std"
@@ -84,6 +112,28 @@
             },
             "sourceMaps": true,
             "outputCapture": "std"
+        },
+
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run File",
+            "cwd": "${workspaceRoot}",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${file}",
+            "runtimeArgs": [
+                // Tell V8 to compile ahead of time so breakpoints work correctly.
+                "--nolazy",
+                // Ensure ts-node is loaded before trying to execute.
+                "--require",
+                "ts-node/register"
+            ],
+            "env": {
+                "NODE_ENV": "dev"
+            },
+            "outputCapture": "std",
         },
     ]
 }

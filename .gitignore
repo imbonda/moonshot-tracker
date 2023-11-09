@@ -1,8 +1,11 @@
-# Dependencies
+# Dependencies.
 /node_modules
 
-# Environment variables
+# Cache directory Puppeteer.
+.cache
+
+# Environment variables.
 .env
 
-# Build directory
+# Build directory.
 /build
