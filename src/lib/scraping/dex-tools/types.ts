@@ -164,4 +164,17 @@ export type FullyAuditedPairData = Modify<PairData, {
     }>,
 }>
 
-export interface TokenInsights {}
+export interface TokenInsights {
+    audit: FullyAuditedPairData['token']['audit'],
+    metrics: PairData['token']['metrics'],
+    links: PairData['token']['links'],
+    topPair: {
+        dextScore: PairData['dextScore'],
+        metrics: PairData['dextScore'],
+        votes: PairData['votes'],
+        fee: PairData['fee'],
+        swaps: PairData['swaps'],
+        price: PairData['price'],
+        volume: PairData['volume'],
+    },
+}

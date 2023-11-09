@@ -110,16 +110,13 @@ export function parseExternalTokenAudits(
             const parsedAudit = auditChecks.reduce((accum, check) => {
                 const value = audit[check];
                 if (positiveValues.includes(value as string | boolean)) {
-                    // @ts-ignore
-                    accum[check] = true;
+                    (accum[check] as boolean) = true;
                 }
                 if (negativeValues.includes(value as string | boolean)) {
-                    // @ts-ignore
-                    accum[check] = false;
+                    (accum[check] as boolean) = false;
                 }
                 if (typeof value === 'number') {
-                    // @ts-ignore
-                    accum[check] = value;
+                    (accum[check] as number) = value;
                 }
                 return accum;
             }, {} as Audit);
