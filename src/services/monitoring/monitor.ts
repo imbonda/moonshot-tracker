@@ -67,7 +67,7 @@ export class BlockchainMonitor extends Service {
     }
 
     private async processReceipt(receipt: TransactionReceipt): Promise<void> {
-        await Promise.all([
+        await Promise.allSettled([
             this.erc20Processor.processReceipt(receipt),
             this.lpTokenProcessor.processReceipt(receipt),
         ]);

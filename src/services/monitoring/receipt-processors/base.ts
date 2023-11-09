@@ -25,7 +25,7 @@ export abstract class BaseProcessor {
     public abstract processReceipt(receipt: TransactionReceipt): Promise<void>;
 
     protected async processLogs(receipt: TransactionReceipt): Promise<void> {
-        await Promise.all(
+        await Promise.allSettled(
             receipt.logs.map(this.processLog.bind(this)),
         );
     }
