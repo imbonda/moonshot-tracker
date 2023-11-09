@@ -23,6 +23,11 @@ export class NewERC20Model extends BaseDalModule {
         return this.dal.redis.get(key, options);
     }
 
+    public async deleteNewERC20(chainId: number, address: string): Promise<void> {
+        const key = NewERC20Model.buildERC20Uid(chainId, address);
+        await this.dal.redis.delete(key);
+    }
+
     private static buildERC20Uid(chainId: number, address: string): string {
         return `${chainId}.${address}.${ERC20_TAG}`;
     }

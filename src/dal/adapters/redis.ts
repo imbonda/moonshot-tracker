@@ -105,7 +105,7 @@ export class RedisAdapter {
             serialize?: boolean,
             ttlSeconds?: number
         },
-    ) {
+    ): Promise<void> {
         if (this.client.status !== 'ready') {
             return;
         }
@@ -141,7 +141,7 @@ export class RedisAdapter {
             serialize?: boolean,
             ttlSeconds?: number
         },
-    ) {
+    ): Promise<void> {
         if (this.client.status !== 'ready') {
             return;
         }
@@ -174,5 +174,10 @@ export class RedisAdapter {
         }
 
         await pipeline.exec();
+    }
+
+    @safe()
+    public async delete(...keys: string[]) {
+        await this.client.del(...keys);
     }
 }

@@ -31,12 +31,3 @@ export const LP_V3_FACTORIES = new Set([
     // (ETH) Uniswap V3 Factory.
     '0x1f98431c8ad98523631ae4a59f267346ea31f984',
 ]);
-
-export const DEAD_ADDRESSES = new Set<string>([
-    '0x0000000000000000000000000000000000000000',
-    '0x0000000000000000000000000000000000000001',
-    '0x000000000000000000000000000000000000dead',
-    '0x1111111111111111111111111111111111111111',
-    '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    '0xffffffffffffffffffffffffffffffffffffffff',
-]);

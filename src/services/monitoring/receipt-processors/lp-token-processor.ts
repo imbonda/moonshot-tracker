@@ -3,17 +3,15 @@ import type { Log, TransactionReceipt } from 'ethers';
 // Internal.
 import type { ERC20 } from '../../../@types/web3';
 import { dal } from '../../../dal/dal';
+import { createTrackedToken } from '../../../templates/tracked-token';
 import {
-    DEAD_ADDRESSES,
     LP_V2_FACTORIES, LP_V3_FACTORIES,
     uniswapV2FactoryInterface, uniswapV3FactoryInterface,
 } from '../uniswap-utils/constants';
 import {
-    parsePairAddress, parsePoolAddress, parseTokenAddresses, parseTransfer,
+    parsePairAddress, parsePoolAddress, parseTokenAddresses,
 } from '../uniswap-utils/utils';
 import { BaseProcessor } from './base';
-
-const NEW_LP_TOKEN_TTL_SECONDS = 14 * 24 * 60 * 60; // 14 days.
 
 export class LPTokenReceiptProcessor extends BaseProcessor {
     public async processReceipt(receipt: TransactionReceipt): Promise<void> {
@@ -24,7 +22,6 @@ export class LPTokenReceiptProcessor extends BaseProcessor {
         await Promise.all([
             this.processUniswapV2LPTokenCreation(log),
             this.processUniswapV3LPTokenCreation(log),
-            this.processLPTokenTransfer(log),
         ]);
     }
 
@@ -42,9 +39,9 @@ export class LPTokenReceiptProcessor extends BaseProcessor {
         ]);
         const newToken = token1 || token2;
         if (newToken) {
-            await this.saveNewLPToken(pair);
+            await this.saveTrackedToken(newToken.address);
+            await this.deleteNewERC20(newToken.address);
             this.logger.info('Liquidity pair created for tracked token', { pair });
-            // TODO: Sum all amount of new token turned into LP.
         }
     }
 
@@ -62,31 +59,9 @@ export class LPTokenReceiptProcessor extends BaseProcessor {
         ]);
         const newToken = token1 || token2;
         if (newToken) {
-            await this.saveNewLPToken(pool);
+            await this.saveTrackedToken(newToken.address);
+            await this.deleteNewERC20(newToken.address);
             this.logger.info('Liquidity pool created for tracked token', { pool });
-            // TODO: Sum all amount of new token turned into LP.
-        }
-    }
-
-    private async processLPTokenTransfer(log: Log): Promise<void> {
-        const tokenAddress = log.address.toLowerCase();
-        const parsed = parseTransfer(log);
-        if (!parsed) {
-            return;
-        }
-        if (!this.isNewLPToken(tokenAddress)) {
-            this.logger.debug('Skipping transfer of untracked LP token');
-            return;
-        }
-
-        const { from, to, amount } = parsed;
-
-        if (DEAD_ADDRESSES.has(to)) {
-            this.logger.info('LP token moved to burned address', {
-                tokenAddress, from, to, amount: amount.toString(),
-            });
-            // TODO: check if amount moved is a big percentage of total supply of lp token
-            // TODO: check that liquidity is more then $10,000
         }
     }
 
@@ -100,20 +75,13 @@ export class LPTokenReceiptProcessor extends BaseProcessor {
         return cached || saved || null;
     }
 
-    private async saveNewLPToken(address: string): Promise<void> {
-        const ttl = NEW_LP_TOKEN_TTL_SECONDS;
-        this.cache.saveNewLPToken(address, ttl);
-        // TODO: Make relations between new erc20s and new lp tokens.
-        await dal.models.newLpToken.saveNewLPToken(this.chainId, address, ttl);
+    private async saveTrackedToken(address: string): Promise<void> {
+        const trackedToken = createTrackedToken(this.chainId, address);
+        await dal.models.trackedToken.upsertTrackedToken(trackedToken);
     }
 
-    private async isNewLPToken(address: string): Promise<boolean> {
-        // TODO: consider adding fallback.
-        const isInCache = this.cache.isNewLPToken(address);
-        const isNewInDB = !isInCache && await dal.models.newLpToken.isNewLPToken(
-            this.chainId,
-            address,
-        );
-        return isInCache ?? isNewInDB;
+    private async deleteNewERC20(address: string): Promise<void> {
+        await dal.models.newErc20.deleteNewERC20(this.chainId, address);
+        this.cache.deleteNewERC20(address);
     }
 }
