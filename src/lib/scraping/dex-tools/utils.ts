@@ -82,6 +82,7 @@ export function parseToken(
     } = rawToken;
     return {
         creationTime: new Date(creationTime),
+        links: rawToken.links,
         metrics: {
             ...rawToken.metrics,
             holdersUpdatedAt: new Date(metrics.holdersUpdatedAt),

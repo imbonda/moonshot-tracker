@@ -41,7 +41,10 @@ export class TrackingScheduler extends Service {
             range,
         });
         while (paginated.page.length) {
-            paginated.page.forEach(this.sendToQueue.bind(this));
+            // eslint-disable-next-line no-await-in-loop
+            await Promise.all(
+                paginated.page.map(this.sendToQueue.bind(this)),
+            );
             // eslint-disable-next-line no-await-in-loop
             paginated = await dal.models.trackedToken.findScheduledTrackedTokens({
                 range: {

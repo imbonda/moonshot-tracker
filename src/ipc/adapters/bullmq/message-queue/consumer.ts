@@ -14,7 +14,7 @@ export class QueueConsumer extends BaseQueueRole {
     public async consume(onConsume: ConsumeHandler): Promise<void> {
         this.queue.process(async (job, done: DoneCallback) => {
             const message = {
-                content: job.data as Buffer,
+                content: Buffer.from(job.data as Buffer),
             };
             await onConsume(
                 message,

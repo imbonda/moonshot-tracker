@@ -87,8 +87,9 @@ export abstract class TaskExecutor {
         return this.taskState === TaskState.DISACTIVATED;
     }
 
-    private get isPending(): boolean {
-        return this.taskState === TaskState.PENDING;
+    private get notStarted(): boolean {
+        return this.taskState === TaskState.PENDING
+            || this.taskState === TaskState.ACTIVATED;
     }
 
     private get isDaemon(): boolean {
@@ -121,15 +122,15 @@ export abstract class TaskExecutor {
         } = this.data.repetitions;
 
         const now = new Date();
-        const isExpired = (!!deadline) && (deadline <= now);
+        const isExpired = (!!deadline) && (new Date(deadline) <= now);
         const isFinishedRepeating = ((repeat ?? 0) <= this.repetition);
-        return isExpired || isFinishedRepeating;
+        return !this.isDaemon && (isExpired || isFinishedRepeating);
     }
 
     private get shouldExecute(): boolean {
         const { scheduledExecutionTime } = this.data;
         const now = new Date();
-        const isScheduled = !scheduledExecutionTime || (scheduledExecutionTime <= now);
+        const isScheduled = !scheduledExecutionTime || (new Date(scheduledExecutionTime) <= now);
         const shouldExecute = this.isActivated && isScheduled && !this.shouldNotRepeat;
         return shouldExecute;
     }
@@ -139,7 +140,7 @@ export abstract class TaskExecutor {
             return;
         }
 
-        if (this.isPending) {
+        if (this.notStarted) {
             this.taskState = TaskState.IN_PROGRESS;
         }
 
