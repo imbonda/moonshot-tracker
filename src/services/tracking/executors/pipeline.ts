@@ -75,9 +75,7 @@ export class PipelineExecutor {
             tasks.map((task) => [task.id, task.toJSON()]),
         );
         const tracking = !tasks.some((task) => task.shouldStopTracking);
-        const insights = mergeDeep(
-            tasks.map((task) => task.insight),
-        );
+        const insights = mergeDeep({}, ...tasks.map((task) => task.insight));
         const scheduledExecutionTime = Object.values(tasksData).reduce(
             (soonest: Date | undefined, task) => {
                 const scheduledTime = task.scheduledExecutionTime;

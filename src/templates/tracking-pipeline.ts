@@ -8,8 +8,9 @@ export const TASKS_TEMPLATE: TrackedToken['tasks'] = {
         state: TaskState.ACTIVATED,
         repetitions: {
             count: 0,
-            interval: 3 * 60, // 3 hours.
+            interval: 3 * 60 * 60, // 3 hours.
         },
+        daemon: true,
     },
 };
 

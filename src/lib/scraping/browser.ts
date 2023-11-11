@@ -48,6 +48,7 @@ export class Browser {
     }
 
     private async launch(): Promise<void> {
+        this.logger.info('Opening browser');
         this.browser = await puppeteer.launch({
             headless: 'new',
             defaultViewport: null,

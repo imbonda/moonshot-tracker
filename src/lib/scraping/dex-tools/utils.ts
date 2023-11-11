@@ -33,6 +33,18 @@ export function resolveChainId(chain: string): number | undefined {
     }
 }
 
+export enum AudicCheck {
+    CONTRACT_VERIFIED = 'is_open_source',
+    HONEYPOT = 'is_honeypot',
+    BUY_TAX = 'buy_tax',
+    SELL_TAX = 'sell_tax',
+    PROXY = 'is_proxy',
+    OWNER_PERCENT = 'owner_percent',
+    CREATOR_PERCENT = 'creator_percent',
+}
+
+export const AUDIT_CHECKS: (keyof Audit)[] = Object.values(AudicCheck);
+
 export function parseTokenPair(
     rawPair: RawPairData,
 ): PairData {
@@ -70,6 +82,7 @@ export function parseToken(
     } = rawToken;
     return {
         creationTime: new Date(creationTime),
+        links: rawToken.links,
         metrics: {
             ...rawToken.metrics,
             holdersUpdatedAt: new Date(metrics.holdersUpdatedAt),
@@ -100,11 +113,8 @@ export function parseExternalTokenAudits(
 
     const positiveValues = [true, 'Yes', '1'];
     const negativeValues = [false, 'No', '0'];
-    const auditChecks: (keyof Audit)[] = [
-        'is_open_source',
-        'is_honeypot',
-        'creator_percent',
-    ];
+    const auditChecks = AUDIT_CHECKS;
+
     const external = Object.fromEntries(
         Object.entries(externalAudits ?? []).map(([provider, audit]) => {
             const parsedAudit = auditChecks.reduce((accum, check) => {

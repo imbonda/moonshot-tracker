@@ -9,6 +9,8 @@ import {
     buildGetPairUrl, buildGetTopTokenPairsUrl, parseTokenPair,
 } from './utils';
 
+export { AudicCheck, AUDIT_CHECKS } from './utils';
+
 const LANDING_URL = 'https://www.dextools.io/app/en/pairs';
 
 class DexToolsScraper {
