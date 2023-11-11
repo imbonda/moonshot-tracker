@@ -97,7 +97,7 @@ export class DEXToolsAuditCheck extends TaskExecutor {
             return true;
         }
         // TODO: check out the audit-scan matrix ('Honeypot', 'Sell Tax', 'Owner Percent', etc.)
-        return true;
+        return false;
     }
 
     private get completedAudit(): boolean {
