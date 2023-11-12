@@ -1,3 +1,5 @@
+// Builtin.
+import v8 from 'v8';
 // Internal.
 import type { TrackedToken } from '../../@types/tracking';
 import { dal } from '../../dal/dal';
@@ -62,6 +64,6 @@ export class TrackingScheduler extends Service {
 
     @safe()
     private async sendToQueue(token: TrackedToken): Promise<void> {
-        await this.producer.send(Buffer.from(JSON.stringify(token)));
+        await this.producer.send(v8.serialize(token));
     }
 }

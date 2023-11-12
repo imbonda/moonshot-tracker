@@ -106,6 +106,11 @@ export class TrackedTokenModel extends BaseDalModule {
                             ),
                         },
                     },
+                    {
+                        $set: {
+                            _id: { $toString: '$_id' },
+                        },
+                    },
                 ],
                 params,
             ),
