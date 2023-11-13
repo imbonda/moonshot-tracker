@@ -41,7 +41,7 @@ class DexToolsScraper {
     }
 
     protected setupBrowser(): void {
-        if (!this.browser ?? this.browser.closed) {
+        if (!this.browser || this.browser.closed) {
             this.browser = new Browser();
         }
     }
