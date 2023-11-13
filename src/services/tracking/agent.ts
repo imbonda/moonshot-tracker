@@ -1,3 +1,5 @@
+// Builtin.
+import v8 from 'v8';
 // Internal.
 import type { TrackedToken } from '../../@types/tracking';
 import { dal } from '../../dal/dal';
@@ -32,7 +34,7 @@ export class TrackingAgent extends Service {
             }
 
             try {
-                const trackedToken = JSON.parse(msg.content.toString());
+                const trackedToken = v8.deserialize(msg.content);
                 await this.track(trackedToken);
                 await ack();
             } catch (err) {

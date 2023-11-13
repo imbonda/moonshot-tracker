@@ -9,7 +9,11 @@ type AuditMatrix = {
     }
 };
 
-const RED_FLAG_PREDICATES = {
+type AuditBooleanPredicate = (value: boolean) => boolean;
+type AuditNumricPredicate = (value: number) => boolean;
+type AuditPredicate = AuditBooleanPredicate | AuditNumricPredicate;
+
+const RED_FLAG_PREDICATES: Record<AudicCheck, AuditPredicate> = {
     [AudicCheck.CONTRACT_VERIFIED]: (isVerified: boolean) => !isVerified,
     [AudicCheck.HONEYPOT]: (isHoneypot: boolean) => isHoneypot,
     [AudicCheck.BUY_TAX]: (tax: number) => tax >= 0.2,
@@ -96,8 +100,23 @@ export class DEXToolsAuditCheck extends TaskExecutor {
         if (!this.audit.codeVerified) {
             return true;
         }
-        // TODO: check out the audit-scan matrix ('Honeypot', 'Sell Tax', 'Owner Percent', etc.)
-        return false;
+
+        const redFlags = Object
+            .entries(RED_FLAG_PREDICATES)
+            .reduce((accum, [check, predicate]) => {
+                const audits = this.auditMatrix![check as AudicCheck];
+                const auditResults = Object.values(audits ?? {});
+                const predicateResults = auditResults.map(predicate);
+                const alertingResults = predicateResults.filter((isRedFlag) => !!isRedFlag);
+                const isRedFlag = alertingResults.length > 0;
+                if (isRedFlag) {
+                    accum[check as AudicCheck] = true;
+                }
+                return accum;
+            }, {} as Record<AudicCheck, true>);
+
+        const hasRedFlags = Object.keys(redFlags).length > 0;
+        return hasRedFlags;
     }
 
     private get completedAudit(): boolean {

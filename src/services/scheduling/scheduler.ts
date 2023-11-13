@@ -1,3 +1,5 @@
+// Builtin.
+import v8 from 'v8';
 // Internal.
 import type { TrackedToken } from '../../@types/tracking';
 import { dal } from '../../dal/dal';
@@ -7,7 +9,7 @@ import { QueueProducer } from '../../ipc/message-queue/producer';
 import { safe } from '../../lib/decorators';
 import { Service } from '../service';
 
-const SCHEDULING_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes.
+const SCHEDULING_INTERVAL_MS = 1 * 60 * 1000; // 1 minute.
 
 export class TrackingScheduler extends Service {
     private producer: QueueProducer;
@@ -62,6 +64,6 @@ export class TrackingScheduler extends Service {
 
     @safe()
     private async sendToQueue(token: TrackedToken): Promise<void> {
-        await this.producer.send(Buffer.from(JSON.stringify(token)));
+        await this.producer.send(v8.serialize(token));
     }
 }

@@ -1,9 +1,17 @@
 // 3rd party.
-import { PipelineStage } from 'mongoose';
+import { Types, PipelineStage } from 'mongoose';
 // Internal.
 import { DalError } from '../errors/dal-error';
 import { DEFAULTS, RESTRICTIONS } from '../static';
 import type { QueryParams } from '../types';
+
+export function createId(id?: Types.ObjectId | string) {
+    return new Types.ObjectId(id);
+}
+
+export function generateId() {
+    return createId();
+}
 
 export function validatePageSize(pageSize: number) {
     if (pageSize > RESTRICTIONS.pageSize) {

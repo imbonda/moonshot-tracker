@@ -4,7 +4,7 @@ import mongoose, { Schema } from 'mongoose';
 // Internal.
 import type { PipelineStage, TaskData, TrackedToken } from '../../@types/tracking';
 import { Dal } from '../dal';
-import { createPagination, createTimeRangeFilter } from '../helpers/mongodb';
+import { createId, createPagination, createTimeRangeFilter } from '../helpers/mongodb';
 import type { Paginated, QueryParams, Timestamped } from '../types';
 import { BaseDalModule } from './base';
 
@@ -75,15 +75,18 @@ export class TrackedTokenModel extends BaseDalModule {
     }
 
     public async upsertTrackedToken(
-        token: TrackedToken,
+        token: TrackedToken | HydratedDocument<TrackedToken>,
     ): Promise<TrackedTokenDocument> {
         const { uuid } = token;
+        const { _id } = (token as HydratedDocument<TrackedToken>);
+
         return this.model.findOneAndUpdate(
             {
                 uuid,
             },
             {
                 ...token,
+                ...((!!_id) && { _id: createId(_id) }),
             },
             { upsert: true, new: true },
         ).lean();
@@ -104,6 +107,11 @@ export class TrackedTokenModel extends BaseDalModule {
                                 range?.startDate,
                                 range?.endDate,
                             ),
+                        },
+                    },
+                    {
+                        $set: {
+                            _id: { $toString: '$_id' },
                         },
                     },
                 ],
