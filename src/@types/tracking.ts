@@ -38,6 +38,7 @@ export interface TrackedToken {
             }
         },
     },
+    completed: boolean,
     currentStageIndex: number,
     scheduledExecutionTime: Date,
     latestExecutionTime?: Date,

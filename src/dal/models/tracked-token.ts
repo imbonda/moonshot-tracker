@@ -59,6 +59,7 @@ const TrackedTokenSchema = new Schema<Timestamped<TrackedToken>>(
         pipeline: { type: [PipelineStageSchema] },
         tasks: { type: Map, of: TaskDataSchema },
         insights: { type: Schema.Types.Mixed },
+        completed: { type: Boolean },
         currentStageIndex: { type: Number },
         scheduledExecutionTime: { type: Date },
         latestExecutionTime: { type: Date, required: false },

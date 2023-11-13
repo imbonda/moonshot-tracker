@@ -95,6 +95,7 @@ export class PipelineExecutor {
             pipeline: stagesData,
             tasks: tasksData,
             insights,
+            completed: this.isPipelineCompleted,
             currentStageIndex: this.currentStageIndex,
             latestExecutionTime: new Date(),
             scheduledExecutionTime,
