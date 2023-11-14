@@ -28,6 +28,8 @@ export class DEXToolsAuditCheck extends TaskExecutor {
 
     private auditMatrix?: AuditMatrix;
 
+    private redFlags?: Record<string, true>;
+
     protected async run(): Promise<void> {
         const { chainId } = this.token;
         const tokenAddress = this.token.address;
@@ -40,6 +42,7 @@ export class DEXToolsAuditCheck extends TaskExecutor {
 
         this.dexToolsInsight = { dextools: result };
         this.auditMatrix = this.buildAuditMatrix();
+        this.setRedFlags();
 
         // TODO: consider checking audit alerts even before obtaining all the intel.
         if (!this.sufficientIntel) {
@@ -66,6 +69,22 @@ export class DEXToolsAuditCheck extends TaskExecutor {
             return mat;
         }, {} as AuditMatrix);
         return matrix;
+    }
+
+    private setRedFlags(): void {
+        this.redFlags = Object
+            .entries(RED_FLAG_PREDICATES)
+            .reduce((accum, [check, predicate]) => {
+                const audits = this.auditMatrix![check as AudicCheck];
+                const auditResults = Object.values(audits ?? {});
+                const predicateResults = auditResults.map(predicate);
+                const alertingResults = predicateResults.filter((isRedFlag) => !!isRedFlag);
+                const isRedFlag = alertingResults.length > 0;
+                if (isRedFlag) {
+                    accum[check as AudicCheck] = true;
+                }
+                return accum;
+            }, {} as Record<AudicCheck, true>);
     }
 
     public get insight(): Record<string, unknown> {
@@ -96,27 +115,12 @@ export class DEXToolsAuditCheck extends TaskExecutor {
         return true;
     }
 
+    private get hasRedFlags(): boolean {
+        return Object.keys(this.redFlags!).length > 0;
+    }
+
     private get isFraud(): boolean {
-        if (!this.audit.codeVerified) {
-            return true;
-        }
-
-        const redFlags = Object
-            .entries(RED_FLAG_PREDICATES)
-            .reduce((accum, [check, predicate]) => {
-                const audits = this.auditMatrix![check as AudicCheck];
-                const auditResults = Object.values(audits ?? {});
-                const predicateResults = auditResults.map(predicate);
-                const alertingResults = predicateResults.filter((isRedFlag) => !!isRedFlag);
-                const isRedFlag = alertingResults.length > 0;
-                if (isRedFlag) {
-                    accum[check as AudicCheck] = true;
-                }
-                return accum;
-            }, {} as Record<AudicCheck, true>);
-
-        const hasRedFlags = Object.keys(redFlags).length > 0;
-        return hasRedFlags;
+        return !this.audit.codeVerified || this.hasRedFlags;
     }
 
     private get completedAudit(): boolean {
