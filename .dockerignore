@@ -1,0 +1,5 @@
+# Exclude directories.
+
+.cache/
+
+node_modules/

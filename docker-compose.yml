@@ -1,0 +1,55 @@
+version: "3.9"
+
+x-common-variables: &common-variables
+    LOGGER_SILENT: false
+    LOGGER_LEVEL: info
+    NODE_ENV: 'prod'
+    MONGO_URL: mongodb://host.docker.internal:27017/moonshotTrackerDB
+    REDIS_URL: redis://host.docker.internal:6379
+    MQ_URL: redis://host.docker.internal:6379
+
+services:
+    monitor_eth:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        env_file:
+            - .env
+        environment:
+            <<: *common-variables
+            CHAIN_ID: 1
+        command: ["node", "./build/src/main.js", "--service", "monitor"]
+    
+    monitor_bsc:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        env_file:
+            - .env
+        environment:
+            <<: *common-variables
+            CHAIN_ID: 56
+        command: ["node", "./build/src/main.js", "--service", "monitor"]
+
+    scheduler:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        env_file:
+            - .env
+        environment:
+            <<: *common-variables
+        command: ["node", "./build/src/main.js", "--service", "scheduler"]
+    
+    agent:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        env_file:
+            - .env
+        environment:
+            <<: *common-variables
+        cap_add:
+            # Required for puppeteer to run the browser in sandbox mode.
+            - SYS_ADMIN
+        command: ["node", "./build/src/main.js", "--service", "agent"]
