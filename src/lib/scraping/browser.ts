@@ -60,7 +60,7 @@ export class Browser {
         if (!this.closed) {
             this.logger.info('Closing browser');
             this.closed = true;
-            await this.browser.close();
+            await this.browser?.close();
         }
     }
 }
