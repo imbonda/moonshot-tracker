@@ -20,7 +20,8 @@ npm i
 `Run and Debug` to run one of the pre-configured services found at `.vscode/launch.json`.
 
 ### PM2
-Development:
+
+#### Development
 ```
 # Build js files.
 npm run build
@@ -33,7 +34,7 @@ npx pm2 start --env dev
 npx pm2 stop --all
 ```
 
-Production:
+#### Production
 ```
 # Run PM2 with "production" mode.
 npx pm2 start --env production
@@ -43,17 +44,18 @@ npx pm2 stop --all
 ```
 
 ### Docker
-Build:
+
+#### Build
 ```
 docker compose build
 ```
 
-Start:
+#### Start
 ```
 docker compose up -d
 ```
 
-Stop:
+#### Stop
 ```
 docker compose down
 ```
