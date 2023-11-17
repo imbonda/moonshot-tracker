@@ -10,7 +10,7 @@ import { Logger } from '../../../../lib/logger';
 export abstract class BaseQueueRole {
     protected routingKey: string;
 
-    protected queue: BullQueue<unknown>;
+    protected queue!: BullQueue<unknown>;
 
     protected brokerUrl: string;
 
