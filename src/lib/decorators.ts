@@ -9,10 +9,11 @@ import { RawNetworkingError } from './errors/networking-error';
 interface ThrottleOptions {
     delayMs?: number,
     maxConcurrent?: number,
+    discard?: boolean,
 }
 
 export function throttle(
-    { delayMs, maxConcurrent }: ThrottleOptions,
+    { delayMs, maxConcurrent, discard }: ThrottleOptions,
 ) {
     return (
         _target: unknown,
@@ -20,15 +21,27 @@ export function throttle(
         descriptor: PropertyDescriptor,
     ) => {
         const originalMethod = descriptor.value!;
-        const limiter = new Bottleneck({ minTime: delayMs, maxConcurrent });
+        const limiter = new Bottleneck({
+            minTime: delayMs,
+            maxConcurrent,
+            ...(discard && {
+                highWater: 0,
+                strategy: Bottleneck.strategy.OVERFLOW,
+            }),
+        });
         const wrapped = limiter.wrap(originalMethod);
         descriptor.value = wrapped;
         return descriptor;
     };
 }
 
+interface SafeOptions {
+    defaultValue?: unknown,
+    silent?: boolean,
+}
+
 export function safe(
-    { defaultValue } = { defaultValue: null },
+    { defaultValue, silent }: SafeOptions = {},
 ) {
     return (
         _target: unknown,
@@ -42,13 +55,17 @@ export function safe(
             try {
                 result = originalMethod.apply(this, args);
             } catch (err) {
-                (this as { logger: Logger })?.logger.error(err);
+                if (!silent) {
+                    (this as { logger: Logger })?.logger.error(err);
+                }
                 return defaultValue;
             }
 
             if (result.then) {
                 return result.catch((err: Error) => {
-                    (this as { logger: Logger })?.logger.error(err);
+                    if (!silent) {
+                        (this as { logger: Logger })?.logger.error(err);
+                    }
                     return defaultValue;
                 });
             }

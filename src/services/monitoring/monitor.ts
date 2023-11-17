@@ -2,7 +2,7 @@
 import type { TransactionReceipt } from 'ethers';
 // Internal.
 import { web3Config } from '../../config';
-import { safe } from '../../lib/decorators';
+import { safe, throttle } from '../../lib/decorators';
 import { dal } from '../../dal/dal';
 import { Web3RpcProvider } from '../../lib/adapters/rpc-provider';
 import { hexifyNumber } from '../../lib/utils';
@@ -21,6 +21,8 @@ export class BlockchainMonitor extends Service {
     private erc20Processor: ERC20ReceiptProcessor;
 
     private lpTokenProcessor: LPTokenReceiptProcessor;
+
+    private nextExpectedBlock?: number;
 
     constructor() {
         super();
@@ -46,12 +48,26 @@ export class BlockchainMonitor extends Service {
     }
 
     private monitor(): void {
-        this.provider.on('block', this.processBlock.bind(this));
+        this.provider.on('block', this.newBlockHandler.bind(this));
     }
 
-    @safe()
-    private async processBlock(blockNumber: number) {
-        // TODO: Handle skipped blocks.
+    @safe({ silent: true })
+    @throttle({ maxConcurrent: 1, discard: true })
+    private async newBlockHandler(blockNumber: number): Promise<void> {
+        this.nextExpectedBlock ??= blockNumber;
+        if (this.nextExpectedBlock > blockNumber) {
+            this.logger.info('Ignoring duplicate block event');
+            return;
+        }
+
+        // Handling blocks by order and taking care of gaps that can happen.
+        for (; this.nextExpectedBlock <= blockNumber; this.nextExpectedBlock += 1) {
+            // eslint-disable-next-line no-await-in-loop
+            await this.processBlock(this.nextExpectedBlock);
+        }
+    }
+
+    private async processBlock(blockNumber: number): Promise<void> {
         this.logger.info('Starting handling block', { blockNumber });
         const hexBlockNumber = hexifyNumber(blockNumber);
         const receipts = await this.provider.getTransactionReceipts(hexBlockNumber);
