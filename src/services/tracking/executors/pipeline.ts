@@ -47,12 +47,12 @@ export class PipelineExecutor {
         return this.currentStage.isCompleted;
     }
 
-    private get isPipelineCompleted(): boolean {
+    public get completed(): boolean {
         return this.isLastStage && this.isStageCompleted;
     }
 
     public async execute(): Promise<void> {
-        if (this.isPipelineCompleted) {
+        if (this.completed) {
             return;
         }
 
@@ -75,7 +75,7 @@ export class PipelineExecutor {
             tasks.map((task) => [task.id, task.toJSON()]),
         );
         const circuitBreak = tasks.some((task) => task.shouldStopTracking);
-        const tracking = !this.isPipelineCompleted && !circuitBreak;
+        const tracking = !this.completed && !circuitBreak;
         const insights = mergeDeep({}, ...tasks.map((task) => task.insight));
         const scheduledExecutionTime = Object.values(tasksData).reduce(
             (soonest: Date | undefined, task) => {
@@ -96,7 +96,7 @@ export class PipelineExecutor {
             pipeline: stagesData,
             tasks: tasksData,
             insights,
-            completed: this.isPipelineCompleted,
+            completed: this.completed,
             currentStageIndex: this.currentStageIndex,
             latestExecutionTime: new Date(),
             scheduledExecutionTime,

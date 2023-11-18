@@ -28,6 +28,7 @@
         "ethers": "^6.7.1",
         "ioredis": "^5.3.2",
         "lodash": "^4.17.21",
+        "millify": "^6.1.0",
         "mongodb": "^6.1.0",
         "mongoose": "^7.5.3",
         "node-cache": "^5.1.2",
@@ -35,6 +36,7 @@
         "puppeteer": "^21.4.1",
         "puppeteer-extra": "^3.3.6",
         "puppeteer-extra-plugin-stealth": "^2.11.2",
+        "telegraf": "^4.15.0",
         "typescript-retry-decorator": "^2.4.2",
         "winston": "^3.10.0"
     },

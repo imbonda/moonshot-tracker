@@ -80,6 +80,11 @@ export const opentelemetryConfig = {
     SAMPLE_RATE: parseInt(process.env.OTEL_SAMPLE_RATE ?? '1'),
 };
 
+export const telegramConfig = {
+    BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN as string,
+    NOTIFICATIONS_CHAT_ID: process.env.TELEGRAM_NOTIFICATIONS_CHAT_ID as string,
+};
+
 function validateSubConfig(subConfig: Record<string, unknown>) {
     Object.entries(subConfig).forEach(([key, value]) => {
         if (value === undefined) {

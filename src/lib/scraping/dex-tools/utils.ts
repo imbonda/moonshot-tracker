@@ -4,7 +4,7 @@ import type {
     Audit,
     RawPairData, PairData,
     RawFullyAuditedPairData, FullyAuditedPairData,
-} from './types';
+} from '../../../@types/dex-tools';
 
 export function buildGetTopTokenPairsUrl(token: string): string {
     return `https://www.dextools.io/shared/search/pair?query=${token}`;
@@ -78,19 +78,25 @@ export function parseToken(
     rawToken: RawPairData['token'],
 ): PairData['token'] {
     const {
-        creationTime, metrics, audit,
+        creationBlock, creationTime,
+        audit, metrics, links,
+        decimals, symbol, name,
     } = rawToken;
     return {
+        creationBlock,
         creationTime: new Date(creationTime),
-        links: rawToken.links,
+        audit: parseTokenAudit(audit),
+        links,
         metrics: {
-            ...rawToken.metrics,
+            ...metrics,
             holdersUpdatedAt: new Date(metrics.holdersUpdatedAt),
             totalSupplyUpdatedAt: new Date(metrics.totalSupplyUpdatedAt),
             updatedAt: new Date(metrics.updatedAt),
         },
-        audit: parseTokenAudit(audit),
-    } as never;
+        decimals,
+        symbol,
+        name,
+    };
 }
 
 export function parseTokenAudit(

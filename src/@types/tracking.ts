@@ -1,3 +1,6 @@
+// Internal.
+import type { TokenInsights as DexToolsTokenInsights } from './dex-tools';
+
 export interface TaskData {
     taskId: string,
     state: string,
@@ -30,13 +33,7 @@ export interface TrackedToken {
     pipeline: PipelineStage[],
     tasks: Record<TaskData['taskId'], TaskData>,
     insights: {
-        project?: {
-            marketCap: number,
-            links: {
-                telegram: string,
-                twitter: string,
-            }
-        },
+        dextools?: DexToolsTokenInsights,
     },
     completed: boolean,
     currentStageIndex: number,

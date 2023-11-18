@@ -1,5 +1,5 @@
 // Internal.
-import type { Modify, WithRequired } from '../../../@types/generics';
+import type { Modify, WithRequired } from './generics';
 
 export type AuditProvider = 'goplus' | 'hapi' | 'quickintel' | 'tokensniffer';
 
@@ -87,12 +87,17 @@ export interface RawPairData {
         metrics: {
             circulationSupply: number,
             fdv: number,
+            mcap: number,
+            tmcap: number,
             holders: number,
             txCount: number,
             holdersUpdatedAt: string,
             totalSupplyUpdatedAt: string,
             updatedAt: string,
         },
+        decimals: number,
+        symbol: string,
+        name: string,
     },
     votes: {
         _warning: number,
@@ -172,13 +177,15 @@ export interface TokenInsights {
     audit: FullyAuditedPairData['token']['audit'],
     metrics: PairData['token']['metrics'],
     links: PairData['token']['links'],
+    properties: Pick<PairData['token'], 'decimals' | 'symbol' | 'name'>,
     topPair: {
         dextScore: PairData['dextScore'],
-        metrics: PairData['dextScore'],
+        metrics: PairData['metrics'],
         votes: PairData['votes'],
         fee: PairData['fee'],
         swaps: PairData['swaps'],
         price: PairData['price'],
         volume: PairData['volume'],
+        url: string,
     },
 }

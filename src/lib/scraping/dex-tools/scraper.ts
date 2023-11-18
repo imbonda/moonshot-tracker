@@ -1,17 +1,19 @@
 // Internal.
-import { Browser, type Page } from '../browser';
 import type {
     FullyAuditedPairData, PairData,
     TokenInsights,
     TokenPairResponse, TopTokenPairsResponse,
-} from './types';
+} from '../../../@types/dex-tools';
+import { Browser, type Page } from '../browser';
 import {
     buildGetPairUrl, buildGetTopTokenPairsUrl, parseTokenPair,
 } from './utils';
 
 export { AudicCheck, AUDIT_CHECKS } from './utils';
 
-const LANDING_URL = 'https://www.dextools.io/app/en/pairs';
+const DEX_TOOLS_URL = 'https://www.dextools.io';
+const LANDING_URL = `${DEX_TOOLS_URL}/app/en/pairs`;
+const PAIR_EXPLORER_URL = `${DEX_TOOLS_URL}/app/en/ether/pair-explorer`;
 
 class DexToolsScraper {
     private browser!: Browser;
@@ -115,14 +117,20 @@ class DexToolsScraper {
             audit: data.token.audit,
             metrics: data.token.metrics,
             links: data.token.links,
+            properties: {
+                decimals: data.token.decimals,
+                symbol: data.token.symbol,
+                name: data.token.name,
+            },
             topPair: {
                 dextScore: data.dextScore,
-                metrics: data.dextScore,
+                metrics: data.metrics,
                 votes: data.votes,
                 fee: data.fee,
                 swaps: data.swaps,
                 price: data.price,
                 volume: data.volume,
+                url: `${PAIR_EXPLORER_URL}/${data.id.pair}`,
             },
         };
     }

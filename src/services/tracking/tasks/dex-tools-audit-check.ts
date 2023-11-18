@@ -1,6 +1,6 @@
 // Internal.
+import type { Audit, AuditProvider, TokenInsights } from '../../../@types/dex-tools';
 import { scraper, AudicCheck, AUDIT_CHECKS } from '../../../lib/scraping/dex-tools/scraper';
-import type { Audit, AuditProvider, TokenInsights } from '../../../lib/scraping/dex-tools/types';
 import { TaskExecutor } from '../executors/task';
 
 type AuditMatrix = {

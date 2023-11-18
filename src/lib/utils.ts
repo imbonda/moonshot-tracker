@@ -1,5 +1,6 @@
 // 3rd party.
 import { BigNumberish, toBeHex } from 'ethers';
+import millify from 'millify';
 
 export { isEmpty, merge as mergeDeep } from 'lodash';
 
@@ -16,4 +17,8 @@ export function hexifyNumber(number: BigNumberish): string {
         return `0x${hex.slice(3)}`;
     }
     return hex;
+}
+
+export function pretifyNumber(value: number): string {
+    return millify(value, { precision: 2 });
 }
