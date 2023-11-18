@@ -39,4 +39,5 @@ export interface TrackedToken {
     currentStageIndex: number,
     scheduledExecutionTime: Date,
     latestExecutionTime?: Date,
+    schedulerLockExpirationTime?: Date,
 }

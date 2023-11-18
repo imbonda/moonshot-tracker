@@ -5,6 +5,8 @@ import { RedisAdapter } from './adapters/redis';
 import { NewERC20Model } from './models/new-erc20';
 import { TrackedTokenModel } from './models/tracked-token';
 
+export type { TrackedTokenQueryParams } from './models/tracked-token';
+
 interface DalModels {
     newErc20: NewERC20Model,
     trackedToken: TrackedTokenModel,

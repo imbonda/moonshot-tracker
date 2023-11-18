@@ -2,11 +2,18 @@
 import type { Model, HydratedDocument } from 'mongoose';
 import mongoose, { Schema } from 'mongoose';
 // Internal.
+import type { Modify } from '../../@types/generics';
 import type { PipelineStage, TaskData, TrackedToken } from '../../@types/tracking';
 import { Dal } from '../dal';
 import { createId, createPagination, createTimeRangeFilter } from '../helpers/mongodb';
 import type { Paginated, QueryParams, Timestamped } from '../types';
 import { BaseDalModule } from './base';
+
+export type TrackedTokenQueryParams = Modify<QueryParams, {
+    set?: Modify<QueryParams['set'], {
+        schedulerLockDuration?: number,
+    }>,
+}>;
 
 type TrackedTokenDocument = HydratedDocument<Timestamped<TrackedToken>>;
 
@@ -94,31 +101,59 @@ export class TrackedTokenModel extends BaseDalModule {
     }
 
     public async findScheduledTrackedTokens(
-        params: QueryParams,
+        params: TrackedTokenQueryParams,
     ): Promise<Paginated<TrackedTokenDocument>> {
-        const { range } = params;
-        const [result] = await this.model.aggregate(
-            createPagination(
+        const { range, set } = params;
+        const { startDate, endDate } = range ?? {};
+        const { schedulerLockDuration } = set ?? {};
+        const pipeline = createPagination(
+            [
+                {
+                    $match: {
+                        tracking: true,
+                        ...createTimeRangeFilter(
+                            'scheduledExecutionTime',
+                            { startDate, endDate },
+                        ),
+                        ...createTimeRangeFilter(
+                            'schedulerLockExpirationTime',
+                            { startDate: new Date(), negate: true },
+                        ),
+                    },
+                },
+                {
+                    $set: {
+                        _id: { $toString: '$_id' },
+                    },
+                },
+                {
+                    $project: {
+                        schedulerLockExpirationTime: 0,
+                    },
+                },
+            ],
+            params,
+        );
+        const [result] = await this.model.aggregate(pipeline);
+        const docIds = result.page.map((doc: TrackedTokenDocument) => createId(doc._id));
+
+        if (schedulerLockDuration && docIds.length) {
+            const lockExpirationTime = new Date(Date.now() + schedulerLockDuration);
+            // Set locks.
+            await this.model.updateMany(
+                {
+                    _id: { $in: docIds },
+                },
                 [
                     {
-                        $match: {
-                            tracking: true,
-                            ...createTimeRangeFilter(
-                                'scheduledExecutionTime',
-                                range?.startDate,
-                                range?.endDate,
-                            ),
-                        },
-                    },
-                    {
                         $set: {
-                            _id: { $toString: '$_id' },
+                            schedulerLockExpirationTime: lockExpirationTime,
                         },
                     },
                 ],
-                params,
-            ),
-        );
+            );
+        }
+
         return result;
     }
 }

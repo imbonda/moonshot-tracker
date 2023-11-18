@@ -2,7 +2,7 @@
 import type { Log, TransactionReceipt } from 'ethers';
 // Internal.
 import type { ERC20 } from '../../../@types/web3';
-import { dal } from '../../../dal/dal';
+import { dal } from '../../../dal';
 import { BaseProcessor } from './base';
 
 const NEW_ERC20_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days.

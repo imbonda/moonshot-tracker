@@ -2,7 +2,7 @@
 import v8 from 'v8';
 // Internal.
 import type { TrackedToken } from '../../@types/tracking';
-import { dal } from '../../dal/dal';
+import { dal } from '../../dal';
 import { TRACKING_QUEUE } from '../../ipc/message-queue/constants';
 import { QueueConsumer } from '../../ipc/message-queue/consumer';
 import { telegram } from '../../lib/notifications/telegram';

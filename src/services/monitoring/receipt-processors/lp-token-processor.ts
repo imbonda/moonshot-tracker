@@ -2,7 +2,7 @@
 import type { Log, TransactionReceipt } from 'ethers';
 // Internal.
 import type { ERC20 } from '../../../@types/web3';
-import { dal } from '../../../dal/dal';
+import { dal } from '../../../dal';
 import { createTrackedToken } from '../../../templates/tracked-token';
 import {
     LP_V2_FACTORIES, LP_V3_FACTORIES,

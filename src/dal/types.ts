@@ -12,7 +12,7 @@ export type Paginated<T> = {
     total?: number,
 }
 
-export type QueryMatchParams = Record<string, any>
+export type QueryMatchParams = Record<string, unknown>;
 
 export interface QueryRangeParams {
     startDate?: Date,
@@ -24,8 +24,11 @@ export interface QueryRangeParams {
     pageNumber?: number,
 }
 
+export type QuerySetParams = Record<string, unknown>;
+
 export interface QueryParams {
     match?: QueryMatchParams,
     range?: QueryRangeParams,
+    set?: QuerySetParams,
     sort?: SortingOrder,
 }
