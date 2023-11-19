@@ -22,3 +22,25 @@ export function hexifyNumber(number: BigNumberish): string {
 export function pretifyNumber(value: number): string {
     return millify(value, { precision: 2 });
 }
+
+const NUMBER_EMOJI_MAP: Record<number, string> = {
+    0: '0️⃣',
+    1: '1️⃣',
+    2: '2️⃣',
+    3: '3️⃣',
+    4: '4️⃣',
+    5: '5️⃣',
+    6: '6️⃣',
+    7: '7️⃣',
+    8: '8️⃣',
+    9: '9️⃣',
+};
+
+export function emojifyNumber(positive: number): string {
+    const wholeNumber = Math.trunc(positive);
+    if (!wholeNumber) {
+        return NUMBER_EMOJI_MAP[0];
+    }
+
+    return `${wholeNumber}`.split('').map((digit) => NUMBER_EMOJI_MAP[Number(digit)]).join('');
+}

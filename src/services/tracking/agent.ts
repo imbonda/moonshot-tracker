@@ -6,7 +6,7 @@ import { dal } from '../../dal';
 import { TRACKING_QUEUE } from '../../ipc/message-queue/constants';
 import { QueueConsumer } from '../../ipc/message-queue/consumer';
 import { telegram } from '../../lib/notifications/telegram';
-import { pretifyNumber } from '../../lib/utils';
+import { emojifyNumber, pretifyNumber } from '../../lib/utils';
 import { Service } from '../service';
 import { PipelineExecutor } from './executors/pipeline';
 
@@ -65,10 +65,11 @@ export class TrackingAgent extends Service {
         const dextoolsInsights = token.insights.dextools!;
         const { name, symbol } = dextoolsInsights.properties;
         const { fdv, mcap } = dextoolsInsights.metrics;
+        const { total: dextScore } = dextoolsInsights.topPair.dextScore;
         const { liquidity: topPairLiquidity } = dextoolsInsights.topPair.metrics;
         const explorerLink = dextoolsInsights.topPair.url;
 
-        return '🚀✨<b>Moonshot-Token</b>🚀✨\n'
+        return `🚀✨<b>Moonshot Token</b>🚀✨${emojifyNumber(dextScore)}\n`
             + `${name} [${symbol}]\n`
             + '\n'
             + `Mktcap: $${pretifyNumber(mcap)}\n`

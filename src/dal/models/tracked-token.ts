@@ -92,10 +92,17 @@ export class TrackedTokenModel extends BaseDalModule {
             {
                 uuid,
             },
-            {
-                ...token,
-                ...((!!_id) && { _id: createId(_id) }),
-            },
+            [
+                {
+                    $set: {
+                        ...token,
+                        ...((!!_id) && { _id: createId(_id) }),
+                    },
+                },
+                {
+                    $unset: 'schedulerLockExpirationTime',
+                },
+            ],
             { upsert: true, new: true },
         ).lean();
     }

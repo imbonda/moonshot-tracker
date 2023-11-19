@@ -29,6 +29,6 @@ export class NewERC20Model extends BaseDalModule {
     }
 
     private static buildERC20Uid(chainId: number, address: string): string {
-        return `${chainId}.${address}.${ERC20_TAG}`;
+        return `${ERC20_TAG}:${chainId}:${address}`;
     }
 }
