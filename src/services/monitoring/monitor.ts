@@ -56,7 +56,7 @@ export class BlockchainMonitor extends Service {
     private async newBlockHandler(blockNumber: number): Promise<void> {
         this.nextExpectedBlock ??= blockNumber;
         if (this.nextExpectedBlock > blockNumber) {
-            this.logger.info('Ignoring duplicate block event');
+            this.logger.info('Ignoring duplicate block event', { blockNumber });
             return;
         }
 
@@ -67,6 +67,7 @@ export class BlockchainMonitor extends Service {
         }
     }
 
+    @safe()
     private async processBlock(blockNumber: number): Promise<void> {
         this.logger.info('Starting handling block', { blockNumber });
         const hexBlockNumber = hexifyNumber(blockNumber);
