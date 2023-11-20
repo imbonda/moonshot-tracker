@@ -5,7 +5,7 @@ import Bottleneck from 'bottleneck';
 import {
     Contract, JsonRpcProvider, TransactionReceipt,
 } from 'ethers';
-import { Retryable } from 'typescript-retry-decorator';
+import { BackOffPolicy, Retryable } from 'typescript-retry-decorator';
 // Internal.
 import type { ERC20 } from '../../@types/web3';
 import erc20ABI from '../../abi/erc20.json';
@@ -71,8 +71,13 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
      */
     // eslint-disable-next-line class-methods-use-this
     @Retryable({
-        maxAttempts: 3,
+        maxAttempts: 10,
         backOff: 100,
+        backOffPolicy: BackOffPolicy.ExponentialBackOffPolicy,
+        exponentialOption: {
+            maxInterval: 500,
+            multiplier: 2,
+        },
         doRetry: isRetryableError,
     })
     @wrapRpcError
