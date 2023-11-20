@@ -4,9 +4,6 @@ x-common-variables: &common-variables
     LOGGER_SILENT: false
     LOGGER_LEVEL: info
     NODE_ENV: 'prod'
-    MONGO_URL: mongodb://host.docker.internal:27017/moonshotTrackerDB
-    REDIS_URL: redis://host.docker.internal:6379
-    MQ_URL: redis://host.docker.internal:6379
 
 services:
     monitor_eth:
