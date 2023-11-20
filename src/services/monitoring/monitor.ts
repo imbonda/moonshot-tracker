@@ -62,25 +62,26 @@ export class BlockchainMonitor extends Service {
 
         // Handling blocks by order and taking care of gaps that can happen.
         for (; this.nextExpectedBlock <= blockNumber; this.nextExpectedBlock += 1) {
+            this.logger.info('Starting handling block', { blockNumber: this.nextExpectedBlock });
             // eslint-disable-next-line no-await-in-loop
             await this.processBlock(this.nextExpectedBlock);
+            this.logger.info('Finished handling block', { blockNumber: this.nextExpectedBlock });
         }
     }
 
     @safe()
     private async processBlock(blockNumber: number): Promise<void> {
-        this.logger.info('Starting handling block', { blockNumber });
         const hexBlockNumber = hexifyNumber(blockNumber);
         const receipts = await this.provider.getTransactionReceipts(hexBlockNumber);
         // TODO: Consider handling blocks that we failed to query.
         if (!receipts) {
+            this.logger.warn('No receipts', { blockNumber });
             return;
         }
 
         await Promise.all(
             receipts.map(this.processReceipt.bind(this)),
         );
-        this.logger.info('Finished handling block', { blockNumber });
     }
 
     private async processReceipt(receipt: TransactionReceipt): Promise<void> {

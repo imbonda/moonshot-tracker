@@ -44,11 +44,11 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         const reflectedValue = Reflect.get(this._provider, prop, receiver);
         const selfValue = this[prop as keyof Web3RpcProvider];
 
-        let value = reflectedValue;
-        let bindTarget = this._provider;
+        let value: unknown = selfValue;
+        let bindTarget = this as JsonRpcProvider;
         if (!value) {
-            value = selfValue;
-            bindTarget = this as JsonRpcProvider;
+            value = reflectedValue;
+            bindTarget = this._provider;
         }
 
         if (typeof reflectedValue === 'function') {
@@ -169,7 +169,7 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         if (this.isAlchemy) {
             return this.getTransactionReceiptsAlchemy(blockNumber);
         }
-        return this._provider.send(
+        return this.send(
             'eth_getBlockReceipts',
             [blockNumber],
         );
@@ -183,6 +183,17 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
             [{ blockNumber }],
         );
         return result?.receipts ?? null;
+    }
+
+    public async send<T>(
+        method: string,
+        params: unknown[],
+    ): Promise<T> {
+        const res = await this._provider.send(method, params);
+        if (!res) {
+            throw new Error('Empty response');
+        }
+        return res;
     }
 
     private async sendNoBatch<T>(
