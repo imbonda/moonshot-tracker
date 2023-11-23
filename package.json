@@ -8,7 +8,8 @@
     },
     "main": "main.ts",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
+        "nyc": "npx nyc npm run test",
+        "test": "ts-mocha -n loader=ts-node/esm -p tsconfig.json --exit --timeout 10000 'tests/unit-tests/**/*.ts'",
         "build": "tsc",
         "postbuild": "rsync -ar --prune-empty-dirs --include=*.proto --include=*.json --include=*.csv src/ build/src/ && cp .env ./build 2> /dev/null || :",
         "dev": "ts-node src/index.ts",
@@ -43,6 +44,7 @@
     "devDependencies": {
         "@types/amqplib": "^0.10.2",
         "@types/lodash": "^4.14.198",
+        "@types/mocha": "^10.0.6",
         "@typescript-eslint/eslint-plugin": "^6.5.0",
         "eslint": "^8.20.0",
         "eslint-config-airbnb": "^19.0.4",
@@ -50,6 +52,9 @@
         "eslint-plugin-jsx-a11y": "^6.6.0",
         "eslint-plugin-react": "^7.30.1",
         "eslint-plugin-react-hooks": "^4.6.0",
+        "mocha": "^10.2.0",
+        "nyc": "^15.1.0",
+        "ts-mocha": "^10.0.0",
         "ts-node": "^10.9.1",
         "typescript": "^5.1.6"
     }
