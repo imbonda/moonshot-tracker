@@ -7,6 +7,7 @@ import {
 } from 'ethers';
 import { BackOffPolicy, Retryable } from 'typescript-retry-decorator';
 // Internal.
+import type { UnknownFunction } from '../../@types/general';
 import type { ERC20 } from '../../@types/web3';
 import erc20ABI from '../../abi/erc20.json';
 import { web3Config } from '../../config';
@@ -34,14 +35,18 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
 
     private _nextReqId: number;
 
+    #proxyFuncCache: Map<string, UnknownFunction>;
+
+    #proxy;
+
     private handler = {
         get(target: Web3RpcProvider, prop: string, receiver: unknown) {
             return target.proxy(prop, receiver);
         },
     };
 
-    private proxy(prop: string, receiver: unknown) {
-        const reflectedValue = Reflect.get(this._provider, prop, receiver);
+    private proxy(prop: string, _receiver: unknown) {
+        const reflectedValue = this._provider[prop as keyof JsonRpcProvider];
         const selfValue = this[prop as keyof Web3RpcProvider];
 
         let value: unknown = selfValue;
@@ -51,15 +56,19 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
             bindTarget = this._provider;
         }
 
-        if (typeof reflectedValue === 'function') {
-            value = reflectedValue.bind(bindTarget);
-        }
+        if (typeof value === 'function') {
+            if (this.#proxyFuncCache.has(prop)) {
+                return this.#proxyFuncCache.get(prop);
+            }
 
-        if (typeof value === 'function' && !NO_RETRY_METHODS.has(prop)) {
-            const original = value;
-            value = (...args: unknown[]) => (
-                this.withRetry(original.bind(bindTarget), ...args)
-            );
+            value = value.bind(bindTarget);
+            if (!NO_RETRY_METHODS.has(prop)) {
+                const original = value as UnknownFunction;
+                value = (...args: unknown[]) => (
+                    this.withRetry(original, ...args)
+                );
+            }
+            this.#proxyFuncCache.set(prop, value as UnknownFunction);
         }
 
         return value;
@@ -92,7 +101,9 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         this._provider = this.getProvider(this.endpoints[rotatingProviderIndex]);
         this._nextReqId = 1;
         rotatingProviderIndex = (rotatingProviderIndex + 1) % this.endpoints.length;
-        return new Proxy(this, this.handler);
+        this.#proxyFuncCache = new Map();
+        this.#proxy = new Proxy(this, this.handler);
+        return this.#proxy;
     }
 
     public get config(): ProviderConfig {
@@ -143,7 +154,7 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         const contract = new Contract(
             address,
             erc20ABI,
-            this,
+            this.#proxy,
         );
 
         try {

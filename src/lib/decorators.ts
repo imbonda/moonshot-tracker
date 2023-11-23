@@ -84,7 +84,8 @@ export function wrapRpcError(
     const originalMethod = descriptor.value!;
     descriptor.value = async function wrapper(...args: unknown[]) {
         try {
-            return await originalMethod.apply(this, args);
+            const result = await originalMethod.apply(this, args);
+            return result;
         } catch (err) {
             throw rpcErrorFactory(err as RawRpcError);
         }
