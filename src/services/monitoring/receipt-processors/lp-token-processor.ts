@@ -58,10 +58,10 @@ export class LPTokenReceiptProcessor extends BaseProcessor {
             this.getNewERC20(token2Addr),
         ]);
         const newToken = token1 || token2;
+        this.logger.info('Liquidity pool created', { pool, tracked: !!newToken });
         if (newToken) {
             await this.saveTrackedToken(newToken.address);
             await this.deleteNewERC20(newToken.address);
-            this.logger.info('Liquidity pool created for tracked token', { pool });
         }
     }
 
