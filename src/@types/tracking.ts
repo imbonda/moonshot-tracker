@@ -32,9 +32,9 @@ export interface TrackedToken {
     tracking: boolean,
     pipeline: PipelineStage[],
     tasks: Record<TaskData['taskId'], TaskData>,
-    insights: {
+    insights: null | {
         dextools?: DexToolsTokenInsights,
-    } | null,
+    },
     aborted: boolean,
     completed: boolean,
     currentStageIndex: number,
