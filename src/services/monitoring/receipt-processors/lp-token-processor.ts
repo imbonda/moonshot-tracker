@@ -38,7 +38,7 @@ export class LPTokenReceiptProcessor extends BaseProcessor {
             this.getNewERC20(token2Addr),
         ]);
         const newToken = token1 || token2;
-        this.logger.info('Liquidity pair created', { pair, tracked: !!newToken });
+        this.logger.info('Liquidity pair created', { pair, newToken: !!newToken });
         if (newToken) {
             await this.saveTrackedToken(newToken.address);
             await this.deleteNewERC20(newToken.address);
@@ -58,7 +58,7 @@ export class LPTokenReceiptProcessor extends BaseProcessor {
             this.getNewERC20(token2Addr),
         ]);
         const newToken = token1 || token2;
-        this.logger.info('Liquidity pool created', { pool, tracked: !!newToken });
+        this.logger.info('Liquidity pool created', { pool, newToken: !!newToken });
         if (newToken) {
             await this.saveTrackedToken(newToken.address);
             await this.deleteNewERC20(newToken.address);
