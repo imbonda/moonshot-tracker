@@ -86,24 +86,24 @@ export class TrackedTokenModel extends BaseDalModule {
     public async upsertTrackedToken(
         token: TrackedToken | HydratedDocument<TrackedToken>,
     ): Promise<TrackedTokenDocument> {
-        const { uuid } = token;
+        const { uuid, insights } = token;
         const { _id } = (token as HydratedDocument<TrackedToken>);
 
-        return this.model.findOneAndUpdate(
+        const update = [
             {
-                uuid,
+                $set: {
+                    ...token,
+                    ...((!!_id) && { _id: createId(_id) }),
+                    ...((!!insights && { insights: { $mergeObjects: ['$insights', insights] } })),
+                },
             },
-            [
-                {
-                    $set: {
-                        ...token,
-                        ...((!!_id) && { _id: createId(_id) }),
-                    },
-                },
-                {
-                    $unset: 'schedulerLockExpirationTime',
-                },
-            ],
+            {
+                $unset: 'schedulerLockExpirationTime',
+            },
+        ];
+        return this.model.findOneAndUpdate(
+            { uuid },
+            update,
             { upsert: true, new: true },
         ).lean();
     }

@@ -25,9 +25,12 @@ export abstract class BaseProcessor {
     public abstract processReceipt(receipt: TransactionReceipt): Promise<void>;
 
     protected async processLogs(receipt: TransactionReceipt): Promise<void> {
-        await Promise.allSettled(
+        const results = await Promise.allSettled(
             receipt.logs.map(this.processLog.bind(this)),
         );
+        results
+            .filter((result) => result.status === 'rejected')
+            .map((rejected) => this.logger.error((rejected as PromiseRejectedResult).reason));
     }
 
     protected abstract processLog(log: Log): Promise<void>;

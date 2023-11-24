@@ -62,7 +62,7 @@ export class TrackingAgent extends Service {
 
     // eslint-disable-next-line class-methods-use-this
     private formatMoonShotMessage(token: TrackedToken): string {
-        const dextoolsInsights = token.insights.dextools!;
+        const dextoolsInsights = token.insights!.dextools!;
         const { name, symbol } = dextoolsInsights.properties;
         const { fdv, mcap } = dextoolsInsights.metrics;
         const { total: dextScore } = dextoolsInsights.topPair.dextScore;

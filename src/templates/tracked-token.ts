@@ -18,7 +18,7 @@ export function createTrackedToken(
         tracking: true,
         pipeline: PIPELINE_TEMPLATE,
         tasks: TASKS_TEMPLATE,
-        insights: {},
+        insights: null,
         aborted: false,
         completed: false,
         currentStageIndex: 0,

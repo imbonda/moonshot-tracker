@@ -34,7 +34,7 @@ export interface TrackedToken {
     tasks: Record<TaskData['taskId'], TaskData>,
     insights: {
         dextools?: DexToolsTokenInsights,
-    },
+    } | null,
     aborted: boolean,
     completed: boolean,
     currentStageIndex: number,
