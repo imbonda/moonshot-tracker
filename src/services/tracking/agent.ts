@@ -68,7 +68,7 @@ export class TrackingAgent extends Service {
         const { total: dextScore } = dextoolsInsights.topPair.dextScore;
         const { liquidity: topPairLiquidity } = dextoolsInsights.topPair.metrics;
         const explorerLink = dextoolsInsights.topPair.url;
-        const NAN_STRING = 'Unavailable';
+        const NAN_STRING = 'U/A';
 
         return `🚀✨<b>Moonshot Token</b>🚀✨${emojifyNumber(dextScore)}\n`
             + `${name} [${symbol}]\n`
