@@ -23,6 +23,22 @@ export function pretifyNumber(value: number): string {
     return millify(value, { precision: 2 });
 }
 
+export function formatUSD(value: number, nanStringValue: string = ''): string {
+    const isNumber = ['number', 'bigint'].includes(typeof value);
+    const isNaN = Number.isNaN(value);
+    const isFinite = Number.isFinite(value);
+    if (!isNumber || isNaN) {
+        return nanStringValue;
+    }
+    if (value < 0) {
+        return `-${formatUSD(-value, nanStringValue)}`;
+    }
+    if (!isFinite) {
+        return 'Infinity';
+    }
+    return `$${pretifyNumber(value)}`;
+}
+
 const NUMBER_EMOJI_MAP: Record<number, string> = {
     0: '0️⃣',
     1: '1️⃣',

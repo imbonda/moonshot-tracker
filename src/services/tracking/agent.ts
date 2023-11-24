@@ -6,7 +6,7 @@ import { dal } from '../../dal';
 import { TRACKING_QUEUE } from '../../ipc/message-queue/constants';
 import { QueueConsumer } from '../../ipc/message-queue/consumer';
 import { telegram } from '../../lib/notifications/telegram';
-import { emojifyNumber, pretifyNumber } from '../../lib/utils';
+import { emojifyNumber, formatUSD } from '../../lib/utils';
 import { Service } from '../service';
 import { PipelineExecutor } from './executors/pipeline';
 
@@ -68,13 +68,14 @@ export class TrackingAgent extends Service {
         const { total: dextScore } = dextoolsInsights.topPair.dextScore;
         const { liquidity: topPairLiquidity } = dextoolsInsights.topPair.metrics;
         const explorerLink = dextoolsInsights.topPair.url;
+        const NAN_STRING = 'Unavailable';
 
         return `🚀✨<b>Moonshot Token</b>🚀✨${emojifyNumber(dextScore)}\n`
             + `${name} [${symbol}]\n`
             + '\n'
-            + `Mktcap: $${pretifyNumber(mcap)}\n`
-            + `Fully Diluted: $${pretifyNumber(fdv)}\n`
-            + `Top Pair Liquidity: ${pretifyNumber(topPairLiquidity)}\n`
+            + `Mktcap: ${formatUSD(mcap, NAN_STRING)}\n`
+            + `Fully Diluted: ${formatUSD(fdv, NAN_STRING)}\n`
+            + `Top Pair Liquidity: ${formatUSD(topPairLiquidity, NAN_STRING)}\n`
             + '\n'
             + `${explorerLink}`;
     }
