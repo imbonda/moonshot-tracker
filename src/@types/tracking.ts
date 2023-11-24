@@ -35,6 +35,7 @@ export interface TrackedToken {
     insights: {
         dextools?: DexToolsTokenInsights,
     },
+    aborted: boolean,
     completed: boolean,
     currentStageIndex: number,
     scheduledExecutionTime: Date,

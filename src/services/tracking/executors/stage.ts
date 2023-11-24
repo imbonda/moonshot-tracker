@@ -28,11 +28,11 @@ export class StageExecutor {
         this.logger = new Logger(this.constructor.name);
     }
 
-    public get isUnlocked(): boolean {
+    public get unlocked(): boolean {
         return this.stageState === StageState.UNLOCKED;
     }
 
-    public get isCompleted(): boolean {
+    public get completed(): boolean {
         return this.stageState === StageState.DONE;
     }
 
@@ -59,8 +59,8 @@ export class StageExecutor {
             this.stageTasks.map((task) => task.execute()),
         );
 
-        const isCompletedAllTasks = this.stageTasks.every((task) => task.isCompleted);
-        if (isCompletedAllTasks) {
+        const completedAllTasks = this.stageTasks.every((task) => task.completed);
+        if (completedAllTasks) {
             this.stageState = StageState.DONE;
         }
     }
@@ -70,11 +70,11 @@ export class StageExecutor {
             return;
         }
 
-        const isUnlocked = this.stage.prerequisiteTasks.every(
-            (taskId) => tasksById[taskId]?.isCompleted,
+        const unlocked = this.stage.prerequisiteTasks.every(
+            (taskId) => tasksById[taskId]?.completed,
         );
 
-        if (isUnlocked) {
+        if (unlocked) {
             this.stageState = StageState.UNLOCKED;
             this.stageTasks.forEach((task) => task.setActivated());
         }

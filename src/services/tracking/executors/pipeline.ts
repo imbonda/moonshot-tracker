@@ -44,7 +44,7 @@ export class PipelineExecutor {
     }
 
     private get isStageCompleted(): boolean {
-        return this.currentStage.isCompleted;
+        return this.currentStage.completed;
     }
 
     public get completed(): boolean {
@@ -62,7 +62,7 @@ export class PipelineExecutor {
 
         if (!this.isLastStage) {
             this.nextStage!.attemptUnlock(this.tasksById);
-            if (this.nextStage!.isUnlocked) {
+            if (this.nextStage!.unlocked) {
                 this.currentStageIndex += 1;
             }
         }
@@ -74,8 +74,8 @@ export class PipelineExecutor {
         const tasksData = Object.fromEntries(
             tasks.map((task) => [task.id, task.toJSON()]),
         );
-        const circuitBreak = tasks.some((task) => task.shouldStopTracking);
-        const tracking = !this.completed && !circuitBreak;
+        const aborted = tasks.some((task) => task.aborted);
+        const tracking = !this.completed && !aborted;
         const insights = mergeDeep({}, ...tasks.map((task) => task.insight));
         const scheduledExecutionTime = Object.values(tasksData).reduce(
             (soonest: Date | undefined, task) => {
@@ -96,6 +96,7 @@ export class PipelineExecutor {
             pipeline: stagesData,
             tasks: tasksData,
             insights,
+            aborted,
             completed: this.completed,
             currentStageIndex: this.currentStageIndex,
             latestExecutionTime: new Date(),

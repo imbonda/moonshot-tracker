@@ -50,7 +50,7 @@ export class DEXToolsAuditCheck extends TaskExecutor {
         }
 
         if (this.isFraud) {
-            this.stopTracking();
+            this.abort();
             return;
         }
 

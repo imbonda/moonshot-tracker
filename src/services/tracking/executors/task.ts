@@ -12,9 +12,9 @@ import { TaskState } from '../static';
  * @scheduledExecutionTime The next time the task should run.
  *
  * Important notes:
- * * A task is completed when "setCompleted" was called, or when it is finished repeating.
- * * A task can trigger a circuit-breaker to stop token tracking by calling "stopTracking".
- * * A daemon can be disactivated by calling "setDisactivated".
+ * - A task is completed when "setCompleted" was called, or when it is finished repeating.
+ * - A task can trigger a circuit-breaker to abort token tracking by calling "abort".
+ * - A daemon can be disactivated by calling "setDisactivated".
  */
 export abstract class TaskExecutor {
     protected token: TrackedToken;
@@ -27,7 +27,7 @@ export abstract class TaskExecutor {
 
     protected logger: Logger;
 
-    private _stopTracking: boolean;
+    private _aborted: boolean;
 
     constructor(token: TrackedToken, taskData: TaskData) {
         this.token = token;
@@ -35,19 +35,19 @@ export abstract class TaskExecutor {
         this.taskState = taskData.state as TaskState;
         this.repetition = taskData.repetitions.count;
         this.logger = new Logger(this.constructor.name);
-        this._stopTracking = false;
+        this._aborted = false;
     }
 
     public get id(): TaskData['taskId'] {
         return this.taskData.taskId;
     }
 
-    public get isCompleted(): boolean {
+    public get completed(): boolean {
         return this.taskState === TaskState.DONE;
     }
 
-    public get shouldStopTracking(): boolean {
-        return this._stopTracking;
+    public get aborted(): boolean {
+        return this._aborted;
     }
 
     public setActivated(): void {
@@ -65,8 +65,8 @@ export abstract class TaskExecutor {
     /**
      * Circuit breaker.
      */
-    protected stopTracking(): void {
-        this._stopTracking = true;
+    protected abort(): void {
+        this._aborted = true;
     }
 
     private get state(): TaskData['state'] {
@@ -149,7 +149,7 @@ export abstract class TaskExecutor {
         this.logger.info('Execution ended');
 
         this.repetition += 1;
-        if (this.isCompleted || this.shouldNotRepeat) {
+        if (this.completed || this.shouldNotRepeat) {
             this.setCompleted();
         }
     }

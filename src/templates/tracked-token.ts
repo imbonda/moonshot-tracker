@@ -19,6 +19,7 @@ export function createTrackedToken(
         pipeline: PIPELINE_TEMPLATE,
         tasks: TASKS_TEMPLATE,
         insights: {},
+        aborted: false,
         completed: false,
         currentStageIndex: 0,
         scheduledExecutionTime: new Date(Date.now() + executionDelayMs),
