@@ -50,7 +50,7 @@ export class TrackingScheduler extends Service {
         while (paginated.page.length) {
             // eslint-disable-next-line no-await-in-loop
             await Promise.all(
-                paginated.page.map(this.sendToQueue.bind(this)),
+                paginated.page.map(this.scheduleTokenTracking.bind(this)),
             );
             // eslint-disable-next-line no-await-in-loop
             paginated = await dal.models.trackedToken.findScheduledTrackedTokens({
@@ -69,7 +69,12 @@ export class TrackingScheduler extends Service {
     }
 
     @safe()
-    private async sendToQueue(token: TrackedToken): Promise<void> {
+    private async scheduleTokenTracking(token: TrackedToken): Promise<void> {
+        this.logger.info('Scheduling tracked token', {
+            chainId: token.chainId,
+            token: token.address,
+        });
+        // Send to queue.
         await this.producer.send(v8.serialize(token));
     }
 }
