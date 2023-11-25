@@ -112,7 +112,11 @@ class DexToolsScraper {
         const response = await this.fetchDexTools<TokenPairResponse>(url);
         const [rawPair] = response?.data ?? [];
         if (!rawPair) {
-            this.logger.warn('Failed to fetch token pair', { chainId, pair: pairAddress });
+            this.logger.warn('Failed to fetch token pair', {
+                chainId,
+                pair: pairAddress,
+                error: response?.error?.desc,
+            });
             return null;
         }
         const parsed = parseTokenPair(rawPair) as FullyAuditedPairData;

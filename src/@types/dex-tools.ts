@@ -127,6 +127,10 @@ export interface TopTokenPairsResponse {
 export interface TokenPairResponse {
     code: 'OK' | 'ERROR',
     data: RawFullyAuditedPairData[],
+    error?: {
+        type?: 'ERROR',
+        desc?: string,
+    }
 }
 
 /**

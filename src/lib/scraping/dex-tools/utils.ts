@@ -19,6 +19,8 @@ export function resolveChain(chainId: number): string {
     switch (chainId) {
         case ChainId.ETH:
             return 'ether';
+        case ChainId.BSC:
+            return 'bsc';
         default:
             return '';
     }
