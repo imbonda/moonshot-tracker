@@ -1,6 +1,6 @@
 // Internal.
 import type {
-    Audit, AuditMatrix, AuditProvider, RedFlags, TokenInsights,
+    Audit, AuditMatrix, AuditProvider, DexToolsInsights, RedFlags, TokenInsights,
 } from '../../../@types/dex-tools';
 import { scraper, AudicCheck, AUDIT_CHECKS } from '../../../lib/scraping/dex-tools/scraper';
 import { TaskExecutor } from '../executors/task';
@@ -20,7 +20,7 @@ const RED_FLAG_PREDICATES: Record<AudicCheck, AuditPredicate> = {
 };
 
 export class DEXToolsAuditCheck extends TaskExecutor {
-    private dexToolsInsight?: { dextools: TokenInsights};
+    private dexToolsInsight?: { dextools: DexToolsInsights };
 
     private auditMatrix?: AuditMatrix;
 

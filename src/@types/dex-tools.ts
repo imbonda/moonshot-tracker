@@ -200,6 +200,9 @@ export interface TokenInsights {
         volume: PairData['volume'],
         url: string,
     },
+}
+
+export interface DexToolsInsights extends TokenInsights {
     auditMatrix: AuditMatrix,
     redFlags: RedFlags,
 }
