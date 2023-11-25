@@ -1,6 +1,6 @@
 // Internal.
 import type {
-    Audit, AuditMatrix, AuditProvider, DexToolsInsights, RedFlags, TokenInsights,
+    Audit, AuditMatrix, AuditProvider, RedFlags, TokenInsights,
 } from '../../../@types/dex-tools';
 import { scraper, AudicCheck, AUDIT_CHECKS } from '../../../lib/scraping/dex-tools/scraper';
 import { TaskExecutor } from '../executors/task';
@@ -20,7 +20,7 @@ const RED_FLAG_PREDICATES: Record<AudicCheck, AuditPredicate> = {
 };
 
 export class DEXToolsAuditCheck extends TaskExecutor {
-    private dexToolsInsight?: { dextools: DexToolsInsights };
+    private tokenInsight?: TokenInsights;
 
     private auditMatrix?: AuditMatrix;
 
@@ -36,16 +36,9 @@ export class DEXToolsAuditCheck extends TaskExecutor {
             return;
         }
 
+        this.tokenInsight = result;
         this.auditMatrix = this.buildAuditMatrix();
         this.setRedFlags();
-
-        this.dexToolsInsight = {
-            dextools: {
-                ...result,
-                auditMatrix: this.auditMatrix!,
-                redFlags: this.redFlags!,
-            },
-        };
 
         // TODO: consider checking audit alerts even before obtaining all the intel.
         if (!this.sufficientIntel) {
@@ -91,22 +84,28 @@ export class DEXToolsAuditCheck extends TaskExecutor {
     }
 
     public get insight(): Record<string, unknown> {
-        if (!this.dexToolsInsight) {
+        if (!this.tokenInsight) {
             return super.insight;
         }
-        return this.dexToolsInsight;
+        return {
+            dextools: {
+                ...this.tokenInsight,
+                auditMatrix: this.auditMatrix!,
+                redFlags: this.redFlags!,
+            },
+        };
     }
 
     private get audit(): TokenInsights['audit'] {
-        return this.dexToolsInsight!.dextools.audit;
+        return this.tokenInsight!.audit;
     }
 
     private get externalAudit(): TokenInsights['audit']['external'] {
-        return this.dexToolsInsight!.dextools.audit.external;
+        return this.tokenInsight!.audit.external;
     }
 
     private get links(): TokenInsights['links'] {
-        return this.dexToolsInsight!.dextools.links;
+        return this.tokenInsight!.links;
     }
 
     private get sufficientIntel(): boolean {
