@@ -1,13 +1,9 @@
 // Internal.
-import type { Audit, AuditProvider, TokenInsights } from '../../../@types/dex-tools';
+import type {
+    Audit, AuditMatrix, AuditProvider, RedFlags, TokenInsights,
+} from '../../../@types/dex-tools';
 import { scraper, AudicCheck, AUDIT_CHECKS } from '../../../lib/scraping/dex-tools/scraper';
 import { TaskExecutor } from '../executors/task';
-
-type AuditMatrix = {
-    [check in keyof Audit]: {
-        [provider in AuditProvider]: Audit[check]
-    }
-};
 
 type AuditBooleanPredicate = (value: boolean) => boolean;
 type AuditNumricPredicate = (value: number) => boolean;
@@ -28,7 +24,7 @@ export class DEXToolsAuditCheck extends TaskExecutor {
 
     private auditMatrix?: AuditMatrix;
 
-    private redFlags?: Record<string, true>;
+    private redFlags?: RedFlags;
 
     protected async run(): Promise<void> {
         const { chainId } = this.token;
@@ -40,9 +36,16 @@ export class DEXToolsAuditCheck extends TaskExecutor {
             return;
         }
 
-        this.dexToolsInsight = { dextools: result };
         this.auditMatrix = this.buildAuditMatrix();
         this.setRedFlags();
+
+        this.dexToolsInsight = {
+            dextools: {
+                ...result,
+                auditMatrix: this.auditMatrix!,
+                redFlags: this.redFlags!,
+            },
+        };
 
         // TODO: consider checking audit alerts even before obtaining all the intel.
         if (!this.sufficientIntel) {
@@ -84,7 +87,7 @@ export class DEXToolsAuditCheck extends TaskExecutor {
                     accum[check as AudicCheck] = true;
                 }
                 return accum;
-            }, {} as Record<AudicCheck, true>);
+            }, {} as RedFlags);
     }
 
     public get insight(): Record<string, unknown> {

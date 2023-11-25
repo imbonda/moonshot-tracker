@@ -147,6 +147,12 @@ export interface Audit {
     creator_percent?: number,
 }
 
+export type AuditMatrix = {
+    [check in keyof Audit]: {
+        [provider in AuditProvider]: Audit[check]
+    }
+};
+
 export type PairData = Modify<RawPairData, {
     creationTime: Date,
     id: Modify<Omit<RawPairData['id'], 'chain'>, {
@@ -177,6 +183,8 @@ export type FullyAuditedPairData = Modify<PairData, {
     }>,
 }>
 
+export type RedFlags = Record<string, true>;
+
 export interface TokenInsights {
     audit: FullyAuditedPairData['token']['audit'],
     metrics: PairData['token']['metrics'],
@@ -192,4 +200,6 @@ export interface TokenInsights {
         volume: PairData['volume'],
         url: string,
     },
+    auditMatrix: AuditMatrix,
+    redFlags: RedFlags,
 }
