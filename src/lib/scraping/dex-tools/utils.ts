@@ -15,12 +15,12 @@ export function buildGetPairUrl(chainId: number, pair: string): string {
     return `https://www.dextools.io/shared/data/pair?address=${pair}&chain=${chain}&audit=true&locks=true`;
 }
 
-export function resolveChain(chainId: number): string {
+export function resolveChain(chainId: number, direct: boolean = true): string {
     switch (chainId) {
         case ChainId.ETH:
             return 'ether';
         case ChainId.BSC:
-            return 'bsc';
+            return direct ? 'bsc' : 'bnb';
         default:
             return '';
     }
@@ -30,6 +30,8 @@ export function resolveChainId(chain: string): number | undefined {
     switch (chain) {
         case 'ether':
             return ChainId.ETH;
+        case 'bsc':
+            return ChainId.BSC;
         default:
             return undefined;
     }

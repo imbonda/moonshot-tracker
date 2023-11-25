@@ -7,14 +7,13 @@ import type {
 import { Logger } from '../../logger';
 import { Browser, type Page } from '../browser';
 import {
-    buildGetPairUrl, buildGetTopTokenPairsUrl, parseTokenPair,
+    buildGetPairUrl, buildGetTopTokenPairsUrl, parseTokenPair, resolveChain,
 } from './utils';
 
 export { AudicCheck, AUDIT_CHECKS } from './utils';
 
 const DEX_TOOLS_URL = 'https://www.dextools.io';
 const LANDING_URL = `${DEX_TOOLS_URL}/app/en/pairs`;
-const PAIR_EXPLORER_URL = `${DEX_TOOLS_URL}/app/en/ether/pair-explorer`;
 
 class DexToolsScraper {
     private browser!: Browser;
@@ -134,7 +133,6 @@ class DexToolsScraper {
         return result;
     }
 
-    // eslint-disable-next-line class-methods-use-this
     private createTokenInsights(data: FullyAuditedPairData): TokenInsights {
         return {
             audit: data.token.audit,
@@ -153,9 +151,16 @@ class DexToolsScraper {
                 swaps: data.swaps,
                 price: data.price,
                 volume: data.volume,
-                url: `${PAIR_EXPLORER_URL}/${data.id.pair}`,
+                url: this.buildPairExplorerUrl(data.id.chainId, data.id.pair),
             },
         };
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    private buildPairExplorerUrl(chainId: number, pairAddress: string) {
+        const chain = resolveChain(chainId, false);
+        const url = `${DEX_TOOLS_URL}/app/en/${chain}/pair-explorer/${pairAddress}`;
+        return url;
     }
 }
 
