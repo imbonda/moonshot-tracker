@@ -4,6 +4,7 @@ import type {
     TokenInsights,
     TokenPairResponse, TopTokenPairsResponse,
 } from '../../../@types/dex-tools';
+import { Logger } from '../../logger';
 import { Browser, type Page } from '../browser';
 import {
     buildGetPairUrl, buildGetTopTokenPairsUrl, parseTokenPair,
@@ -22,15 +23,25 @@ class DexToolsScraper {
 
     private reqInit!: RequestInit;
 
+    private logger: Logger;
+
+    constructor() {
+        this.logger = new Logger(this.constructor.name);
+    }
+
     public async fetchTokenInsights(
         chainId: number,
         tokenAddress: string,
-    ): Promise<TokenInsights> {
+    ): Promise<TokenInsights | null> {
         try {
             await this.setup();
             const topPair = await this.fetchTopTokenPair(tokenAddress);
-            const auditedPair = await this.fetchTokenPair(chainId, topPair.id.pair);
-            const insights = this.createTokenInsights(auditedPair);
+            const auditedPair = topPair
+                ? await this.fetchTokenPair(chainId, topPair.id.pair)
+                : null;
+            const insights = auditedPair
+                ? this.createTokenInsights(auditedPair)
+                : null;
             return insights;
         } finally {
             await this.browser?.close();
@@ -81,10 +92,14 @@ class DexToolsScraper {
 
     private async fetchTopTokenPair(
         tokenAddress: string,
-    ): Promise<PairData> {
+    ): Promise<PairData | null> {
         const url = buildGetTopTokenPairsUrl(tokenAddress);
         const response = await this.fetchDexTools<TopTokenPairsResponse>(url);
         const [rawTopPair] = response?.results ?? [];
+        if (!rawTopPair) {
+            this.logger.warn('Failed to fetch token pairs', { token: tokenAddress });
+            return null;
+        }
         const parsed = parseTokenPair(rawTopPair);
         return parsed;
     }
@@ -92,10 +107,14 @@ class DexToolsScraper {
     private async fetchTokenPair(
         chainId: number,
         pairAddress: string,
-    ): Promise<FullyAuditedPairData> {
+    ): Promise<FullyAuditedPairData | null> {
         const url = buildGetPairUrl(chainId, pairAddress);
         const response = await this.fetchDexTools<TokenPairResponse>(url);
         const [rawPair] = response?.data ?? [];
+        if (!rawPair) {
+            this.logger.warn('Failed to fetch token pair', { chainId, pair: pairAddress });
+            return null;
+        }
         const parsed = parseTokenPair(rawPair) as FullyAuditedPairData;
         return parsed;
     }

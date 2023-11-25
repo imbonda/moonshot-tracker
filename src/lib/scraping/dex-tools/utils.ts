@@ -54,18 +54,24 @@ export function parseTokenPair(
     return {
         creationTime: new Date(creationTime),
         dextScore,
-        id: {
-            chainId: resolveChainId(id.chain) as number,
-            exchange: id.exchange,
-            pair: id.pair,
-            token: id.token,
-            tokenRef: id.tokenRef,
-        },
-        metrics: {
-            ...metrics,
-            liquidityUpdatedAt: new Date(metrics.liquidityUpdatedAt),
-        },
-        token: parseToken(token),
+        ...(!!id && {
+            id: {
+                chainId: resolveChainId(id.chain) as number,
+                exchange: id.exchange,
+                pair: id.pair,
+                token: id.token,
+                tokenRef: id.tokenRef,
+            },
+        }),
+        ...(!!metrics && {
+            metrics: {
+                ...metrics,
+                liquidityUpdatedAt: new Date(metrics.liquidityUpdatedAt),
+            },
+        }),
+        ...(!!token && {
+            token: parseToken(token),
+        }),
         votes,
         fee,
         swaps,
@@ -87,12 +93,14 @@ export function parseToken(
         creationTime: new Date(creationTime),
         audit: parseTokenAudit(audit),
         links,
-        metrics: {
-            ...metrics,
-            holdersUpdatedAt: new Date(metrics.holdersUpdatedAt),
-            totalSupplyUpdatedAt: new Date(metrics.totalSupplyUpdatedAt),
-            updatedAt: new Date(metrics.updatedAt),
-        },
+        ...(!!metrics && {
+            metrics: {
+                ...metrics,
+                holdersUpdatedAt: new Date(metrics.holdersUpdatedAt),
+                totalSupplyUpdatedAt: new Date(metrics.totalSupplyUpdatedAt),
+                updatedAt: new Date(metrics.updatedAt),
+            },
+        }),
         decimals,
         symbol,
         name,
