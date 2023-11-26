@@ -3,7 +3,7 @@ import type {
     Audit, AuditMatrix, AuditProvider, RedFlags, TokenInsights,
 } from '../../../@types/dex-tools';
 import { scraper, AudicCheck, AUDIT_CHECKS } from '../../../lib/scraping/dex-tools/scraper';
-import { TaskExecutor } from '../executors/task';
+import { type Insight, TaskExecutor } from '../executors/task';
 
 type AuditBooleanPredicate = (value: boolean) => boolean;
 type AuditNumricPredicate = (value: number) => boolean;
@@ -83,7 +83,7 @@ export class DEXToolsAuditCheck extends TaskExecutor {
             }, {} as RedFlags);
     }
 
-    public get insight(): Record<string, unknown> {
+    public get insight(): Insight {
         if (!this.tokenInsight) {
             return super.insight;
         }

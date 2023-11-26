@@ -4,6 +4,8 @@ import { MS_IN_SECOND } from '../../../lib/constants';
 import { Logger } from '../../../lib/logger';
 import { TaskState } from '../static';
 
+export type Insight = Record<string, unknown> | null;
+
 /**
  * The following describes the different task configurations:
  * @delay Number of seconds by which the initial task execution would be delayed.
@@ -172,8 +174,8 @@ export abstract class TaskExecutor {
      * Override to save insight.
      */
     // eslint-disable-next-line class-methods-use-this
-    public get insight(): Record<string, unknown> {
-        return {};
+    public get insight(): Insight {
+        return null;
     }
 }
 
