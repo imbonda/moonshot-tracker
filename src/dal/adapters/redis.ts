@@ -9,7 +9,7 @@ import { Logger } from '../../lib/logger';
 import { isEmpty } from '../../lib/utils';
 
 export class RedisAdapter {
-    private client!: Redis;
+    private _client!: Redis;
 
     private logger: Logger;
 
@@ -17,8 +17,12 @@ export class RedisAdapter {
         this.logger = new Logger(this.constructor.name);
     }
 
+    public get client(): Redis {
+        return this._client;
+    }
+
     public async connect(): Promise<void> {
-        this.client = new Redis(dbConfig.REDIS_URL);
+        this._client = new Redis(dbConfig.REDIS_URL);
 
         return new Promise((resolve, reject) => {
             // Register connection callbacks.

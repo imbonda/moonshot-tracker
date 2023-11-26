@@ -49,11 +49,11 @@ export class TrackingAgent extends Service {
     private async track(token: TrackedToken): Promise<void> {
         const pipeline = new PipelineExecutor(token);
         await pipeline.execute();
-        const { result } = pipeline;
-        if (pipeline.completed) {
+        const { completed, result } = pipeline;
+        await dal.models.trackedToken.upsertTrackedToken(result);
+        if (completed) {
             await this.notifyMoonShotToken(result);
         }
-        await dal.models.trackedToken.upsertTrackedToken(pipeline.result);
     }
 
     private async notifyMoonShotToken(token: TrackedToken): Promise<void> {
