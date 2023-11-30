@@ -1,18 +1,18 @@
 // Builtin.
 import { parse } from 'url';
 // 3rd party.
-import Bull, { Queue as BullQueue } from 'bull';
+import Bull, { Queue } from 'bull';
 import { RedisOptions } from 'ioredis';
 // Internal.
 import { ipcConfig } from '../../../../config';
 import { Logger } from '../../../../lib/logger';
 
 export abstract class BaseQueueRole {
+    protected brokerUrl: string;
+
     protected routingKey: string;
 
-    protected queue!: BullQueue<unknown>;
-
-    protected brokerUrl: string;
+    protected queue!: Queue<unknown>;
 
     protected logger: Logger;
 
@@ -24,7 +24,7 @@ export abstract class BaseQueueRole {
     }
 
     private createQueue(): void {
-        const { hostname, port, auth } = parse(this.brokerUrl);
+        const { auth, hostname, port } = parse(this.brokerUrl);
         const [username, password] = (auth ?? '').split(':');
         this.queue = new Bull(this.routingKey, {
             redis: {
@@ -32,6 +32,20 @@ export abstract class BaseQueueRole {
                 port: parseInt(port as string),
                 ...(auth && { username, password }),
             } as RedisOptions,
+            defaultJobOptions: {
+                removeOnComplete: {
+                    // Do not keep completed jobs.
+                    count: 0,
+                },
+                removeOnFail: {
+                    // Do not keep failed jobs.
+                    count: 0,
+                },
+            },
+            settings: {
+                stalledInterval: 0,
+                maxStalledCount: 0,
+            },
         });
     }
 
