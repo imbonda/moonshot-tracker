@@ -50,3 +50,5 @@ services:
             # Required for puppeteer to run the browser in sandbox mode.
             - SYS_ADMIN
         command: ["node", "./build/src/main.js", "--service", "agent"]
+        deploy:
+            replicas: 5
