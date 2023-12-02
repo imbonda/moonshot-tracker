@@ -102,12 +102,12 @@ export class TrackedTokenModel extends BaseDalModule {
         const { uuid, insights } = token;
         const { _id } = (token as HydratedDocument<TrackedToken>);
 
-        const setOp = upsert ? '$setOnInsert' : '$set';
-        const update = {
-            [setOp]: {
+        const setOperation = upsert ? '$setOnInsert' : '$set';
+        const updateDocument = {
+            [setOperation]: {
                 ...token,
                 ...((!!_id) && { _id: createId(_id) }),
-                ...((!!insights && { insights: { $mergeObjects: ['$insights', insights] } })),
+                ...((!!insights && { insights })),
             },
             $unset: {
                 schedulerLockExpirationTime: 1,
@@ -115,7 +115,7 @@ export class TrackedTokenModel extends BaseDalModule {
         };
         return this.model.findOneAndUpdate(
             { uuid },
-            update,
+            updateDocument,
             { upsert, new: true },
         ).lean();
     }

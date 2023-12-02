@@ -56,7 +56,7 @@ export class DEXToolsAuditCheck extends TaskExecutor {
     }
 
     private buildAuditMatrix(): AuditMatrix {
-        const { createdAt: _, ...auditors } = this.externalAudit;
+        const { createdAt: _, ...auditors } = this.externalAudit ?? {};
         const matrix = Object.entries(auditors).reduce((mat, [provider, audit]) => {
             Object.entries(audit).forEach(([check, value]) => {
                 mat[check as keyof Audit] ??= {} as never;
@@ -101,7 +101,7 @@ export class DEXToolsAuditCheck extends TaskExecutor {
     }
 
     private get externalAudit(): TokenInsights['audit']['external'] {
-        return this.tokenInsight!.audit.external;
+        return this.audit.external;
     }
 
     private get links(): TokenInsights['links'] {
