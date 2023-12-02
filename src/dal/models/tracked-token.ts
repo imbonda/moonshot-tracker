@@ -70,7 +70,9 @@ const TrackedTokenSchema = new Schema<Timestamped<TrackedToken>>(
         completed: { type: Boolean },
         currentStageIndex: { type: Number },
         scheduledExecutionTime: { type: Date },
-        latestExecutionTime: { type: Date, required: false },
+        latestExecutionTime: { type: Date },
+        // Used only by the scheduler.
+        schedulerLockExpirationTime: { type: Date },
     },
     { timestamps: true },
 );
