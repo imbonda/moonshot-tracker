@@ -20,7 +20,7 @@ export class TrackingAgent extends Service {
 
     // eslint-disable-next-line class-methods-use-this
     public async setup(): Promise<void> {
-        await dal.connect();
+        await dal.connect({ noRedis: true });
     }
 
     // eslint-disable-next-line class-methods-use-this

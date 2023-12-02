@@ -12,12 +12,19 @@ interface DalModels {
     trackedToken: TrackedTokenModel,
 }
 
+interface Options {
+    noMongo?: boolean,
+    noRedis?: boolean,
+}
+
 class Dal {
     public redis: RedisAdapter;
 
     public mongodb: MongoDBAdapter;
 
     public models: DalModels;
+
+    private options!: Options;
 
     private logger: Logger;
 
@@ -31,18 +38,19 @@ class Dal {
         this.logger = new Logger(this.constructor.name);
     }
 
-    public async connect(): Promise<void> {
+    public async connect(options?: Options): Promise<void> {
+        this.options = options ?? {};
         await Promise.all([
-            this.redis.connect(),
-            this.mongodb.connect(),
+            this.options.noRedis ? Promise.resolve() : this.redis.connect(),
+            this.options.noMongo ? Promise.resolve() : this.mongodb.connect(),
         ]);
         this.logger.info('Dal connected');
     }
 
     public async disconnect(): Promise<void> {
         await Promise.all([
-            this.redis.disconnect(),
-            this.mongodb.disconnect(),
+            this.options.noRedis ? Promise.resolve() : this.redis.disconnect(),
+            this.options.noMongo ? Promise.resolve() : this.mongodb.disconnect(),
         ]);
         this.logger.info('Dal disconnected');
     }
