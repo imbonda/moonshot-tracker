@@ -56,6 +56,8 @@ export class PipelineExecutor {
             return;
         }
 
+        this.logger.info('Execution started');
+
         await Promise.all(
             this.stages.map((stage) => stage.execute()),
         );
@@ -66,6 +68,8 @@ export class PipelineExecutor {
                 this.currentStageIndex += 1;
             }
         }
+
+        this.logger.info('Execution ended');
     }
 
     public get result(): TrackedToken {

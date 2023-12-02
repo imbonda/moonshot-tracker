@@ -2,13 +2,13 @@
 import { Logger } from '../lib/logger';
 import { MongoDBAdapter } from './adapters/mongodb';
 import { RedisAdapter } from './adapters/redis';
-import { NewERC20Model } from './models/new-erc20';
+import { MatureERC20Model } from './models/mature-erc20';
 import { TrackedTokenModel } from './models/tracked-token';
 
 export type { TrackedTokenQueryParams } from './models/tracked-token';
 
 interface DalModels {
-    newErc20: NewERC20Model,
+    matureERC20: MatureERC20Model,
     trackedToken: TrackedTokenModel,
 }
 
@@ -25,7 +25,7 @@ class Dal {
         this.redis = new RedisAdapter();
         this.mongodb = new MongoDBAdapter();
         this.models = {
-            newErc20: new NewERC20Model(this),
+            matureERC20: new MatureERC20Model(this),
             trackedToken: new TrackedTokenModel(this),
         };
         this.logger = new Logger(this.constructor.name);

@@ -50,7 +50,7 @@ export class TrackingAgent extends Service {
         const pipeline = new PipelineExecutor(token);
         await pipeline.execute();
         const { completed, result } = pipeline;
-        await dal.models.trackedToken.upsertTrackedToken(result);
+        await dal.models.trackedToken.updateTrackedToken(result);
         if (completed) {
             await this.notifyMoonShotToken(result);
         }

@@ -9,7 +9,7 @@ export function createTrackedToken(
     chainId: number,
     address: string,
 ): TrackedToken {
-    const uuid = `${chainId}.${address}`;
+    const uuid = `${chainId}:${address}`;
     const executionDelayMs = DEFAULT_DELAY_MS;
     return {
         uuid,

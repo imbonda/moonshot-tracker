@@ -11,12 +11,13 @@ import type { UnknownFunction } from '../../@types/general';
 import type { ERC20 } from '../../@types/web3';
 import erc20ABI from '../../abi/erc20.json';
 import { web3Config } from '../../config';
-import { MS_IN_SECOND } from '../constants';
+import { HEX_NONE, MS_IN_SECOND } from '../constants';
 import { wrapRpcError } from '../decorators';
 import { isRetryableError } from '../errors';
 
 interface ProviderConfig {
     endpoints: string[],
+    avgBlockTime: number,
     pollingInterval: number,
     isAlchemy: boolean,
 }
@@ -96,13 +97,13 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
 
     constructor(chainId: number) {
         super();
-        this.setRatelimit();
         this.chainId = chainId;
         this._provider = this.getProvider(this.endpoints[rotatingProviderIndex]);
         this._nextReqId = 1;
         rotatingProviderIndex = (rotatingProviderIndex + 1) % this.endpoints.length;
         this.#proxyFuncCache = new Map();
         this.#proxy = new Proxy(this, this.handler);
+        this.setRatelimit();
         return this.#proxy;
     }
 
@@ -112,6 +113,10 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
 
     public get endpoints(): string[] {
         return this.config.endpoints;
+    }
+
+    public get avgBlockTime(): number {
+        return this.config.avgBlockTime;
     }
 
     public get pollingInterval(): number {
@@ -132,10 +137,15 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
      * Instance specific rate-limiting, rather than class specific (via a decorator).
      */
     private setRatelimit() {
-        this.getERC20 = new Bottleneck({
+        this.#proxy.call = new Bottleneck({
             maxConcurrent: 1,
             minTime: MS_IN_SECOND / 3,
-        }).wrap(this.getERC20.bind(this));
+        }).wrap(this.#proxy.call.bind(this.#proxy));
+
+        this.send<unknown> = new Bottleneck({
+            maxConcurrent: 1,
+            minTime: MS_IN_SECOND / 3,
+        }).wrap(this.send.bind(this));
 
         this.getTransactionReceiptsAlchemy = new Bottleneck({
             maxConcurrent: 1,
@@ -148,6 +158,17 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         provider.pollingInterval = this.pollingInterval;
         providers[endpoint] = provider;
         return provider;
+    }
+
+    public async isContract(
+        address: string,
+        blockNumber: string = 'latest',
+    ): Promise<boolean> {
+        const result = await this.send(
+            'eth_getCode',
+            [address, blockNumber],
+        );
+        return result !== HEX_NONE;
     }
 
     public async getERC20(address: string): Promise<ERC20 | null> {

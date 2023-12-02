@@ -8,7 +8,6 @@ import { Web3RpcProvider } from '../../lib/adapters/rpc-provider';
 import { hexifyNumber } from '../../lib/utils';
 import { Service } from '../service';
 import { MonitorCache } from './cache';
-import { ERC20ReceiptProcessor } from './receipt-processors/erc20-processor';
 import { LPTokenReceiptProcessor } from './receipt-processors/lp-token-processor';
 
 export class BlockchainMonitor extends Service {
@@ -17,8 +16,6 @@ export class BlockchainMonitor extends Service {
     private provider: Web3RpcProvider;
 
     private cache: MonitorCache;
-
-    private erc20Processor: ERC20ReceiptProcessor;
 
     private lpTokenProcessor: LPTokenReceiptProcessor;
 
@@ -29,7 +26,6 @@ export class BlockchainMonitor extends Service {
         this.chainId = web3Config.CHAIN_ID;
         this.provider = new Web3RpcProvider(this.chainId);
         this.cache = new MonitorCache();
-        this.erc20Processor = new ERC20ReceiptProcessor(this.provider, this.cache);
         this.lpTokenProcessor = new LPTokenReceiptProcessor(this.provider, this.cache);
     }
 
@@ -55,9 +51,9 @@ export class BlockchainMonitor extends Service {
     @throttle({ maxConcurrent: 1, discard: true })
     private async newBlockHandler(blockNumber: number): Promise<void> {
         this.nextExpectedBlock ??= blockNumber;
-        if (this.nextExpectedBlock > blockNumber) {
-            this.logger.info('Ignoring duplicate block event', { blockNumber });
-            return;
+        if (blockNumber < this.nextExpectedBlock) {
+            this.logger.warn('Duplicate block event, possible reorg', { blockNumber });
+            this.nextExpectedBlock = blockNumber;
         }
 
         // Handling blocks by order and taking care of gaps that can happen.
@@ -85,9 +81,6 @@ export class BlockchainMonitor extends Service {
     }
 
     private async processReceipt(receipt: TransactionReceipt): Promise<void> {
-        await Promise.allSettled([
-            this.erc20Processor.processReceipt(receipt),
-            this.lpTokenProcessor.processReceipt(receipt),
-        ]);
+        await this.lpTokenProcessor.processReceipt(receipt);
     }
 }

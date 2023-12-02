@@ -83,28 +83,40 @@ export class TrackedTokenModel extends BaseDalModule {
         this.model = mongoose.model<Timestamped<TrackedToken>>('Tracked Token', TrackedTokenSchema);
     }
 
-    public async upsertTrackedToken(
-        token: TrackedToken | HydratedDocument<TrackedToken>,
+    public async saveTrackedToken(
+        token: TrackedToken,
     ): Promise<TrackedTokenDocument> {
+        return this.upsertTrackedToken(token, true) as Promise<TrackedTokenDocument>;
+    }
+
+    public async updateTrackedToken(
+        token: TrackedToken | HydratedDocument<TrackedToken>,
+    ): Promise<TrackedTokenDocument | null> {
+        return this.upsertTrackedToken(token, false);
+    }
+
+    private async upsertTrackedToken(
+        token: TrackedToken | HydratedDocument<TrackedToken>,
+        upsert: boolean,
+    ): Promise<TrackedTokenDocument | null> {
         const { uuid, insights } = token;
         const { _id } = (token as HydratedDocument<TrackedToken>);
 
-        const update = [
-            {
-                $set: {
-                    ...token,
-                    ...((!!_id) && { _id: createId(_id) }),
-                    ...((!!insights && { insights: { $mergeObjects: ['$insights', insights] } })),
-                },
+        const setOp = upsert ? '$setOnInsert' : '$set';
+        const update = {
+            [setOp]: {
+                ...token,
+                ...((!!_id) && { _id: createId(_id) }),
+                ...((!!insights && { insights: { $mergeObjects: ['$insights', insights] } })),
             },
-            {
-                $unset: 'schedulerLockExpirationTime',
+            $unset: {
+                schedulerLockExpirationTime: 1,
             },
-        ];
+        };
         return this.model.findOneAndUpdate(
             { uuid },
             update,
-            { upsert: true, new: true },
+            { upsert, new: true },
         ).lean();
     }
 

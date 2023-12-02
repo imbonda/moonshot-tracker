@@ -53,6 +53,8 @@ export class StageExecutor {
             return;
         }
 
+        this.logger.info('Execution started');
+
         this.stageState = StageState.IN_PROGRESS;
 
         await Promise.all(
@@ -63,6 +65,8 @@ export class StageExecutor {
         if (completedAllTasks) {
             this.stageState = StageState.DONE;
         }
+
+        this.logger.info('Execution ended');
     }
 
     public attemptUnlock(tasksById: TasksById): void {

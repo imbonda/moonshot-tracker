@@ -19,6 +19,10 @@ export function hexifyNumber(number: BigNumberish): string {
     return hex;
 }
 
+export function calcBlockNumber(blockNumber: BigNumberish, offset: BigNumberish): string {
+    return hexifyNumber(BigInt(blockNumber) + BigInt(offset));
+}
+
 export function pretifyNumber(value: number): string {
     return millify(value, { precision: 2 });
 }

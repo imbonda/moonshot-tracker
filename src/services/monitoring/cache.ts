@@ -1,24 +1,18 @@
 // 3rd party.
 import NodeCache from 'node-cache';
-// Internal.
-import type { ERC20 } from '../../@types/web3';
 
 export class MonitorCache {
-    private newERC20Cache: NodeCache;
+    private erc20Cache: NodeCache;
 
     constructor() {
-        this.newERC20Cache = new NodeCache();
+        this.erc20Cache = new NodeCache();
     }
 
-    public saveNewERC20(erc20: ERC20, ttl: number): void {
-        this.newERC20Cache.set(erc20.address, erc20, ttl);
+    public saveERC20(address: string, ttl: number): void {
+        this.erc20Cache.set(address, true, ttl);
     }
 
-    public deleteNewERC20(address: string): void {
-        this.newERC20Cache.del(address);
-    }
-
-    public getNewERC20(address: string): ERC20 | null {
-        return this.newERC20Cache.get<ERC20>(address) ?? null;
+    public isERC20(address: string): boolean {
+        return this.erc20Cache.get<boolean>(address) ?? false;
     }
 }
