@@ -34,19 +34,8 @@ export class LPTokenReceiptProcessor extends BaseProcessor {
         if (!parsed) {
             return;
         }
-        const [token1Addr, token2Addr] = parseTokenAddresses(log);
         const pair = parsePairAddress(log);
-        const [isNewToken1, isNewToken2] = await Promise.all([
-            this.isNewERC20(token1Addr, log.blockNumber),
-            this.isNewERC20(token2Addr, log.blockNumber),
-        ]);
-        let newTokenAddr = isNewToken1 ? token1Addr : undefined;
-        newTokenAddr ??= isNewToken2 ? token2Addr : undefined;
-        this.logger.info('Liquidity pair created', { pair, newToken: !!newTokenAddr });
-        if (newTokenAddr) {
-            await this.saveTrackedToken(newTokenAddr);
-            await this.saveTokenCache(newTokenAddr);
-        }
+        await this.processNewLP(pair, log);
     }
 
     private async processUniswapV3LPTokenCreation(log: Log): Promise<void> {
@@ -55,15 +44,19 @@ export class LPTokenReceiptProcessor extends BaseProcessor {
         if (!parsed) {
             return;
         }
-        const [token1Addr, token2Addr] = parseTokenAddresses(log);
         const pool = parsePoolAddress(log);
+        await this.processNewLP(pool, log);
+    }
+
+    private async processNewLP(lp: string, log: Log): Promise<void> {
+        const [token1Addr, token2Addr] = parseTokenAddresses(log);
         const [isNewToken1, isNewToken2] = await Promise.all([
             this.isNewERC20(token1Addr, log.blockNumber),
             this.isNewERC20(token2Addr, log.blockNumber),
         ]);
         let newTokenAddr = isNewToken1 ? token1Addr : undefined;
         newTokenAddr ??= isNewToken2 ? token2Addr : undefined;
-        this.logger.info('Liquidity pool created', { pool, newToken: !!newTokenAddr });
+        this.logger.info('LP created', { lp, newToken: !!newTokenAddr });
         if (newTokenAddr) {
             this.logger.info('Saving token for tracking', { token: newTokenAddr });
             await this.saveTrackedToken(newTokenAddr);
