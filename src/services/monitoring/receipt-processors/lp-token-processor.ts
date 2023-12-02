@@ -86,12 +86,12 @@ export class LPTokenReceiptProcessor extends BaseProcessor {
         const blocksOffset = ERC20_MATURITY_THRESHOLD_SECONDS / (avgBlockTime / MS_IN_SECOND);
         const offset = -blocksOffset;
         const oldBlockNumber = calcBlockNumber(currentBlockNumber, offset);
-        const isNewContract = await this.provider.isContract(address, oldBlockNumber);
-        if (!isNewContract) {
+        const isMatureContract = await this.provider.isContract(address, oldBlockNumber);
+        if (isMatureContract) {
             // Cache mature tokens (e.g. WETH).
             await this.saveTokenCache(address, false);
         }
-        return isNewContract;
+        return !isMatureContract;
     }
 
     private async saveTokenCache(address: string, persist: boolean = true): Promise<void> {

@@ -19,7 +19,7 @@ export class MatureERC20Model extends BaseDalModule {
         const options = {
             deserialize: true,
         };
-        return !!this.dal.redis.get(key, options);
+        return !!await this.dal.redis.get(key, options);
     }
 
     private static buildERC20Uid(chainId: number, address: string): string {
