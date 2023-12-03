@@ -1,12 +1,14 @@
 // Builtin.
+import { parse } from 'url';
 import v8 from 'v8';
 // 3rd party.
-import Redis from 'ioredis';
+import Redis, { RedisOptions } from 'ioredis';
 // Internal.
 import { dbConfig } from '../../config';
 import { safe } from '../../lib/decorators';
 import { Logger } from '../../lib/logger';
-import { isEmpty } from '../../lib/utils';
+import { exponentialBackoff, isEmpty } from '../../lib/utils';
+import { MS_IN_SECOND } from '../../lib/constants';
 
 export class RedisAdapter {
     private _client!: Redis;
@@ -17,12 +19,27 @@ export class RedisAdapter {
         this.logger = new Logger(this.constructor.name);
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    public get options(): RedisOptions {
+        const { auth, hostname, port } = parse(dbConfig.REDIS_URL);
+        const [username, password] = (auth ?? '').split(':');
+        return {
+            host: hostname!,
+            port: parseInt(port!),
+            ...(auth && { username, password }),
+            retryStrategy: (times: number) => exponentialBackoff(
+                times,
+                { maxDelay: 10 * MS_IN_SECOND },
+            ),
+        };
+    }
+
     public get client(): Redis {
         return this._client;
     }
 
     public async connect(): Promise<void> {
-        this._client = new Redis(dbConfig.REDIS_URL);
+        this._client = new Redis(this.options);
 
         return new Promise((resolve, reject) => {
             // Register connection callbacks.

@@ -1,10 +1,8 @@
-// Builtin.
-import { parse } from 'url';
 // 3rd party.
 import Bull, { Queue } from 'bull';
-import { RedisOptions } from 'ioredis';
 // Internal.
 import { ipcConfig } from '../../../../config';
+import { Dal, dal } from '../../../../dal';
 import { Logger } from '../../../../lib/logger';
 
 export abstract class BaseQueueRole {
@@ -12,7 +10,7 @@ export abstract class BaseQueueRole {
 
     protected routingKey: string;
 
-    protected queue!: Queue<unknown>;
+    protected queue: Queue;
 
     protected logger: Logger;
 
@@ -20,33 +18,37 @@ export abstract class BaseQueueRole {
         this.routingKey = queue;
         this.brokerUrl = ipcConfig.mq.URL;
         this.logger = new Logger(this.constructor.name);
-        this.createQueue();
+        this.queue = this.createQueue(this.routingKey);
     }
 
-    private createQueue(): void {
-        const { auth, hostname, port } = parse(this.brokerUrl);
-        const [username, password] = (auth ?? '').split(':');
-        this.queue = new Bull(this.routingKey, {
-            redis: {
-                host: hostname,
-                port: parseInt(port as string),
-                ...(auth && { username, password }),
-            } as RedisOptions,
-            defaultJobOptions: {
-                removeOnComplete: {
-                    // Do not keep completed jobs.
-                    count: 0,
+    // eslint-disable-next-line class-methods-use-this
+    protected get redisOptions(): Dal['redis']['options'] {
+        return {
+            ...dal.redis.options,
+        };
+    }
+
+    protected createQueue(name: string): Queue {
+        return new Bull(
+            name,
+            {
+                redis: this.redisOptions,
+                defaultJobOptions: {
+                    removeOnComplete: {
+                        // Do not keep completed jobs.
+                        count: 0,
+                    },
+                    removeOnFail: {
+                        // Do not keep failed jobs.
+                        count: 0,
+                    },
                 },
-                removeOnFail: {
-                    // Do not keep failed jobs.
-                    count: 0,
+                settings: {
+                    stalledInterval: 0,
+                    maxStalledCount: 0,
                 },
             },
-            settings: {
-                stalledInterval: 0,
-                maxStalledCount: 0,
-            },
-        });
+        );
     }
 
     // eslint-disable-next-line class-methods-use-this

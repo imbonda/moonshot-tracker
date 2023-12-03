@@ -1,8 +1,21 @@
 // 3rd party.
 import { BigNumberish, toBeHex } from 'ethers';
 import millify from 'millify';
+// Internal.
+import { MS_IN_SECOND } from './constants';
 
 export { isEmpty, merge as mergeDeep } from 'lodash';
+
+interface ExponentialBackoffOptions {
+    minDelay?: number,
+    maxDelay?: number,
+}
+
+export function exponentialBackoff(times: number, options?: ExponentialBackoffOptions): number {
+    const minDelay = options?.minDelay ?? 1 * MS_IN_SECOND;
+    const maxDelay = options?.maxDelay ?? 60 * MS_IN_SECOND;
+    return Math.max(Math.min(Math.exp(times), maxDelay), minDelay);
+}
 
 export async function sleep(timeMs: number): Promise<void> {
     return new Promise((resolve) => {

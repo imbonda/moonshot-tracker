@@ -1,11 +1,21 @@
 // 3rd party.
 import { Job } from 'bull';
 // Internal.
+import { Dal } from '../../../../dal';
 import type { ConsumeHandler } from '../../../message-queue/consumer';
 import { BaseQueueRole } from './base';
 import { MS_IN_SECOND } from '../../../../lib/constants';
 
 export class QueueConsumer extends BaseQueueRole {
+    protected get redisOptions(): Dal['redis']['options'] {
+        const options = super.redisOptions;
+        return {
+            ...options,
+            enableOfflineQueue: true,
+            maxRetriesPerRequest: null,
+        };
+    }
+
     /**
      * Perform stuck jobs cleanum on startup.
      */
