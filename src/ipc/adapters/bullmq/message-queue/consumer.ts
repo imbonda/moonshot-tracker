@@ -12,7 +12,10 @@ export class QueueConsumer extends BaseQueueRole {
     public async init(): Promise<void> {
         const STUCK_JOB_THRESHOLD_MS = 5 * 60 * MS_IN_SECOND;
         // Cleaning stucked jobs (e.g. after crash).
-        await this.queue.clean(STUCK_JOB_THRESHOLD_MS, 'active');
+        await Promise.all([
+            this.queue.clean(STUCK_JOB_THRESHOLD_MS, 'active'),
+            this.queue.clean(STUCK_JOB_THRESHOLD_MS, 'wait'),
+        ]);
     }
 
     /**

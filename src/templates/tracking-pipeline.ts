@@ -16,6 +16,7 @@ export const TASKS_TEMPLATE: TrackedToken['tasks'] = {
 
 export const PIPELINE_TEMPLATE: TrackedToken['pipeline'] = [
     {
+        stageId: 'stage1',
         state: StageState.UNLOCKED,
         taskIds: [TaskId.DEX_TOOLS_AUDIT_CHECK],
         prerequisiteTasks: [],
