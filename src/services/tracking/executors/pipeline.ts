@@ -28,7 +28,10 @@ export class PipelineExecutor {
             return accum;
         }, {});
         this.currentStageIndex = this.token.currentStageIndex;
-        this.logger = new Logger(this.constructor.name);
+        this.logger = new Logger(
+            this.constructor.name,
+            { token: token.address },
+        );
     }
 
     private get currentStage(): StageExecutor {

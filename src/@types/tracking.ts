@@ -20,6 +20,7 @@ export interface TaskData {
 }
 
 export interface PipelineStage {
+    stageId: string,
     state: string,
     taskIds: TaskData['taskId'][],
     prerequisiteTasks: TaskData['taskId'][],

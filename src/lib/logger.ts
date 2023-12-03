@@ -58,9 +58,9 @@ export class Logger extends LoggerClass() {
         },
     };
 
-    constructor(name: string) {
+    constructor(name: string, extra: Record<string, unknown> = {}) {
         super();
-        this._logger = baseLogger.child({ loggerName: name });
+        this._logger = baseLogger.child({ loggerName: name, ...extra });
         return new Proxy(this, this.handler);
     }
 }

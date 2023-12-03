@@ -50,6 +50,7 @@ const TaskDataSchema = new Schema<TaskData>(
 
 const PipelineStageSchema = new Schema<PipelineStage>(
     {
+        stageId: { type: String },
         state: { type: String },
         taskIds: { type: [String] },
         prerequisiteTasks: { type: [String] },

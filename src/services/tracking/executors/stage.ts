@@ -25,7 +25,13 @@ export class StageExecutor {
         this.stageTasks = stage.taskIds.map(
             (taskId) => TaskFactory.createTask(token, token.tasks[taskId]),
         );
-        this.logger = new Logger(this.constructor.name);
+        this.logger = new Logger(
+            this.constructor.name,
+            {
+                token: token.address,
+                stageId: stage.stageId,
+            },
+        );
     }
 
     public get unlocked(): boolean {

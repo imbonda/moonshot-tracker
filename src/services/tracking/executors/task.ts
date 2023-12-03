@@ -36,7 +36,13 @@ export abstract class TaskExecutor {
         this.taskData = taskData;
         this.taskState = taskData.state as TaskState;
         this.repetition = taskData.repetitions.count;
-        this.logger = new Logger(this.constructor.name);
+        this.logger = new Logger(
+            this.constructor.name,
+            {
+                token: token.address,
+                taskId: taskData.taskId,
+            },
+        );
         this._aborted = false;
     }
 
