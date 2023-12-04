@@ -3,6 +3,7 @@ import v8 from 'v8';
 // Internal.
 import type { TrackedToken } from '../../@types/tracking';
 import { dal, type TrackedTokenQueryParams } from '../../dal';
+import type { Paginated } from '../../dal/types';
 import { TRACKING_QUEUE } from '../../ipc/message-queue/constants';
 import { QueueProducer } from '../../ipc/message-queue/producer';
 import { safe } from '../../lib/decorators';
@@ -46,25 +47,22 @@ export class TrackingScheduler extends Service {
 
     @safe()
     async schedule(): Promise<void> {
-        const range: TrackedTokenQueryParams['range'] = {
+        const range = {
             endDate: new Date(),
         };
-        const set: TrackedTokenQueryParams['set'] = {
+        const set = {
             // Locking the tokens until the tracking request is completes or the lock expires.
             schedulerLockDuration: SCHEDULING_LOCK_EXPIRATION_MS,
         };
 
-        let paginated = await dal.models.trackedToken.findScheduledTrackedTokens({
-            range,
-            set,
-        });
+        let paginated = await this.findScheduledTrackedTokens({ range, set });
         while (paginated.page.length) {
             // eslint-disable-next-line no-await-in-loop
             await Promise.all(
                 paginated.page.map(this.scheduleTokenTracking.bind(this)),
             );
             // eslint-disable-next-line no-await-in-loop
-            paginated = await dal.models.trackedToken.findScheduledTrackedTokens({
+            paginated = await this.findScheduledTrackedTokens({
                 range: {
                     ...range,
                     pageNumber: paginated.pageNumber + 1,
@@ -72,6 +70,18 @@ export class TrackingScheduler extends Service {
                 set,
             });
         }
+    }
+
+    private async findScheduledTrackedTokens(
+        { range, set }: TrackedTokenQueryParams,
+    ): Promise<Paginated<TrackedToken>> {
+        return this.tracer.startActiveSpan('findScheduledTrackedTokens', async (span) => {
+            try {
+                return await dal.models.trackedToken.findScheduledTrackedTokens({ range, set });
+            } finally {
+                span.end();
+            }
+        });
     }
 
     @safe()
