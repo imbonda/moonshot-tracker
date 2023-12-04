@@ -1,3 +1,6 @@
+// Builtin.
+import http from 'http';
+import https from 'https';
 // 3rd party.
 import { program, Option, OptionValues } from 'commander';
 // Internal.
@@ -35,9 +38,15 @@ class Launcher {
     }
 
     async launch(): Promise<void> {
-        const { service } = this;
-        await service.setup();
-        await service.start().catch((err) => service.teardown());
+        this.setHooks();
+        await this.service.setup();
+        await this.service.start().catch(this.service.teardown.bind(this));
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    setHooks(): void {
+        http.globalAgent = new http.Agent({ keepAlive: true });
+        https.globalAgent = new https.Agent({ keepAlive: true });
     }
 }
 
