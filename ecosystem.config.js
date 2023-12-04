@@ -10,8 +10,8 @@ module.exports = {
                 NODE_ENV: 'dev',
                 CHAIN_ID: 1,
             },
-            env_production: {
-                NODE_ENV: 'production',
+            env_prod: {
+                NODE_ENV: 'prod',
                 CHAIN_ID: 1,
             },
         },
@@ -25,8 +25,8 @@ module.exports = {
                 NODE_ENV: 'dev',
                 CHAIN_ID: 56,
             },
-            env_production: {
-                NODE_ENV: 'production',
+            env_prod: {
+                NODE_ENV: 'prod',
                 CHAIN_ID: 56,
             },
         },
@@ -39,8 +39,8 @@ module.exports = {
             env: {
                 NODE_ENV: 'dev',
             },
-            env_production: {
-                NODE_ENV: 'production',
+            env_prod: {
+                NODE_ENV: 'prod',
             },
         },
 
@@ -52,8 +52,8 @@ module.exports = {
             env: {
                 NODE_ENV: 'dev',
             },
-            env_production: {
-                NODE_ENV: 'production',
+            env_prod: {
+                NODE_ENV: 'prod',
             },
         },
     ],

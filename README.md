@@ -37,7 +37,7 @@ npx pm2 stop --all
 #### Production
 ```
 # Run PM2 with "production" mode.
-npx pm2 start --env production
+npx pm2 start --env prod
 
 # Stop all PM2 processes.
 npx pm2 stop --all

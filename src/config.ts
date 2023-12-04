@@ -15,8 +15,8 @@ dotenv.config({ path: path.join(__dirname, '..', dotEnvFilename()) });
  * Mode.
  */
 export const envConfig = {
-    IS_DEBUG: nodeEnv === 'debug',
-    IS_PROD: nodeEnv === 'production',
+    IS_DEV: nodeEnv === 'dev',
+    IS_PROD: nodeEnv === 'prod',
 };
 
 /**
