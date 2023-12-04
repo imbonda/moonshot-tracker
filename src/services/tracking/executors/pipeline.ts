@@ -2,6 +2,7 @@
 import type { TrackedToken } from '../../../@types/tracking';
 import { Logger } from '../../../lib/logger';
 import { mergeDeep } from '../../../lib/utils';
+import { tracer, type Tracer } from '../static';
 import { StageExecutor } from './stage';
 import type { TasksById } from './task';
 
@@ -15,6 +16,8 @@ export class PipelineExecutor {
     private currentStageIndex: number;
 
     private logger: Logger;
+
+    private tracer: Tracer;
 
     constructor(token: TrackedToken) {
         this.token = token;
@@ -32,6 +35,7 @@ export class PipelineExecutor {
             this.constructor.name,
             { token: token.address },
         );
+        this.tracer = tracer;
     }
 
     private get currentStage(): StageExecutor {
@@ -59,20 +63,25 @@ export class PipelineExecutor {
             return;
         }
 
-        this.logger.info('Execution started');
+        await this.tracer.startActiveSpan('pipeline', async (span) => {
+            try {
+                this.logger.info('Execution started');
 
-        await Promise.all(
-            this.stages.map((stage) => stage.execute()),
-        );
+                await Promise.all(
+                    this.stages.map((stage) => stage.execute()),
+                );
 
-        if (!this.isLastStage) {
-            this.nextStage!.attemptUnlock(this.tasksById);
-            if (this.nextStage!.unlocked) {
-                this.currentStageIndex += 1;
+                if (!this.isLastStage) {
+                    this.nextStage!.attemptUnlock(this.tasksById);
+                    if (this.nextStage!.unlocked) {
+                        this.currentStageIndex += 1;
+                    }
+                }
+            } finally {
+                span.end();
+                this.logger.info('Execution ended');
             }
-        }
-
-        this.logger.info('Execution ended');
+        });
     }
 
     public get result(): TrackedToken {

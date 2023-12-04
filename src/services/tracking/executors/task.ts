@@ -2,7 +2,7 @@
 import type { TaskData, TrackedToken } from '../../../@types/tracking';
 import { MS_IN_SECOND } from '../../../lib/constants';
 import { Logger } from '../../../lib/logger';
-import { TaskState } from '../static';
+import { TaskState, tracer, type Tracer } from '../static';
 
 export type Insight = Record<string, unknown> | null;
 
@@ -29,6 +29,8 @@ export abstract class TaskExecutor {
 
     protected logger: Logger;
 
+    protected tracer: Tracer;
+
     private _aborted: boolean;
 
     constructor(token: TrackedToken, taskData: TaskData) {
@@ -43,6 +45,7 @@ export abstract class TaskExecutor {
                 taskId: taskData.taskId,
             },
         );
+        this.tracer = tracer;
         this._aborted = false;
     }
 
@@ -152,9 +155,16 @@ export abstract class TaskExecutor {
             this.taskState = TaskState.IN_PROGRESS;
         }
 
-        this.logger.info('Execution started');
-        await this.run();
-        this.logger.info('Execution ended');
+        await this.tracer.startActiveSpan(`task.${this.id}`, async (span) => {
+            try {
+                span.setAttributes({ taskId: this.id });
+                this.logger.info('Execution started');
+                await this.run();
+            } finally {
+                span.end();
+                this.logger.info('Execution ended');
+            }
+        });
 
         this.repetition += 1;
         if (this.completed || this.shouldNotRepeat) {

@@ -1,7 +1,7 @@
 // Internal.
 import type { TrackedToken, PipelineStage } from '../../../@types/tracking';
 import { Logger } from '../../../lib/logger';
-import { StageState } from '../static';
+import { StageState, tracer, type Tracer } from '../static';
 import { TaskFactory } from '../tasks/task-factory';
 import { type TasksById, TaskExecutor } from './task';
 
@@ -19,6 +19,8 @@ export class StageExecutor {
 
     private logger: Logger;
 
+    private tracer: Tracer;
+
     constructor(token: TrackedToken, stage: PipelineStage) {
         this.stage = stage;
         this.stageState = this.stage.state as StageState;
@@ -29,9 +31,10 @@ export class StageExecutor {
             this.constructor.name,
             {
                 token: token.address,
-                stageId: stage.stageId,
+                stageId: this.id,
             },
         );
+        this.tracer = tracer;
     }
 
     public get unlocked(): boolean {
@@ -44,6 +47,10 @@ export class StageExecutor {
 
     public get tasks(): TaskExecutor[] {
         return this.stageTasks;
+    }
+
+    private get id(): PipelineStage['stageId'] {
+        return this.stage.stageId;
     }
 
     private get state(): PipelineStage['state'] {
@@ -59,20 +66,27 @@ export class StageExecutor {
             return;
         }
 
-        this.logger.info('Execution started');
+        await this.tracer.startActiveSpan('stage', async (span) => {
+            try {
+                span.setAttributes({ stageId: this.id });
 
-        this.stageState = StageState.IN_PROGRESS;
+                this.logger.info('Execution started');
 
-        await Promise.all(
-            this.stageTasks.map((task) => task.execute()),
-        );
+                this.stageState = StageState.IN_PROGRESS;
 
-        const completedAllTasks = this.stageTasks.every((task) => task.completed);
-        if (completedAllTasks) {
-            this.stageState = StageState.DONE;
-        }
+                await Promise.all(
+                    this.stageTasks.map((task) => task.execute()),
+                );
 
-        this.logger.info('Execution ended');
+                const completedAllTasks = this.stageTasks.every((task) => task.completed);
+                if (completedAllTasks) {
+                    this.stageState = StageState.DONE;
+                }
+            } finally {
+                span.end();
+                this.logger.info('Execution ended');
+            }
+        });
     }
 
     public attemptUnlock(tasksById: TasksById): void {

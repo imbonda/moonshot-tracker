@@ -1,5 +1,5 @@
 // 3rd party.
-import { trace, Tracer } from '@opentelemetry/api';
+import { trace, type Tracer } from '@opentelemetry/api';
 // Internal.
 import { Logger } from '../lib/logger';
 
