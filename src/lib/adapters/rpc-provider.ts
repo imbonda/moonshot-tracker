@@ -1,5 +1,6 @@
 /* eslint-disable max-classes-per-file */
 // 3rd party.
+import { trace, type Tracer } from '@opentelemetry/api';
 import axios from 'axios';
 import Bottleneck from 'bottleneck';
 import {
@@ -30,6 +31,12 @@ const NO_RETRY_METHODS = new Set(['on']);
 const JsonRpcProviderClass = (): new () => JsonRpcProvider => (class {} as never);
 
 export class Web3RpcProvider extends JsonRpcProviderClass() {
+    private static tracer: Tracer;
+
+    static {
+        this.tracer = trace.getTracer(this.name);
+    }
+
     public chainId: number;
 
     private _provider: JsonRpcProvider;
@@ -226,40 +233,52 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         method: string,
         params: unknown[],
     ): Promise<T> {
-        const res = await this._provider.send(method, params);
-        if (!res) {
-            throw new Error('Empty response');
-        }
-        return res;
+        return Web3RpcProvider.tracer.startActiveSpan(`rpc.send.${method}`, async (span) => {
+            try {
+                const res = await this._provider.send(method, params);
+                if (!res) {
+                    throw new Error('Empty response');
+                }
+                return res;
+            } finally {
+                span.end();
+            }
+        });
     }
 
     private async sendNoBatch<T>(
         method: string,
         params: unknown[],
     ): Promise<T | null> {
-        const { url } = this._provider._getConnection();
-        const body = JSON.stringify({
-            jsonrpc: '2.0',
-            method,
-            params,
-            id: this.nextId,
+        return Web3RpcProvider.tracer.startActiveSpan(`rpc.send.${method}`, async (span) => {
+            try {
+                const { url } = this._provider._getConnection();
+                const body = JSON.stringify({
+                    jsonrpc: '2.0',
+                    method,
+                    params,
+                    id: this.nextId,
+                });
+
+                const result = await axios.post(
+                    url,
+                    body,
+                    {
+                        headers: {
+                            'Content-Type': 'application/json;',
+                        },
+                    },
+                );
+
+                const error = result?.data?.error;
+                if (error) {
+                    throw new Error(error.message);
+                }
+
+                return result?.data?.result ?? null;
+            } finally {
+                span.end();
+            }
         });
-
-        const result = await axios.post(
-            url,
-            body,
-            {
-                headers: {
-                    'Content-Type': 'application/json;',
-                },
-            },
-        );
-
-        const error = result?.data?.error;
-        if (error) {
-            throw new Error(error.message);
-        }
-
-        return result?.data?.result ?? null;
     }
 }
