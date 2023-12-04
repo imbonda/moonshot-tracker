@@ -3,6 +3,7 @@ import Bull, { Queue } from 'bull';
 // Internal.
 import { ipcConfig } from '../../../../config';
 import { Dal, dal } from '../../../../dal';
+import { MS_IN_SECOND } from '../../../../lib/constants';
 import { Logger } from '../../../../lib/logger';
 
 export abstract class BaseQueueRole {
@@ -49,6 +50,18 @@ export abstract class BaseQueueRole {
                 },
             },
         );
+    }
+
+    /**
+     * Perform stuck jobs cleanum on startup.
+     */
+    protected async cleanup(): Promise<void> {
+        const STUCK_JOB_THRESHOLD_MS = 5 * 60 * MS_IN_SECOND;
+        // Cleaning stucked jobs (e.g. after crash).
+        await Promise.all([
+            this.queue.clean(STUCK_JOB_THRESHOLD_MS, 'active'),
+            this.queue.clean(STUCK_JOB_THRESHOLD_MS, 'wait'),
+        ]);
     }
 
     // eslint-disable-next-line class-methods-use-this
