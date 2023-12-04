@@ -132,15 +132,19 @@ class DexToolsScraper {
         return parsed;
     }
 
-    private async fetchDexTools<T>(
-        url: string,
-    ): Promise<T> {
-        const result = await this.page.evaluate(async (reqUrl, reqInit) => new Promise(
-            (resolve) => {
-                fetch(reqUrl, reqInit).then((res) => resolve(res.json()));
-            },
-        ), url, this.reqInit) as T;
-        return result;
+    private async fetchDexTools<T>(url: string): Promise<T> {
+        return this.tracer.startActiveSpan(`${this.constructor.name}.fetchDexTools`, async (span) => {
+            try {
+                const result = await this.page.evaluate(async (reqUrl, reqInit) => new Promise(
+                    (resolve) => {
+                        fetch(reqUrl, reqInit).then((res) => resolve(res.json()));
+                    },
+                ), url, this.reqInit) as T;
+                return result;
+            } finally {
+                span.end();
+            }
+        });
     }
 
     private createTokenInsights(data: FullyAuditedPairData): TokenInsights {
