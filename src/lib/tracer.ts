@@ -11,20 +11,11 @@ import { nodeEnv, opentelemetryConfig, web3Config } from '../config';
 import { Logger } from './logger';
 
 class OTELTracer {
-    static logger: Logger;
+    private sdk: NodeSDK;
 
-    static sdk: NodeSDK;
+    private logger: Logger;
 
-    static get serviceName() {
-        const args = process.argv;
-        const service = args[args.indexOf('--service') + 1];
-        const chain = web3Config.CHAIN_NAME;
-        return `[${nodeEnv}] ${service}${chain ? ` ${chain}` : ''}`;
-    }
-
-    static {
-        this.logger = new Logger(OTELTracer.name);
-
+    constructor() {
         const traceExporter = new OTLPTraceExporter({
             url: opentelemetryConfig.EXPORTER_TRACES_ENDPOINT,
             headers: {
@@ -51,31 +42,47 @@ class OTELTracer {
             ],
             sampler: new TraceIdRatioBasedSampler(1 / opentelemetryConfig.SAMPLE_RATE),
         });
+
+        this.logger = new Logger(this.constructor.name);
     }
 
-    static run(): void {
+    // eslint-disable-next-line class-methods-use-this
+    private get serviceName() {
+        const args = process.argv;
+        const service = args[args.indexOf('--service') + 1];
+        const chain = web3Config.CHAIN_NAME;
+        return `[${nodeEnv}] ${service}${chain ? ` ${chain}` : ''}`;
+    }
+
+    public run(): void {
         try {
             this.sdk.start();
         } catch (err) {
             this.logger.error('Initialization failed', err);
         }
         this.logger.info('Initialized successfully');
+    }
 
-        process.on('SIGTERM', async () => {
-            try {
-                await this.sdk.shutdown();
-                this.logger.info('Shutdown successfully');
-            } catch (err) {
-                this.logger.error('Shutdown failed', err);
-            } finally {
-                process.exit(0);
-            }
-        });
+    public async shutdown(): Promise<void> {
+        try {
+            await this.sdk.shutdown();
+            this.logger.info('Shutdown successfully');
+        } catch (err) {
+            this.logger.error('Shutdown failed', err);
+        }
     }
 }
 
 function main() {
-    OTELTracer.run();
+    const tracer = new OTELTracer();
+    tracer.run();
+    process.on('SIGTERM', async () => {
+        try {
+            await tracer.shutdown();
+        } finally {
+            process.exit(0);
+        }
+    });
 }
 
 main();
