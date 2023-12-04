@@ -4,7 +4,9 @@ import v8 from 'v8';
 import type { TrackedToken } from '../../@types/tracking';
 import { dal } from '../../dal';
 import { TRACKING_QUEUE } from '../../ipc/message-queue/constants';
-import { QueueConsumer } from '../../ipc/message-queue/consumer';
+import {
+    ChannelAck, ChannelReject, Message, QueueConsumer,
+} from '../../ipc/message-queue/consumer';
 import { telegram } from '../../lib/notifications/telegram';
 import { emojifyNumber, formatUSD } from '../../lib/utils';
 import { Service } from '../service';
@@ -30,21 +32,31 @@ export class TrackingAgent extends Service {
     }
 
     public async start(): Promise<void> {
-        this.consumer.consume(async (msg, ack, reject) => {
-            if (!msg) {
-                this.logger.info('Consumed empty message');
-                return;
-            }
+        this.consumer.consume(this.onConsume.bind(this));
+    }
 
-            try {
-                const trackedToken = v8.deserialize(msg.content);
-                await this.track(trackedToken);
-                await ack();
-            } catch (err) {
-                this.logger.error(err);
-                await reject(false);
-            }
-        });
+    private async onConsume(
+        msg: Message | null,
+        ack: ChannelAck,
+        reject: ChannelReject,
+    ): Promise<void> {
+        if (!msg) {
+            this.logger.info('Consumed empty message');
+            return;
+        }
+
+        try {
+            const trackedToken = v8.deserialize(msg.content);
+            await this.tracer.startActiveSpan('track', { root: true }, async (span) => {
+                const { chainId, address } = trackedToken;
+                span.setAttributes({ chainId, token: address });
+                await this.track(trackedToken).finally(() => span.end());
+            });
+            await ack();
+        } catch (err) {
+            this.logger.error(err);
+            await reject(false);
+        }
     }
 
     private async track(token: TrackedToken): Promise<void> {

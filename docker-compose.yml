@@ -15,7 +15,7 @@ services:
         environment:
             <<: *common-variables
             CHAIN_ID: 1
-        command: ["node", "./build/src/main.js", "--service", "monitor"]
+        command: ["node", "-r", "./build/src/lib/tracer.js", "./build/src/main.js", "--service", "monitor"]
     
     monitor_bsc:
         build:
@@ -26,7 +26,7 @@ services:
         environment:
             <<: *common-variables
             CHAIN_ID: 56
-        command: ["node", "./build/src/main.js", "--service", "monitor"]
+        command: ["node", "-r", "./build/src/lib/tracer.js", "./build/src/main.js", "--service", "monitor"]
 
     scheduler:
         build:
@@ -36,7 +36,7 @@ services:
             - .env
         environment:
             <<: *common-variables
-        command: ["node", "./build/src/main.js", "--service", "scheduler"]
+        command: ["node", "-r", "./build/src/lib/tracer.js", "./build/src/main.js", "--service", "scheduler"]
     
     agent:
         build:
@@ -49,6 +49,6 @@ services:
         cap_add:
             # Required for puppeteer to run the browser in sandbox mode.
             - SYS_ADMIN
-        command: ["node", "./build/src/main.js", "--service", "agent"]
+        command: ["node", "-r", "./build/src/lib/tracer.js", "./build/src/main.js", "--service", "agent"]
         deploy:
             replicas: 5

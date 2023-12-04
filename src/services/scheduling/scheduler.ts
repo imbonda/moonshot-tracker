@@ -30,7 +30,18 @@ export class TrackingScheduler extends Service {
     }
 
     public async start(): Promise<void> {
-        await this.schedule();
+        await this.schedulePeriodically();
+    }
+
+    async schedulePeriodically(): Promise<void> {
+        await this.tracer.startActiveSpan('schedule', { root: true }, async (span) => {
+            await this.schedule().finally(() => span.end());
+        });
+
+        setTimeout(
+            this.schedulePeriodically.bind(this),
+            SCHEDULING_INTERVAL_MS,
+        );
     }
 
     @safe()
@@ -61,11 +72,6 @@ export class TrackingScheduler extends Service {
                 set,
             });
         }
-
-        setTimeout(
-            this.schedule.bind(this),
-            SCHEDULING_INTERVAL_MS,
-        );
     }
 
     @safe()

@@ -5,7 +5,7 @@ module.exports = {
             name: 'monitor_eth',
             cwd: './',
             script: 'node',
-            args: './build/src/main.js --service monitor',
+            args: '-r ./build/src/lib/tracer.js ./build/src/main.js --service monitor',
             env: {
                 NODE_ENV: 'dev',
                 CHAIN_ID: 1,
@@ -20,7 +20,7 @@ module.exports = {
             name: 'monitor_bsc',
             cwd: './',
             script: 'node',
-            args: './build/src/main.js --service monitor',
+            args: '-r ./build/src/lib/tracer.js ./build/src/main.js --service monitor',
             env: {
                 NODE_ENV: 'dev',
                 CHAIN_ID: 56,
@@ -35,7 +35,7 @@ module.exports = {
             name: 'scheduler',
             cwd: './',
             script: 'node',
-            args: './build/src/main.js --service scheduler',
+            args: '-r ./build/src/lib/tracer.js ./build/src/main.js --service scheduler',
             env: {
                 NODE_ENV: 'dev',
             },
@@ -48,7 +48,7 @@ module.exports = {
             name: 'agent',
             cwd: './',
             script: 'node',
-            args: './build/src/main.js --service agent',
+            args: '-r ./build/src/lib/tracer.js ./build/src/main.js --service agent',
             env: {
                 NODE_ENV: 'dev',
             },

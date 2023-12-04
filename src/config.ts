@@ -3,7 +3,7 @@ import path from 'path';
 // 3rd party.
 import dotenv from 'dotenv';
 // Internal.
-import { CHAIN_IDS } from './lib/constants';
+import { CHAIN_IDS, CHAIN_NAMES } from './lib/constants';
 
 export const nodeEnv = process.env.NODE_ENV?.toLowerCase();
 
@@ -30,8 +30,12 @@ export const dbConfig = {
 /**
  * Web3.
  */
+const CHAIN_ID = parseInt(process.env.CHAIN_ID!);
+const CHAIN_NAME = CHAIN_NAMES[CHAIN_ID]!;
+
 export const web3Config = {
-    CHAIN_ID: parseInt(process.env.CHAIN_ID!),
+    CHAIN_ID,
+    CHAIN_NAME,
     RPC_CONFIG_BY_CHAIN: Object.fromEntries(
         CHAIN_IDS.map((chainId) => [
             chainId,

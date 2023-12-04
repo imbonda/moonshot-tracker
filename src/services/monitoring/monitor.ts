@@ -56,11 +56,14 @@ export class BlockchainMonitor extends Service {
             this.nextExpectedBlock = blockNumber;
         }
 
-        // Handling blocks by order and taking care of gaps that can happen.
+        // Handling blocks by order and taking care of gaps that can occur.
         for (; this.nextExpectedBlock <= blockNumber; this.nextExpectedBlock += 1) {
             this.logger.info('Starting handling block', { blockNumber: this.nextExpectedBlock });
             // eslint-disable-next-line no-await-in-loop
-            await this.processBlock(this.nextExpectedBlock);
+            await this.tracer.startActiveSpan('block', { root: true }, async (span) => {
+                span.setAttributes({ 'monitor.block': this.nextExpectedBlock });
+                await this.processBlock(this.nextExpectedBlock!).finally(() => span.end());
+            });
             this.logger.info('Finished handling block', { blockNumber: this.nextExpectedBlock });
         }
     }
