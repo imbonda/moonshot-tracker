@@ -6,6 +6,7 @@ import type {
 } from '../../../@types/dex-tools';
 import { Logger } from '../../logger';
 import { Browser, type Page } from '../browser';
+import { tracer, type Tracer } from '../static';
 import {
     buildGetPairUrl, buildGetTopTokenPairsUrl, parseTokenPair, resolveChain,
 } from './utils';
@@ -24,8 +25,11 @@ class DexToolsScraper {
 
     private logger: Logger;
 
+    private tracer: Tracer;
+
     constructor() {
         this.logger = new Logger(this.constructor.name);
+        this.tracer = tracer;
     }
 
     public async fetchTokenInsights(
@@ -48,8 +52,14 @@ class DexToolsScraper {
     }
 
     protected async setup(): Promise<void> {
-        this.setupBrowser();
-        await this.setupPage();
+        await this.tracer.startActiveSpan(`${this.constructor.name}.setup`, async (span) => {
+            try {
+                this.setupBrowser();
+                await this.setupPage();
+            } finally {
+                span.end();
+            }
+        });
     }
 
     protected setupBrowser(): void {

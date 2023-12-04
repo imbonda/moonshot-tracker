@@ -5,6 +5,7 @@ import stealthPlugin from 'puppeteer-extra-plugin-stealth';
 // Internal.
 import { safe } from '../decorators';
 import { Logger } from '../logger';
+import { tracer, type Tracer } from './static';
 
 export type { Page } from 'puppeteer';
 
@@ -18,12 +19,15 @@ export class Browser {
 
     private logger: Logger;
 
+    private tracer: Tracer;
+
     private _closed: boolean;
 
     constructor() {
         this.pagesById = {};
         this._closed = false;
         this.logger = new Logger(this.constructor.name);
+        this.tracer = tracer;
     }
 
     public get closed(): boolean {
@@ -44,23 +48,41 @@ export class Browser {
         if (!this.browser) {
             await this.launch();
         }
-        return this.browser.newPage();
+        return this.tracer.startActiveSpan(`${this.constructor.name}.newPage`, async (span) => {
+            try {
+                return await this.browser.newPage();
+            } finally {
+                span.end();
+            }
+        });
     }
 
     private async launch(): Promise<void> {
-        this.logger.info('Opening browser');
-        this.browser = await puppeteer.launch({
-            headless: 'new',
-            defaultViewport: null,
+        await this.tracer.startActiveSpan(`${this.constructor.name}.launch`, async (span) => {
+            try {
+                this.logger.info('Opening browser');
+                this.browser = await puppeteer.launch({
+                    headless: 'new',
+                    defaultViewport: null,
+                });
+            } finally {
+                span.end();
+            }
         });
     }
 
     @safe()
     public async close() {
         if (!this.closed) {
-            this.logger.info('Closing browser');
-            this.closed = true;
-            await this.browser?.close();
+            await this.tracer.startActiveSpan(`${this.constructor.name}.close`, async (span) => {
+                try {
+                    this.logger.info('Closing browser');
+                    this.closed = true;
+                    await this.browser?.close();
+                } finally {
+                    span.end();
+                }
+            });
         }
     }
 }
