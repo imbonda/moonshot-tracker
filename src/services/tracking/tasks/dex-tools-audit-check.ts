@@ -73,11 +73,10 @@ export class DEXToolsAuditCheck extends TaskExecutor {
             .reduce((accum, [check, predicate]) => {
                 const audits = this.auditMatrix![check as AudicCheck];
                 const auditResults = Object.values(audits ?? {});
-                const predicateResults = auditResults.map(predicate);
-                const alertingResults = predicateResults.filter((isRedFlag) => !!isRedFlag);
-                const isRedFlag = alertingResults.length > 0;
-                if (isRedFlag) {
-                    accum[check as AudicCheck] = true;
+                const alertingResults = auditResults.filter(predicate);
+                const hasRedFlags = alertingResults.length > 0;
+                if (hasRedFlags) {
+                    accum[check as AudicCheck] = alertingResults;
                 }
                 return accum;
             }, {} as RedFlags);

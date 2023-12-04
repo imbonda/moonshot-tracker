@@ -183,7 +183,7 @@ export type FullyAuditedPairData = Modify<PairData, {
     }>,
 }>
 
-export type RedFlags = Record<string, true>;
+export type RedFlags = Record<string, unknown[]>;
 
 export interface TokenInsights {
     audit: FullyAuditedPairData['token']['audit'],

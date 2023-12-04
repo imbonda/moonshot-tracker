@@ -64,6 +64,11 @@ export class Browser {
                 this.browser = await puppeteer.launch({
                     headless: 'new',
                     defaultViewport: null,
+                    args: [
+                        // Enabling chrome to render large pages within docker:
+                        // https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#tips
+                        '--disable-dev-shm-usage',
+                    ],
                 });
             } finally {
                 span.end();
