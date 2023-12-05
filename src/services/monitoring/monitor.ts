@@ -2,7 +2,7 @@
 import type { TransactionReceipt } from 'ethers';
 // Internal.
 import { web3Config } from '../../config';
-import { safe, throttle } from '../../lib/decorators';
+import { promiselimit, safe, throttle } from '../../lib/decorators';
 import { dal } from '../../dal';
 import { Web3RpcProvider } from '../../lib/adapters/rpc-provider';
 import { hexifyNumber } from '../../lib/utils';
@@ -87,6 +87,7 @@ export class BlockchainMonitor extends Service {
         );
     }
 
+    @promiselimit(50)
     private async processReceipt(receipt: TransactionReceipt): Promise<void> {
         await this.lpTokenProcessor.processReceipt(receipt);
     }

@@ -1,5 +1,6 @@
 // 3rd party.
 import Bottleneck from 'bottleneck';
+import pLimit from 'p-limit';
 // Internal.
 import type { Logger } from './logger';
 import { RawRpcError, rpcErrorFactory } from './errors/rpc';
@@ -31,6 +32,21 @@ export function throttle(
         });
         const wrapped = limiter.wrap(originalMethod);
         descriptor.value = wrapped;
+        return descriptor;
+    };
+}
+
+export function promiselimit(maxConcurrent: number) {
+    return (
+        _target: unknown,
+        _propertyKey: string,
+        descriptor: PropertyDescriptor,
+    ) => {
+        const originalMethod = descriptor.value!;
+        const limit = pLimit(maxConcurrent);
+        descriptor.value = function wrapper(...args: unknown[]) {
+            return limit(() => originalMethod.apply(this, args));
+        };
         return descriptor;
     };
 }
