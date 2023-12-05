@@ -10,6 +10,8 @@ import { Service } from '../service';
 import { MonitorCache } from './cache';
 import { LPTokenReceiptProcessor } from './receipt-processors/lp-token-processor';
 
+const MAX_CONCURRENT_PROCESSED_RECEIPTS = 50;
+
 export class BlockchainMonitor extends Service {
     private chainId: number;
 
@@ -87,7 +89,7 @@ export class BlockchainMonitor extends Service {
         );
     }
 
-    @promiselimit(50)
+    @promiselimit(MAX_CONCURRENT_PROCESSED_RECEIPTS)
     private async processReceipt(receipt: TransactionReceipt): Promise<void> {
         await this.lpTokenProcessor.processReceipt(receipt);
     }
