@@ -2,14 +2,13 @@
 import type {
     Audit, AuditMatrix, AuditProvider, RedFlags, TokenInsights,
 } from '../../../@types/dex-tools';
+import type { valueof } from '../../../@types/generics';
 import { scraper, AudicCheck, AUDIT_CHECKS } from '../../../lib/scraping/dex-tools/scraper';
 import { type Insight, TaskExecutor } from '../executors/task';
 
-type AuditBooleanPredicate = (value: boolean) => boolean;
-type AuditNumricPredicate = (value: number) => boolean;
-type AuditPredicate = AuditBooleanPredicate | AuditNumricPredicate;
+type AuditPredicate = (value: boolean | number) => boolean
 
-const RED_FLAG_PREDICATES: Record<AudicCheck, AuditPredicate> = {
+const RED_FLAG_PREDICATES = {
     [AudicCheck.CONTRACT_VERIFIED]: (isVerified: boolean) => !isVerified,
     [AudicCheck.HONEYPOT]: (isHoneypot: boolean) => isHoneypot,
     [AudicCheck.BUY_TAX]: (tax: number) => tax >= 0.2,
@@ -17,7 +16,7 @@ const RED_FLAG_PREDICATES: Record<AudicCheck, AuditPredicate> = {
     [AudicCheck.PROXY]: (isProxy: boolean) => isProxy,
     [AudicCheck.OWNER_PERCENT]: (ownerShare: number) => ownerShare >= 0.05,
     [AudicCheck.CREATOR_PERCENT]: (creatorShare: number) => creatorShare >= 0.05,
-};
+} as Record<AudicCheck, AuditPredicate>;
 
 export class DEXToolsAuditCheck extends TaskExecutor {
     private tokenInsight?: TokenInsights;
@@ -72,11 +71,12 @@ export class DEXToolsAuditCheck extends TaskExecutor {
             .entries(RED_FLAG_PREDICATES)
             .reduce((accum, [check, predicate]) => {
                 const audits = this.auditMatrix![check as AudicCheck];
-                const auditResults = Object.values(audits ?? {});
-                const alertingResults = auditResults.filter(predicate);
-                const hasRedFlags = alertingResults.length > 0;
-                if (hasRedFlags) {
-                    accum[check as AudicCheck] = alertingResults;
+                const alertingAuditEntries = Object.entries(audits ?? {})
+                    .filter(([_, audit]) => !!predicate(audit));
+                const alertingAudits = Object.fromEntries(alertingAuditEntries);
+                const hasAlertingAudits = alertingAuditEntries.length > 0;
+                if (hasAlertingAudits) {
+                    accum[check as keyof RedFlags] = alertingAudits as valueof<RedFlags>;
                 }
                 return accum;
             }, {} as RedFlags);

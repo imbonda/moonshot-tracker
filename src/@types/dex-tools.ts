@@ -1,5 +1,5 @@
 // Internal.
-import type { Modify, WithRequired } from './generics';
+import type { Modify, WithRequired, valueof } from './generics';
 
 export type AuditProvider = 'goplus' | 'hapi' | 'quickintel' | 'tokensniffer';
 
@@ -183,7 +183,7 @@ export type FullyAuditedPairData = Modify<PairData, {
     }>,
 }>
 
-export type RedFlags = Record<string, unknown[]>;
+export type RedFlags = Record<keyof AuditMatrix, valueof<AuditMatrix>>;
 
 export interface TokenInsights {
     audit: FullyAuditedPairData['token']['audit'],
