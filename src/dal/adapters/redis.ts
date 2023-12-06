@@ -4,7 +4,7 @@ import v8 from 'v8';
 // 3rd party.
 import Redis, { RedisOptions } from 'ioredis';
 // Internal.
-import { dbConfig } from '../../config';
+import { dbConfig, serviceConfig } from '../../config';
 import { safe } from '../../lib/decorators';
 import { Logger } from '../../lib/logger';
 import { exponentialBackoff, isEmpty } from '../../lib/utils';
@@ -31,6 +31,7 @@ export class RedisAdapter {
                 times,
                 { maxDelay: 10 * MS_IN_SECOND },
             ),
+            connectionName: serviceConfig.DESCRIPTION,
         };
     }
 

@@ -7,7 +7,7 @@ import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { Resource } from '@opentelemetry/resources';
 // Internal.
-import { nodeEnv, opentelemetryConfig, web3Config } from '../config';
+import { nodeEnv, opentelemetryConfig, serviceConfig } from '../config';
 import { Logger } from './logger';
 
 class OTELTracer {
@@ -48,10 +48,7 @@ class OTELTracer {
 
     // eslint-disable-next-line class-methods-use-this
     private get serviceName() {
-        const args = process.argv;
-        const service = args[args.indexOf('--service') + 1];
-        const chain = web3Config.CHAIN_NAME;
-        return `[${nodeEnv}] ${service}${chain ? ` ${chain}` : ''}`;
+        return `[${nodeEnv}] ${serviceConfig.DESCRIPTION}`;
     }
 
     public run(): void {

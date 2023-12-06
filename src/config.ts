@@ -85,9 +85,25 @@ export const opentelemetryConfig = {
     SAMPLE_RATE: parseInt(process.env.OTEL_SAMPLE_RATE ?? '1'),
 };
 
+/**
+ * Social.
+ */
 export const telegramConfig = {
     BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN!,
     NOTIFICATIONS_CHAT_ID: process.env.TELEGRAM_NOTIFICATIONS_CHAT_ID!,
+};
+
+/**
+ * Service identifiers.
+ */
+const args = process.argv;
+const serviceNameIndex = args.findIndex((arg) => ['-s', '--service'].includes(arg)) + 1;
+const serviceName = args[serviceNameIndex];
+const serviceDescription = `${serviceName}${CHAIN_NAME ? `-${CHAIN_NAME}` : ''}`;
+
+export const serviceConfig = {
+    NAME: serviceName,
+    DESCRIPTION: serviceDescription,
 };
 
 function validateSubConfig(subConfig: Record<string, unknown>) {
