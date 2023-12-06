@@ -51,4 +51,4 @@ services:
             - SYS_ADMIN
         command: ["node", "-r", "./build/src/lib/tracer.js", "./build/src/main.js", "--service", "agent"]
         deploy:
-            replicas: 5
+            replicas: 1
