@@ -4,7 +4,7 @@ import type {
 } from '../../../@types/dex-tools';
 import type { valueof } from '../../../@types/generics';
 import { scraper, AudicCheck, AUDIT_CHECKS } from '../../../lib/scraping/dex-tools/scraper';
-import { type Insight, TaskExecutor } from '../executors/task';
+import { type Insights, TaskExecutor } from '../executors/task';
 
 type AuditPredicate = (value: boolean | number) => boolean
 
@@ -19,7 +19,7 @@ const RED_FLAG_PREDICATES = {
 } as Record<AudicCheck, AuditPredicate>;
 
 export class DEXToolsAuditCheck extends TaskExecutor {
-    private tokenInsight?: TokenInsights;
+    private tokenInsights?: TokenInsights;
 
     private auditMatrix?: AuditMatrix;
 
@@ -35,7 +35,7 @@ export class DEXToolsAuditCheck extends TaskExecutor {
             return;
         }
 
-        this.tokenInsight = result;
+        this.tokenInsights = result;
         this.auditMatrix = this.buildAuditMatrix();
         this.setRedFlags();
 
@@ -82,13 +82,13 @@ export class DEXToolsAuditCheck extends TaskExecutor {
             }, {} as RedFlags);
     }
 
-    public get insight(): Insight {
-        if (!this.tokenInsight) {
-            return super.insight;
+    public get insights(): Insights {
+        if (!this.tokenInsights) {
+            return super.insights;
         }
         return {
             dextools: {
-                ...this.tokenInsight,
+                ...this.tokenInsights,
                 auditMatrix: this.auditMatrix!,
                 redFlags: this.redFlags!,
             },
@@ -96,7 +96,7 @@ export class DEXToolsAuditCheck extends TaskExecutor {
     }
 
     private get audit(): TokenInsights['audit'] {
-        return this.tokenInsight!.audit;
+        return this.tokenInsights!.audit;
     }
 
     private get externalAudit(): TokenInsights['audit']['external'] {
@@ -104,7 +104,7 @@ export class DEXToolsAuditCheck extends TaskExecutor {
     }
 
     private get links(): TokenInsights['links'] {
-        return this.tokenInsight!.links;
+        return this.tokenInsights!.links;
     }
 
     private get sufficientIntel(): boolean {

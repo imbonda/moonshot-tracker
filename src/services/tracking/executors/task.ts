@@ -4,7 +4,7 @@ import { MS_IN_SECOND } from '../../../lib/constants';
 import { Logger } from '../../../lib/logger';
 import { TaskState, tracer, type Tracer } from '../static';
 
-export type Insight = Record<string, unknown> | null;
+export type Insights = Record<string, unknown> | null;
 
 /**
  * The following describes the different task configurations:
@@ -187,10 +187,10 @@ export abstract class TaskExecutor {
     }
 
     /**
-     * Override to save insight.
+     * Override to save insights.
      */
     // eslint-disable-next-line class-methods-use-this
-    public get insight(): Insight {
+    public get insights(): Insights {
         return null;
     }
 }
