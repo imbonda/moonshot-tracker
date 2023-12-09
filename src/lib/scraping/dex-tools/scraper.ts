@@ -158,6 +158,7 @@ class DexToolsScraper {
                 name: data.token.name,
             },
             topPair: {
+                id: data.id,
                 dextScore: data.dextScore,
                 metrics: data.metrics,
                 votes: data.votes,

@@ -191,6 +191,7 @@ export interface TokenInsights {
     links: PairData['token']['links'],
     properties: Pick<PairData['token'], 'decimals' | 'symbol' | 'name'>,
     topPair: {
+        id: PairData['id'],
         dextScore: PairData['dextScore'],
         metrics: PairData['metrics'],
         votes: PairData['votes'],
