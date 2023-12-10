@@ -5,11 +5,6 @@ import { StageState, tracer, type Tracer } from '../static';
 import { TaskFactory } from '../tasks/task-factory';
 import { type TasksById, TaskExecutor } from './task';
 
-const EXECUTABLE_STATES = new Set<string>([
-    StageState.UNLOCKED,
-    StageState.IN_PROGRESS,
-]);
-
 export class StageExecutor {
     private stage: PipelineStage;
 
@@ -57,8 +52,13 @@ export class StageExecutor {
         return this.stageState;
     }
 
+    private get notStarted(): boolean {
+        return this.stageState === StageState.LOCKED
+            || this.stageState === StageState.UNLOCKED;
+    }
+
     private get shouldExecute(): boolean {
-        return EXECUTABLE_STATES.has(this.stageState);
+        return this.stageTasks.some((task) => task.shouldExecute);
     }
 
     public async execute(): Promise<void> {
@@ -69,10 +69,11 @@ export class StageExecutor {
         await this.tracer.startActiveSpan('stage', async (span) => {
             try {
                 span.setAttributes({ stageId: this.id });
-
                 this.logger.info('Execution started');
 
-                this.stageState = StageState.IN_PROGRESS;
+                if (this.notStarted) {
+                    this.stageState = StageState.IN_PROGRESS;
+                }
 
                 await Promise.all(
                     this.stageTasks.map((task) => task.execute()),

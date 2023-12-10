@@ -120,10 +120,8 @@ export abstract class TaskExecutor {
         const executionDelayMs = this.isFirstRepetition
             ? (delay ?? 0) * MS_IN_SECOND
             : 0;
-
         const { interval } = this.data.repetitions;
         const repetitionIntervalMs = (interval ?? 0) * MS_IN_SECOND;
-
         return new Date(Date.now() + executionDelayMs + repetitionIntervalMs);
     }
 
@@ -138,7 +136,7 @@ export abstract class TaskExecutor {
         return !this.isDaemon && (isExpired || isFinishedRepeating);
     }
 
-    private get shouldExecute(): boolean {
+    public get shouldExecute(): boolean {
         const { scheduledExecutionTime } = this.data;
         const now = new Date();
         const isScheduled = !scheduledExecutionTime || (new Date(scheduledExecutionTime) <= now);
@@ -151,14 +149,13 @@ export abstract class TaskExecutor {
             return;
         }
 
-        if (this.notStarted) {
-            this.taskState = TaskState.IN_PROGRESS;
-        }
-
         await this.tracer.startActiveSpan(`task.${this.id}`, async (span) => {
             try {
                 span.setAttributes({ taskId: this.id });
                 this.logger.info('Execution started');
+                if (this.notStarted) {
+                    this.taskState = TaskState.IN_PROGRESS;
+                }
                 await this.run();
             } finally {
                 span.end();
