@@ -1,17 +1,20 @@
 // Internal.
 import type { TrackedToken } from '../../../@types/tracking';
 import { Logger } from '../../../lib/logger';
-import { mergeDeep } from '../../../lib/utils';
+import { flatten, mergeDeep } from '../../../lib/utils';
 import { tracer, type Tracer } from '../static';
+import { ContextExecutor } from './context';
 import { StageExecutor } from './stage';
-import type { TasksById } from './task';
+import { TaskExecutor } from './task';
 
 export class PipelineExecutor {
     private token: TrackedToken;
 
     private stages: StageExecutor[];
 
-    private tasksById: TasksById;
+    private tasks: TaskExecutor[];
+
+    private context: ContextExecutor;
 
     private currentStageIndex: number;
 
@@ -24,12 +27,8 @@ export class PipelineExecutor {
         this.stages = token.pipeline.map(
             (stage) => new StageExecutor(token, stage),
         );
-        this.tasksById = this.stages.reduce((accum: TasksById, stage: StageExecutor) => {
-            stage.tasks.forEach((task) => {
-                accum[task.id] = task;
-            });
-            return accum;
-        }, {});
+        this.tasks = flatten(this.stages.map((stage) => stage.tasks));
+        this.context = new ContextExecutor(this.tasks);
         this.currentStageIndex = this.token.currentStageIndex;
         this.logger = new Logger(
             this.constructor.name,
@@ -68,11 +67,11 @@ export class PipelineExecutor {
                 this.logger.info('Execution started');
 
                 await Promise.all(
-                    this.stages.map((stage) => stage.execute()),
+                    this.stages.map((stage) => stage.execute(this.context)),
                 );
 
                 if (!this.isLastStage) {
-                    this.nextStage!.attemptUnlock(this.tasksById);
+                    this.nextStage!.attemptUnlock(this.context);
                     if (this.nextStage!.unlocked) {
                         this.currentStageIndex += 1;
                     }
@@ -86,7 +85,7 @@ export class PipelineExecutor {
 
     public get result(): TrackedToken {
         const stagesData = this.stages.map((stage) => stage.toJSON());
-        const tasks = Object.values(this.tasksById);
+        const { tasks } = this;
         const tasksData = Object.fromEntries(
             tasks.map((task) => [task.id, task.toJSON()]),
         );

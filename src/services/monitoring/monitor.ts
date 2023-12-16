@@ -78,7 +78,7 @@ export class BlockchainMonitor extends Service {
     private async processBlock(blockNumber: number): Promise<void> {
         const hexBlockNumber = hexifyNumber(blockNumber);
         const receipts = await this.provider.getTransactionReceipts(hexBlockNumber);
-        // TODO: Consider handling blocks that we failed to query.
+        // TODO: consider handling blocks that we failed to query.
         if (!receipts) {
             this.logger.warn('No receipts', { blockNumber });
             return;

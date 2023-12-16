@@ -4,7 +4,7 @@ import millify from 'millify';
 // Internal.
 import { MS_IN_SECOND } from './constants';
 
-export { isEmpty, merge as mergeDeep } from 'lodash';
+export { flatten, isEmpty, merge as mergeDeep } from 'lodash';
 
 interface ExponentialBackoffOptions {
     minDelay?: number,

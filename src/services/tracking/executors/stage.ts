@@ -3,7 +3,8 @@ import type { TrackedToken, PipelineStage } from '../../../@types/tracking';
 import { Logger } from '../../../lib/logger';
 import { StageState, tracer, type Tracer } from '../static';
 import { TaskFactory } from '../tasks/task-factory';
-import { type TasksById, TaskExecutor } from './task';
+import { type ContextExecutor } from './context';
+import { TaskExecutor } from './task';
 
 export class StageExecutor {
     private stage: PipelineStage;
@@ -57,12 +58,10 @@ export class StageExecutor {
             || this.stageState === StageState.UNLOCKED;
     }
 
-    private get shouldExecute(): boolean {
-        return this.stageTasks.some((task) => task.shouldExecute);
-    }
-
-    public async execute(): Promise<void> {
-        if (!this.shouldExecute) {
+    public async execute(context: ContextExecutor): Promise<void> {
+        const tasksToExecute = this.tasks.filter((task) => task.shouldExecute);
+        const shouldExecute = tasksToExecute.length > 0;
+        if (!shouldExecute) {
             return;
         }
 
@@ -76,10 +75,10 @@ export class StageExecutor {
                 }
 
                 await Promise.all(
-                    this.stageTasks.map((task) => task.execute()),
+                    tasksToExecute.map((task) => context.execute(task.id)),
                 );
 
-                const completedAllTasks = this.stageTasks.every((task) => task.completed);
+                const completedAllTasks = this.tasks.every((task) => task.completed);
                 if (completedAllTasks) {
                     this.stageState = StageState.DONE;
                 }
@@ -90,18 +89,18 @@ export class StageExecutor {
         });
     }
 
-    public attemptUnlock(tasksById: TasksById): void {
+    public attemptUnlock(context: ContextExecutor): void {
         if (this.state !== StageState.LOCKED) {
             return;
         }
 
         const unlocked = this.stage.prerequisiteTasks.every(
-            (taskId) => tasksById[taskId]?.completed,
+            (taskId) => context.isTaskCompleted(taskId),
         );
 
         if (unlocked) {
             this.stageState = StageState.UNLOCKED;
-            this.stageTasks.forEach((task) => task.setActivated());
+            this.tasks.forEach((task) => task.setActivated());
         }
     }
 

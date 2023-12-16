@@ -26,12 +26,14 @@ export interface PipelineStage {
     prerequisiteTasks: TaskData['taskId'][],
 }
 
+export type TrackingPipeline = PipelineStage[];
+
 export interface TrackedToken {
     uuid: string,
     chainId: number,
     address: string,
     tracking: boolean,
-    pipeline: PipelineStage[],
+    pipeline: TrackingPipeline,
     tasks: Record<TaskData['taskId'], TaskData>,
     insights: null | {
         dextools?: DexToolsTokenInsights,

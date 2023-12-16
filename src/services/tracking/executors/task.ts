@@ -3,6 +3,7 @@ import type { TaskData, TrackedToken } from '../../../@types/tracking';
 import { MS_IN_SECOND } from '../../../lib/constants';
 import { Logger } from '../../../lib/logger';
 import { TaskState, tracer, type Tracer } from '../static';
+import { type ContextExecutor } from './context';
 
 export type Insights = Record<string, unknown> | null;
 
@@ -144,7 +145,17 @@ export abstract class TaskExecutor {
         return shouldExecute;
     }
 
-    public async execute(): Promise<void> {
+    /**
+     * Should not be called directly, only via context-executor.
+     *
+     * @param context
+     * @returns
+     */
+    public async execute(context: ContextExecutor): Promise<void> {
+        if (this.isActivated && this.shouldNotRepeat) {
+            this.setDisactivated();
+        }
+
         if (!this.shouldExecute) {
             return;
         }
@@ -156,7 +167,7 @@ export abstract class TaskExecutor {
                 if (this.notStarted) {
                     this.taskState = TaskState.IN_PROGRESS;
                 }
-                await this.run();
+                await this.run(context);
             } finally {
                 span.end();
                 this.logger.info('Execution ended');
@@ -164,12 +175,15 @@ export abstract class TaskExecutor {
         });
 
         this.repetition += 1;
-        if (this.completed || this.shouldNotRepeat) {
+
+        if (this.completed) {
             this.setCompleted();
+        } else if (this.shouldNotRepeat) {
+            this.setDisactivated();
         }
     }
 
-    protected abstract run(): Promise<void>;
+    protected abstract run(context: ContextExecutor): Promise<void>;
 
     public toJSON(): TaskData {
         return {
@@ -195,5 +209,3 @@ export abstract class TaskExecutor {
 export interface TaskExecutorClass {
     new (token: TrackedToken, taskData: TaskData): TaskExecutor;
 }
-
-export type TasksById = Record<TaskData['taskId'], TaskExecutor>;
