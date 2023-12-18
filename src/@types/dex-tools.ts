@@ -185,7 +185,7 @@ export type FullyAuditedPairData = Modify<PairData, {
 
 export type RedFlags = Record<keyof AuditMatrix, valueof<AuditMatrix>>;
 
-export interface TokenInsights {
+export interface DexToolsTokenInsights {
     audit: FullyAuditedPairData['token']['audit'],
     metrics: PairData['token']['metrics'],
     links: PairData['token']['links'],
@@ -203,7 +203,7 @@ export interface TokenInsights {
     },
 }
 
-export interface DexToolsInsights extends TokenInsights {
+export interface DexToolsInsights extends DexToolsTokenInsights {
     auditMatrix: AuditMatrix,
     redFlags: RedFlags,
 }

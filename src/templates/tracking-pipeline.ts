@@ -13,13 +13,28 @@ export const TASKS_TEMPLATE: TrackedToken['tasks'] = {
         },
         daemon: true,
     },
+    [TaskId.CREDIBILITY_SCORE_CHECK]: {
+        taskId: TaskId.CREDIBILITY_SCORE_CHECK,
+        state: TaskState.ACTIVATED,
+        repetitions: {
+            count: 0,
+            // Lazy task does not schedule tracking.
+            interval: undefined,
+        },
+        config: {
+            threshold: 80,
+        },
+    },
 };
 
 export const PIPELINE_TEMPLATE: TrackedToken['pipeline'] = [
     {
         stageId: 'stage1',
         state: StageState.UNLOCKED,
-        taskIds: [TaskId.DEX_TOOLS_AUDIT_CHECK],
+        taskIds: [
+            TaskId.DEX_TOOLS_AUDIT_CHECK,
+            TaskId.CREDIBILITY_SCORE_CHECK,
+        ],
         prerequisiteTasks: [],
     },
 ];

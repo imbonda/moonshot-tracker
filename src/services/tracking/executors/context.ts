@@ -1,6 +1,6 @@
 // Internals.
 import type { TaskData } from '../../../@types/tracking';
-import { type Insights, TaskExecutor } from './task';
+import { type ResolvedTaskInsights, TaskExecutor } from './task';
 
 type TaskId = TaskData['taskId'];
 type TaskById = Record<TaskId, TaskExecutor>;
@@ -32,15 +32,16 @@ export class ContextExecutor {
 
     /**
      *
-     * Allowing tasks to wait for execution results of other tasks.
+     * Get insights of another task from the current iteration,
+     * thereby allowing tasks to wait for execution results of other tasks.
      *
      * @param taskId
      * @returns
      */
-    public async getLatestInsights(taskId: TaskId): Promise<Insights> {
+    public async getLatestResolvedTaskInsights(taskId: TaskId): Promise<ResolvedTaskInsights> {
         await this.execute(taskId);
         const task = this.taskById[taskId];
-        return task?.insights ?? null;
+        return task.insights?.[task.insightsKey] ?? null;
     }
 
     public isTaskCompleted(taskId: TaskId): boolean {

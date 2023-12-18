@@ -33,6 +33,15 @@ const scheduledTaskData: TaskData = {
     },
 };
 
+const lazyTaskData: TaskData = {
+    taskId: 'lazy',
+    state: TaskState.ACTIVATED,
+    repetitions: {
+        count: 0,
+        repeat: 3,
+    },
+};
+
 const completedDaemonTaskData: TaskData = {
     taskId: 'daemon',
     state: TaskState.DONE,
@@ -215,6 +224,24 @@ export function testTaskExecutor() {
             const deltaMs = 100;
             assert(estimatedScheduledTime <= updated.scheduledExecutionTime!.getTime());
             assert(updated.scheduledExecutionTime!.getTime() <= estimatedScheduledTime + deltaMs);
+        });
+
+        it('should format correctly for a lazy task', async () => {
+            const {
+                taskId, repetitions, delay, daemon,
+            } = lazyTaskData;
+            const task = new DummyTaskExecutor(token, lazyTaskData);
+            await task.execute(null as never);
+            const updated = task.toJSON();
+            assert.equal(updated.taskId, taskId);
+            assert.equal(updated.state, TaskState.IN_PROGRESS);
+            assert.equal(updated.repetitions.count, repetitions.count + 1);
+            assert.equal(updated.repetitions.repeat, repetitions.repeat);
+            assert.equal(updated.repetitions.interval, repetitions.interval);
+            assert.equal(updated.repetitions.deadline, repetitions.deadline);
+            assert.equal(updated.delay, delay);
+            assert.equal(updated.daemon, daemon);
+            assert.equal(updated.scheduledExecutionTime, undefined);
         });
 
         it('should format correctly for a completed scheduled task', async () => {

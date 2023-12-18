@@ -1,10 +1,10 @@
 // Internal.
 import type {
-    Audit, AuditMatrix, AuditProvider, RedFlags, TokenInsights,
+    Audit, AuditMatrix, AuditProvider, RedFlags, DexToolsTokenInsights,
 } from '../../../@types/dex-tools';
 import type { valueof } from '../../../@types/generics';
 import { scraper, AudicCheck, AUDIT_CHECKS } from '../../../lib/scraping/dex-tools/scraper';
-import { type Insights, TaskExecutor } from '../executors/task';
+import { type InsightsKey, type TaskInsights, TaskExecutor } from '../executors/task';
 
 type AuditPredicate = (value: boolean | number) => boolean
 
@@ -19,7 +19,7 @@ const RED_FLAG_PREDICATES = {
 } as Record<AudicCheck, AuditPredicate>;
 
 export class DEXToolsAuditCheck extends TaskExecutor {
-    private tokenInsights?: TokenInsights;
+    private tokenInsights?: DexToolsTokenInsights;
 
     private auditMatrix?: AuditMatrix;
 
@@ -82,12 +82,17 @@ export class DEXToolsAuditCheck extends TaskExecutor {
             }, {} as RedFlags);
     }
 
-    public get insights(): Insights {
+    // eslint-disable-next-line class-methods-use-this
+    public get insightsKey(): InsightsKey {
+        return 'dextools';
+    }
+
+    public get insights(): TaskInsights {
         if (!this.tokenInsights) {
             return super.insights;
         }
         return {
-            dextools: {
+            [this.insightsKey]: {
                 ...this.tokenInsights,
                 auditMatrix: this.auditMatrix!,
                 redFlags: this.redFlags!,
@@ -95,15 +100,15 @@ export class DEXToolsAuditCheck extends TaskExecutor {
         };
     }
 
-    private get audit(): TokenInsights['audit'] {
+    private get audit(): DexToolsTokenInsights['audit'] {
         return this.tokenInsights!.audit;
     }
 
-    private get externalAudit(): TokenInsights['audit']['external'] {
+    private get externalAudit(): DexToolsTokenInsights['audit']['external'] {
         return this.audit.external;
     }
 
-    private get links(): TokenInsights['links'] {
+    private get links(): DexToolsTokenInsights['links'] {
         return this.tokenInsights!.links;
     }
 

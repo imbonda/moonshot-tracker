@@ -1,11 +1,16 @@
 // Internal.
+import type { valueof } from '../../../@types/generics';
 import type { TaskData, TrackedToken } from '../../../@types/tracking';
 import { MS_IN_SECOND } from '../../../lib/constants';
 import { Logger } from '../../../lib/logger';
 import { TaskState, tracer, type Tracer } from '../static';
 import { type ContextExecutor } from './context';
 
-export type Insights = Record<string, unknown> | null;
+export type InsightsKey = keyof NonNullable<TrackedToken['insights']>;
+export type TaskInsights = {
+    [key in InsightsKey]: NonNullable<TrackedToken['insights']>[key]
+} | null;
+export type ResolvedTaskInsights = valueof<NonNullable<TaskInsights>> | null;
 
 /**
  * The following describes the different task configurations:
@@ -53,6 +58,10 @@ export abstract class TaskExecutor {
 
     public get id(): TaskData['taskId'] {
         return this.taskData.taskId;
+    }
+
+    public get config(): TaskData['config'] {
+        return this.taskData.config;
     }
 
     public get completed(): boolean {
@@ -123,10 +132,15 @@ export abstract class TaskExecutor {
         }
 
         const { delay } = this.data;
+        const { interval } = this.data.repetitions;
+        if (!interval) {
+            // Lazy task only runs when other tasks have scheduled tracking.
+            return undefined;
+        }
+
         const executionDelayMs = this.isFirstRepetition
             ? (delay ?? 0) * MS_IN_SECOND
             : 0;
-        const { interval } = this.data.repetitions;
         const repetitionIntervalMs = (interval ?? 0) * MS_IN_SECOND;
         return new Date(Date.now() + executionDelayMs + repetitionIntervalMs);
     }
@@ -201,11 +215,22 @@ export abstract class TaskExecutor {
     }
 
     /**
+     * Override to customize inisghts key.
+     * Task insights will be saved under "token.insights[insightsKey]".
+     */
+    public get insightsKey(): InsightsKey {
+        return this.id as InsightsKey;
+    }
+
+    /**
      * Override to save insights.
      */
     // eslint-disable-next-line class-methods-use-this
-    public get insights(): Insights {
-        return null;
+    public get insights(): TaskInsights {
+        const { insights } = this.token;
+        return insights?.[this.insightsKey]
+            ? { [this.insightsKey]: insights[this.insightsKey] }
+            : null;
     }
 }
 

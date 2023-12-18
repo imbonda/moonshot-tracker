@@ -1,5 +1,5 @@
 // Internal.
-import type { TokenInsights as DexToolsTokenInsights } from './dex-tools';
+import type { DexToolsInsights } from './dex-tools';
 
 export interface TaskData {
     taskId: string,
@@ -17,6 +17,7 @@ export interface TaskData {
     },
     delay?: number,
     daemon?: boolean,
+    config?: Record<string, unknown>,
     scheduledExecutionTime?: Date,
 }
 
@@ -37,7 +38,7 @@ export interface TrackedToken {
     pipeline: TrackingPipeline,
     tasks: Record<TaskData['taskId'], TaskData>,
     insights: null | {
-        dextools?: DexToolsTokenInsights,
+        dextools?: DexToolsInsights,
     },
     halted: boolean,
     aborted: boolean,

@@ -1,7 +1,7 @@
 // Internal.
 import type {
     FullyAuditedPairData, PairData,
-    TokenInsights,
+    DexToolsTokenInsights,
     TokenPairResponse, TopTokenPairsResponse,
 } from '../../../@types/dex-tools';
 import { Logger } from '../../logger';
@@ -35,7 +35,7 @@ class DexToolsScraper {
     public async fetchTokenInsights(
         chainId: number,
         tokenAddress: string,
-    ): Promise<TokenInsights | null> {
+    ): Promise<DexToolsTokenInsights | null> {
         try {
             await this.setup();
             const topPair = await this.fetchTopTokenPair(tokenAddress);
@@ -147,7 +147,7 @@ class DexToolsScraper {
         });
     }
 
-    private createTokenInsights(data: FullyAuditedPairData): TokenInsights {
+    private createTokenInsights(data: FullyAuditedPairData): DexToolsTokenInsights {
         return {
             audit: data.token.audit,
             metrics: data.token.metrics,
