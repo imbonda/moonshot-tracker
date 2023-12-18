@@ -10,6 +10,7 @@ export interface TaskData {
         interval?: number,
         deadline?: Date,
     },
+    // @not-supported yet.
     retries?: {
         maxTime?: number,
         retryMaxTime?: number,
@@ -38,6 +39,7 @@ export interface TrackedToken {
     insights: null | {
         dextools?: DexToolsTokenInsights,
     },
+    halted: boolean,
     aborted: boolean,
     completed: boolean,
     currentStageIndex: number,

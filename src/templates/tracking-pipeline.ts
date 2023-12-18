@@ -9,6 +9,7 @@ export const TASKS_TEMPLATE: TrackedToken['tasks'] = {
         repetitions: {
             count: 0,
             interval: 3 * 60 * 60, // 3 hours.
+            repeat: 55, // ~ 1 week.
         },
         daemon: true,
     },

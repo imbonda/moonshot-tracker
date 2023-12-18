@@ -9,6 +9,7 @@ export const enum StageState {
     LOCKED = 'locked',
     UNLOCKED = 'unlocked',
     IN_PROGRESS = 'inProgress',
+    HALTED = 'halted',
     DONE = 'done',
     FAILED = 'failed',
 }

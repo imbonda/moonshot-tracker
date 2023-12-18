@@ -175,7 +175,27 @@ export function testStageExecutor() {
             assert.equal(updated.prerequisiteTasks, prerequisiteTasks);
         });
 
-        it('should format correctly for a finishing stage', async () => {
+        it('should format correctly for a halted stage', async () => {
+            const {
+                stageId,
+                taskIds,
+                prerequisiteTasks,
+            } = firstStage;
+            const stage = new StageExecutor(token, firstStage);
+            sandbox.stub(stage, 'tasks').value([task1, task2]);
+            sandbox.stub(task1, 'shouldExecute').value(true);
+            sandbox.stub(task2, 'shouldExecute').value(true);
+            sandbox.stub(task1, 'halted').value(true);
+            sandbox.stub(task2, 'halted').value(true);
+            await stage.execute(context);
+            const updated = stage.toJSON();
+            assert.equal(updated.stageId, stageId);
+            assert.equal(updated.state, StageState.HALTED);
+            assert.equal(updated.taskIds, taskIds);
+            assert.equal(updated.prerequisiteTasks, prerequisiteTasks);
+        });
+
+        it('should format correctly for a completed stage', async () => {
             const {
                 stageId,
                 taskIds,

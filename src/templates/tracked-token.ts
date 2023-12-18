@@ -19,6 +19,7 @@ export function createTrackedToken(
         pipeline: PIPELINE_TEMPLATE,
         tasks: TASKS_TEMPLATE,
         insights: null,
+        halted: false,
         aborted: false,
         completed: false,
         currentStageIndex: 0,

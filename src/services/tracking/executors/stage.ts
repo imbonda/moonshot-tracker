@@ -37,6 +37,10 @@ export class StageExecutor {
         return this.stageState === StageState.UNLOCKED;
     }
 
+    public get halted(): boolean {
+        return this.stageState === StageState.HALTED;
+    }
+
     public get completed(): boolean {
         return this.stageState === StageState.DONE;
     }
@@ -78,8 +82,12 @@ export class StageExecutor {
                     tasksToExecute.map((task) => context.execute(task.id)),
                 );
 
-                const completedAllTasks = this.tasks.every((task) => task.completed);
-                if (completedAllTasks) {
+                const halted = this.tasks.every((task) => task.halted);
+                const completed = this.tasks.every((task) => task.completed);
+                if (halted) {
+                    this.stageState = StageState.HALTED;
+                }
+                if (completed) {
                     this.stageState = StageState.DONE;
                 }
             } finally {

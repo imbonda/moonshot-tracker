@@ -158,6 +158,30 @@ export function testTaskExecutor() {
             const spyTaskExecutorRun = sandbox.stub(task, 'run');
             await task.execute(null as never);
             assert.equal(spyTaskExecutorRun.callCount, 1);
+            assert.equal(task.halted, false);
+            assert.equal(task.completed, false);
+        });
+
+        it('should complete task', async () => {
+            const task = new DummyTaskExecutor(token, firstExecutionTaskData);
+            sandbox.stub(task, 'shouldExecute').value(true);
+            const spyTaskExecutorRun = sandbox.stub(task, 'run').callsFake(async () => {
+                task.completeTask();
+            });
+            await task.execute(null as never);
+            assert.equal(spyTaskExecutorRun.callCount, 1);
+            assert.equal(task.halted, false);
+            assert.equal(task.completed, true);
+        });
+
+        it('should halt task', async () => {
+            const task = new DummyTaskExecutor(token, scheduledTaskData);
+            sandbox.stub(task, 'shouldExecute').value(true);
+            const spyTaskExecutorRun = sandbox.stub(task, 'run');
+            await task.execute(null as never);
+            assert.equal(spyTaskExecutorRun.callCount, 1);
+            assert.equal(task.halted, true);
+            assert.equal(task.completed, false);
         });
 
         it('should not run task', async () => {
@@ -166,6 +190,8 @@ export function testTaskExecutor() {
             const spyTaskExecutorRun = sandbox.stub(task, 'run');
             await task.execute(null as never);
             assert.equal(spyTaskExecutorRun.callCount, 0);
+            assert.equal(task.halted, false);
+            assert.equal(task.completed, false);
         });
     });
 

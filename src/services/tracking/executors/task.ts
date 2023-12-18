@@ -15,7 +15,8 @@ export type Insights = Record<string, unknown> | null;
  * @scheduledExecutionTime The next time the task should run.
  *
  * Important notes:
- * - A task is completed when "setCompleted" was called, or when it is finished repeating.
+ * - A task is completed only when "setCompleted" was called.
+ * - A task is halted when it finishes repeating without being completed (via "setCompleted").
  * - A task can trigger a circuit-breaker to abort token tracking by calling "abort".
  * - A daemon can be disactivated by calling "setDisactivated".
  */
@@ -56,6 +57,10 @@ export abstract class TaskExecutor {
 
     public get completed(): boolean {
         return this.taskState === TaskState.DONE;
+    }
+
+    public get halted(): boolean {
+        return this.isDisactivated;
     }
 
     public get aborted(): boolean {
@@ -176,9 +181,7 @@ export abstract class TaskExecutor {
 
         this.repetition += 1;
 
-        if (this.completed) {
-            this.setCompleted();
-        } else if (this.shouldNotRepeat) {
+        if (this.shouldNotRepeat) {
             this.setDisactivated();
         }
     }

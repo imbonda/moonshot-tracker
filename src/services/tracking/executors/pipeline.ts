@@ -53,12 +53,17 @@ export class PipelineExecutor {
         return this.currentStage.completed;
     }
 
+    public get halted(): boolean {
+        // TODO: consider next stage can be unlocked after a completed task from a previous stage.
+        return this.currentStage.halted;
+    }
+
     public get completed(): boolean {
         return this.isLastStage && this.isStageCompleted;
     }
 
     public async execute(): Promise<void> {
-        if (this.completed) {
+        if (this.halted || this.completed) {
             return;
         }
 
@@ -70,6 +75,7 @@ export class PipelineExecutor {
                     this.stages.map((stage) => stage.execute(this.context)),
                 );
 
+                // Attempt to unlock next stage at the end of each iteration.
                 if (!this.isLastStage) {
                     this.nextStage!.attemptUnlock(this.context);
                     if (this.nextStage!.unlocked) {
@@ -85,12 +91,12 @@ export class PipelineExecutor {
 
     public get result(): TrackedToken {
         const stagesData = this.stages.map((stage) => stage.toJSON());
-        const { tasks } = this;
+        const { halted, tasks } = this;
         const tasksData = Object.fromEntries(
             tasks.map((task) => [task.id, task.toJSON()]),
         );
         const aborted = tasks.some((task) => task.aborted);
-        const tracking = !this.completed && !aborted;
+        const tracking = !this.halted && !this.completed && !aborted;
         const insights = mergeDeep(this.token.insights, ...tasks.map((task) => task.insights));
         const scheduledExecutionTime = Object.values(tasksData).reduce(
             (soonest: Date | undefined, task) => {
@@ -111,6 +117,7 @@ export class PipelineExecutor {
             pipeline: stagesData,
             tasks: tasksData,
             insights,
+            halted,
             aborted,
             completed: this.completed,
             currentStageIndex: this.currentStageIndex,
