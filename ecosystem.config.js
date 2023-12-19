@@ -2,7 +2,7 @@
 module.exports = {
     apps: [
         {
-            name: 'monitor_eth',
+            name: 'monitor-eth',
             cwd: './',
             script: 'node',
             args: '-r ./build/src/lib/tracer.js ./build/src/main.js --service monitor',
@@ -17,7 +17,7 @@ module.exports = {
         },
 
         {
-            name: 'monitor_bsc',
+            name: 'monitor-bsc',
             cwd: './',
             script: 'node',
             args: '-r ./build/src/lib/tracer.js ./build/src/main.js --service monitor',

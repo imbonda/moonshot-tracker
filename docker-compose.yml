@@ -12,7 +12,7 @@ x-logging: &logging
         max-file: "1"
 
 services:
-    monitor_eth:
+    monitor-eth:
         build:
             context: .
             dockerfile: Dockerfile
@@ -26,7 +26,7 @@ services:
         command: ["node", "-r", "./build/src/lib/tracer.js", "./build/src/main.js", "--service", "monitor"]
         restart: unless-stopped
     
-    monitor_bsc:
+    monitor-bsc:
         build:
             context: .
             dockerfile: Dockerfile
