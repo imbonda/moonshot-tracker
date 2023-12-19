@@ -4,20 +4,18 @@ import { type ResolvedTaskInsights, TaskExecutor } from './task';
 
 type TaskId = TaskData['taskId'];
 type TaskById = Record<TaskId, TaskExecutor>;
-type ExecuteById = Record<TaskId, TaskExecutor['execute']>;
+type ExecutionById = Record<TaskId, ReturnType<TaskExecutor['execute']>>;
 
 export class ContextExecutor {
     private taskById: TaskById;
 
-    private executeById: ExecuteById;
+    private executionById: ExecutionById;
 
     constructor(tasks: TaskExecutor[]) {
         this.taskById = Object.fromEntries(
             tasks.map((task) => [task.id, task]),
         );
-        this.executeById = Object.fromEntries(
-            tasks.map((task) => [task.id, task.execute.bind(task)]),
-        );
+        this.executionById = {};
     }
 
     /**
@@ -26,8 +24,8 @@ export class ContextExecutor {
      * @param task
      */
     public async execute(taskId: TaskId): Promise<void> {
-        const execute = this.executeById[taskId];
-        await execute(this);
+        this.executionById[taskId] ??= this.taskById[taskId].execute(this);
+        await this.executionById[taskId];
     }
 
     /**
