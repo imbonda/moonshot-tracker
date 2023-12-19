@@ -28,12 +28,12 @@ export function throttle(
         const limiter = new Bottleneck({
             maxConcurrent,
             minTime: delayMs,
-            ...(maxInTimeFrame && {
+            ...((maxInTimeFrame !== undefined) && {
                 reservoir: maxInTimeFrame,
                 reservoirRefreshAmount: maxInTimeFrame,
                 reservoirRefreshInterval: delayMs,
             }),
-            ...(queueSize && {
+            ...((queueSize !== undefined) && {
                 highWater: queueSize,
                 strategy: Bottleneck.strategy.OVERFLOW,
             }),

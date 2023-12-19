@@ -50,7 +50,7 @@ export class BlockchainMonitor extends Service {
     }
 
     @safe({ silent: true })
-    @throttle({ maxConcurrent: 1, discard: true })
+    @throttle({ maxConcurrent: 1, queueSize: 0 })
     private async newBlockHandler(blockNumber: number): Promise<void> {
         this.nextExpectedBlock ??= blockNumber;
         if (blockNumber < this.nextExpectedBlock) {
