@@ -2,7 +2,7 @@
 import { Job } from 'bull';
 // Internal.
 import { Dal } from '../../../../dal';
-import type { ConsumeHandler } from '../../../message-queue/consumer';
+import type { ConsumeHandler, Message } from '../../../message-queue/consumer';
 import { BaseQueueRole } from './base';
 
 export class QueueConsumer extends BaseQueueRole {
@@ -16,7 +16,7 @@ export class QueueConsumer extends BaseQueueRole {
     }
 
     public async init(): Promise<void> {
-        await this.cleanup();
+        await this.scheduleCleanup();
     }
 
     /**
@@ -27,17 +27,24 @@ export class QueueConsumer extends BaseQueueRole {
      */
     public async consume(onConsume: ConsumeHandler): Promise<void> {
         this.queue.process(async (job: Job) => {
-            const message = {
-                content: Buffer.from(job.data as Buffer),
-            };
+            let message: Message;
+            try {
+                message = {
+                    content: Buffer.from(job.data as Buffer),
+                };
+            } catch (err) {
+                // Note that we do not "await" on purpose - to allow proper cleanup throttling.
+                this.scheduleCleanup();
+                throw err;
+            }
 
             let fulfill: Promise<unknown> = new Promise(() => {});
             const ack = async () => {
-                await job.takeLock();
+                await job.takeLock().catch();
                 fulfill = Promise.resolve();
             };
             const reject = async () => {
-                await job.takeLock();
+                await job.takeLock().catch();
                 fulfill = Promise.reject(new Error('Failed job'));
             };
 

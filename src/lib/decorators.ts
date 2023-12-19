@@ -8,13 +8,16 @@ import { httpErrorFactory } from './errors/http';
 import { RawNetworkingError } from './errors/networking-error';
 
 interface ThrottleOptions {
-    delayMs?: number,
     maxConcurrent?: number,
-    discard?: boolean,
+    maxInTimeFrame?: number,
+    delayMs?: number,
+    queueSize?: number,
 }
 
 export function throttle(
-    { delayMs, maxConcurrent, discard }: ThrottleOptions,
+    {
+        maxConcurrent, maxInTimeFrame, delayMs, queueSize,
+    }: ThrottleOptions,
 ) {
     return (
         _target: unknown,
@@ -23,10 +26,15 @@ export function throttle(
     ) => {
         const originalMethod = descriptor.value!;
         const limiter = new Bottleneck({
-            minTime: delayMs,
             maxConcurrent,
-            ...(discard && {
-                highWater: 0,
+            minTime: delayMs,
+            ...(maxInTimeFrame && {
+                reservoir: maxInTimeFrame,
+                reservoirRefreshAmount: maxInTimeFrame,
+                reservoirRefreshInterval: delayMs,
+            }),
+            ...(queueSize && {
+                highWater: queueSize,
                 strategy: Bottleneck.strategy.OVERFLOW,
             }),
         });
