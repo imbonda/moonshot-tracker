@@ -88,11 +88,21 @@ export abstract class TaskExecutor {
         this.taskState = TaskState.DONE;
     }
 
+    public get isAlive(): boolean {
+        return (this.taskState === TaskState.ACTIVATED)
+            || (this.taskState === TaskState.IN_PROGRESS)
+            || (this.isDaemon && !this.isDisactivated);
+    }
+
     /**
      * Circuit breaker.
      */
     protected abort(): void {
         this._aborted = true;
+    }
+
+    protected halt(): void {
+        this.setDisactivated();
     }
 
     private get state(): TaskData['state'] {
@@ -101,12 +111,6 @@ export abstract class TaskExecutor {
 
     private get data(): TaskData {
         return this.taskData;
-    }
-
-    private get isActivated(): boolean {
-        return (this.taskState === TaskState.ACTIVATED)
-            || (this.taskState === TaskState.IN_PROGRESS)
-            || (this.isDaemon && !this.isDisactivated);
     }
 
     private get isDisactivated() {
@@ -126,18 +130,20 @@ export abstract class TaskExecutor {
         return this.repetition === 1;
     }
 
+    /**
+     * Lazy task run only when other tasks have scheduled tracking.
+     */
+    private get isLazy(): boolean {
+        return this.data.repetitions.interval === undefined;
+    }
+
     private get nextScheduledTime(): TaskData['scheduledExecutionTime'] {
-        if (!this.isActivated) {
+        if (!this.isAlive || this.isLazy) {
             return undefined;
         }
 
         const { delay } = this.data;
         const { interval } = this.data.repetitions;
-        if (!interval) {
-            // Lazy task only runs when other tasks have scheduled tracking.
-            return undefined;
-        }
-
         const executionDelayMs = this.isFirstRepetition
             ? (delay ?? 0) * MS_IN_SECOND
             : 0;
@@ -146,10 +152,13 @@ export abstract class TaskExecutor {
     }
 
     private get shouldNotRepeat(): boolean {
+        if (this.isLazy) {
+            return false;
+        }
+
         const {
             repeat, deadline,
         } = this.data.repetitions;
-
         const now = new Date();
         const isExpired = (!!deadline) && (new Date(deadline) <= now);
         const isFinishedRepeating = ((repeat ?? 0) <= this.repetition);
@@ -160,7 +169,7 @@ export abstract class TaskExecutor {
         const { scheduledExecutionTime } = this.data;
         const now = new Date();
         const isScheduled = !scheduledExecutionTime || (new Date(scheduledExecutionTime) <= now);
-        const shouldExecute = this.isActivated && isScheduled && !this.shouldNotRepeat;
+        const shouldExecute = this.isAlive && isScheduled && !this.shouldNotRepeat;
         return shouldExecute;
     }
 
@@ -171,7 +180,7 @@ export abstract class TaskExecutor {
      * @returns
      */
     public async execute(context: ContextExecutor): Promise<void> {
-        if (this.isActivated && this.shouldNotRepeat) {
+        if (this.isAlive && this.shouldNotRepeat) {
             this.setDisactivated();
         }
 
