@@ -63,9 +63,8 @@ export class StageExecutor {
     }
 
     public async execute(context: ContextExecutor): Promise<void> {
-        const tasksToExecute = this.tasks.filter((task) => task.shouldExecute);
-        const shouldExecute = tasksToExecute.length > 0;
-        if (!shouldExecute) {
+        const aliveTasks = this.tasks.filter((task) => task.isAlive);
+        if (!aliveTasks.length) {
             return;
         }
 
@@ -79,7 +78,7 @@ export class StageExecutor {
                 }
 
                 await Promise.all(
-                    tasksToExecute.map((task) => context.execute(task.id)),
+                    aliveTasks.map((task) => context.execute(task.id)),
                 );
 
                 const { tasks } = this;
