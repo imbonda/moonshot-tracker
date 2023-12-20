@@ -82,13 +82,14 @@ export class StageExecutor {
                     tasksToExecute.map((task) => context.execute(task.id)),
                 );
 
-                const halted = this.tasks.every((task) => task.halted);
-                const completed = this.tasks.every((task) => task.completed);
-                if (halted) {
-                    this.stageState = StageState.HALTED;
-                }
+                const { tasks } = this;
+                const completed = tasks.every((task) => task.completed);
+                const halted = !completed && tasks.every((task) => task.completed || task.halted);
                 if (completed) {
                     this.stageState = StageState.DONE;
+                }
+                if (halted) {
+                    this.stageState = StageState.HALTED;
                 }
             } finally {
                 span.end();

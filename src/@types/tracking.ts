@@ -10,7 +10,7 @@ export interface TaskData {
         interval?: number,
         deadline?: Date,
     },
-    // @not-supported yet.
+    // @not-supported
     retries?: {
         maxTime?: number,
         retryMaxTime?: number,

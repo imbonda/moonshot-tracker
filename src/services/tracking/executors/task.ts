@@ -23,7 +23,7 @@ export type ResolvedTaskInsights = valueof<NonNullable<TaskInsights>> | null;
  * - A task is completed only when "setCompleted" was called.
  * - A task is halted when it finishes repeating without being completed (via "setCompleted").
  * - A task can trigger a circuit-breaker to abort token tracking by calling "abort".
- * - A daemon can be disactivated by calling "setDisactivated".
+ * - A daemon can be halted by calling "halt".
  */
 export abstract class TaskExecutor {
     protected token: TrackedToken;
@@ -64,12 +64,18 @@ export abstract class TaskExecutor {
         return this.taskData.config;
     }
 
+    public get isAlive(): boolean {
+        return (this.taskState === TaskState.ACTIVATED)
+            || (this.taskState === TaskState.IN_PROGRESS)
+            || (this.isDaemon && !this.halted);
+    }
+
     public get completed(): boolean {
         return this.taskState === TaskState.DONE;
     }
 
     public get halted(): boolean {
-        return this.isDisactivated;
+        return this.taskState === TaskState.HALTED;
     }
 
     public get aborted(): boolean {
@@ -80,20 +86,6 @@ export abstract class TaskExecutor {
         this.taskState = TaskState.ACTIVATED;
     }
 
-    protected setDisactivated(): void {
-        this.taskState = TaskState.DISACTIVATED;
-    }
-
-    protected setCompleted(): void {
-        this.taskState = TaskState.DONE;
-    }
-
-    public get isAlive(): boolean {
-        return (this.taskState === TaskState.ACTIVATED)
-            || (this.taskState === TaskState.IN_PROGRESS)
-            || (this.isDaemon && !this.isDisactivated);
-    }
-
     /**
      * Circuit breaker.
      */
@@ -102,7 +94,14 @@ export abstract class TaskExecutor {
     }
 
     protected halt(): void {
-        this.setDisactivated();
+        // Do not override resolved state (e.g. in case of a completed daemon task).
+        if (!this.completed) {
+            this.taskState = TaskState.HALTED;
+        }
+    }
+
+    protected setCompleted(): void {
+        this.taskState = TaskState.DONE;
     }
 
     private get state(): TaskData['state'] {
@@ -111,10 +110,6 @@ export abstract class TaskExecutor {
 
     private get data(): TaskData {
         return this.taskData;
-    }
-
-    private get isDisactivated() {
-        return this.taskState === TaskState.DISACTIVATED;
     }
 
     private get notStarted(): boolean {
@@ -162,7 +157,7 @@ export abstract class TaskExecutor {
         const now = new Date();
         const isExpired = (!!deadline) && (new Date(deadline) <= now);
         const isFinishedRepeating = ((repeat ?? 0) <= this.repetition);
-        return !this.isDaemon && (isExpired || isFinishedRepeating);
+        return isExpired || isFinishedRepeating;
     }
 
     public get shouldExecute(): boolean {
@@ -181,7 +176,7 @@ export abstract class TaskExecutor {
      */
     public async execute(context: ContextExecutor): Promise<void> {
         if (this.isAlive && this.shouldNotRepeat) {
-            this.setDisactivated();
+            this.halt();
         }
 
         if (!this.shouldExecute) {
@@ -205,7 +200,7 @@ export abstract class TaskExecutor {
         this.repetition += 1;
 
         if (this.shouldNotRepeat) {
-            this.setDisactivated();
+            this.halt();
         }
     }
 

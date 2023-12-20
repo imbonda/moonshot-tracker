@@ -30,6 +30,7 @@ const scheduledTaskData: TaskData = {
     repetitions: {
         count: 1,
         repeat: 2,
+        interval: 60,
     },
 };
 
@@ -47,6 +48,8 @@ const completedDaemonTaskData: TaskData = {
     state: TaskState.DONE,
     repetitions: {
         count: 7,
+        repeat: 8,
+        interval: 60,
     },
     daemon: true,
 };
@@ -60,6 +63,7 @@ const nonDaemonCompletedTaskData: TaskData = {
     state: TaskState.DONE,
     repetitions: {
         count: 1,
+        interval: 60,
     },
     daemon: false,
 };
@@ -69,6 +73,7 @@ const pendingTaskData: TaskData = {
     state: TaskState.PENDING,
     repetitions: {
         count: 0,
+        interval: 60,
     },
 };
 
@@ -78,6 +83,7 @@ const nonScheduledTaskData: TaskData = {
     repetitions: {
         count: 0,
         repeat: 1,
+        interval: 60,
     },
     scheduledExecutionTime: new Date(
         new Date().setDate(
@@ -93,8 +99,20 @@ const repeatLimitTaskData: TaskData = {
     repetitions: {
         count: 2,
         repeat: 2,
+        interval: 0,
     },
     scheduledExecutionTime: new Date(),
+};
+
+const repeatLimitCompletedDaemonTaskData: TaskData = {
+    taskId: 'daemon',
+    state: TaskState.DONE,
+    repetitions: {
+        count: 7,
+        repeat: 7,
+        interval: 60,
+    },
+    daemon: true,
 };
 
 const expiredTaskData: TaskData = {
@@ -102,6 +120,7 @@ const expiredTaskData: TaskData = {
     state: TaskState.ACTIVATED,
     repetitions: {
         count: 2,
+        interval: 60,
         deadline: new Date(),
     },
     scheduledExecutionTime: new Date(),
@@ -114,37 +133,42 @@ export function testTaskExecutor() {
             assert(!!task.shouldExecute);
         });
 
-        it('should return true for a scheduled task', async () => {
+        it('should return true for a scheduled task', () => {
             const task = new DummyTaskExecutor(token, scheduledTaskData);
             assert(!!task.shouldExecute);
         });
 
-        it('should return true for a completed daemon task', async () => {
+        it('should return true for a completed daemon task', () => {
             const task = new DummyTaskExecutor(token, completedDaemonTaskData);
             assert(!!task.shouldExecute);
         });
 
-        it('should return false for a non-daemon completed task', async () => {
+        it('should return false for a non-daemon completed task', () => {
             const task = new DummyTaskExecutor(token, nonDaemonCompletedTaskData);
             assert(!task.shouldExecute);
         });
 
-        it('should return false for a pending task', async () => {
+        it('should return false for a pending task', () => {
             const task = new DummyTaskExecutor(token, pendingTaskData);
             assert(!task.shouldExecute);
         });
 
-        it('should return false for a non-scheduled task', async () => {
+        it('should return false for a non-scheduled task', () => {
             const task = new DummyTaskExecutor(token, nonScheduledTaskData);
             assert(!task.shouldExecute);
         });
 
-        it('should return false for a task that reached repeat limit', async () => {
+        it('should return false for a task that reached repeat limit', () => {
             const task = new DummyTaskExecutor(token, repeatLimitTaskData);
             assert(!task.shouldExecute);
         });
 
-        it('should return false for an expired task', async () => {
+        it('should return false for a completed daemon task that reached repeat limit', () => {
+            const task = new DummyTaskExecutor(token, repeatLimitCompletedDaemonTaskData);
+            assert(!task.shouldExecute);
+        });
+
+        it('should return false for an expired task', () => {
             const task = new DummyTaskExecutor(token, expiredTaskData);
             assert(!task.shouldExecute);
         });
@@ -252,7 +276,7 @@ export function testTaskExecutor() {
             await task.execute(null as never);
             const updated = task.toJSON();
             assert.equal(updated.taskId, taskId);
-            assert.equal(updated.state, TaskState.DISACTIVATED);
+            assert.equal(updated.state, TaskState.HALTED);
             assert.equal(updated.repetitions.count, repetitions.count + 1);
             assert.equal(updated.repetitions.repeat, repetitions.repeat);
             assert.equal(updated.repetitions.interval, repetitions.interval);
@@ -270,7 +294,7 @@ export function testTaskExecutor() {
             await task.execute(null as never);
             const updated = task.toJSON();
             assert.equal(updated.taskId, taskId);
-            assert.equal(updated.state, TaskState.DISACTIVATED);
+            assert.equal(updated.state, TaskState.HALTED);
             assert.equal(updated.repetitions.count, repetitions.count);
             assert.equal(updated.repetitions.repeat, repetitions.repeat);
             assert.equal(updated.repetitions.interval, repetitions.interval);

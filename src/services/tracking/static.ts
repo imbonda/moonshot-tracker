@@ -11,6 +11,7 @@ export const enum StageState {
     IN_PROGRESS = 'inProgress',
     HALTED = 'halted',
     DONE = 'done',
+    // @not-supported
     FAILED = 'failed',
 }
 
@@ -18,8 +19,9 @@ export const enum TaskState {
     PENDING = 'pending',
     ACTIVATED = 'activated',
     IN_PROGRESS = 'inProgress',
-    DISACTIVATED = 'disactivated',
+    HALTED = 'halted',
     DONE = 'done',
+    // @not-supported
     FAILED = 'failed',
 }
 
