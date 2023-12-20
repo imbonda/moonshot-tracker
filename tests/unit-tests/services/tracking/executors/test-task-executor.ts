@@ -104,6 +104,17 @@ const repeatLimitTaskData: TaskData = {
     scheduledExecutionTime: new Date(),
 };
 
+const repeatLimitDaemonTaskData: TaskData = {
+    taskId: 'daemon',
+    state: TaskState.IN_PROGRESS,
+    repetitions: {
+        count: 65,
+        repeat: 55,
+        interval: 1000,
+    },
+    daemon: true,
+};
+
 const repeatLimitCompletedDaemonTaskData: TaskData = {
     taskId: 'daemon',
     state: TaskState.DONE,
@@ -160,6 +171,11 @@ export function testTaskExecutor() {
 
         it('should return false for a task that reached repeat limit', () => {
             const task = new DummyTaskExecutor(token, repeatLimitTaskData);
+            assert(!task.shouldExecute);
+        });
+
+        it('should return false for a daemon task that reached repeat limit', () => {
+            const task = new DummyTaskExecutor(token, repeatLimitDaemonTaskData);
             assert(!task.shouldExecute);
         });
 
