@@ -78,7 +78,7 @@ export abstract class BaseQueueRole {
     protected async cleanup(): Promise<void> {
         await this.tracer.startActiveSpan('mq.cleanup', async (span) => {
             try {
-                this.logger.info('Starting cleaning up stuck and old jobs');
+                this.logger.info('Starting cleanup stuck and old jobs');
                 // Cleaning stucked jobs (e.g. after crash).
                 await Promise.all([
                     this.queue.clean(STUCK_JOB_THRESHOLD_MS, 'active'),
