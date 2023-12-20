@@ -16,6 +16,7 @@ export class QueueConsumer extends BaseQueueRole {
     }
 
     public async init(): Promise<void> {
+        await super.init();
         await this.scheduleCleanup();
     }
 
@@ -33,7 +34,7 @@ export class QueueConsumer extends BaseQueueRole {
                     content: Buffer.from(job.data as Buffer),
                 };
             } catch (err) {
-                // Note that we do not "await" on purpose - to allow proper cleanup throttling.
+                // Important: Do not "await" - to allow proper cleanup throttling.
                 this.scheduleCleanup();
                 throw err;
             }
