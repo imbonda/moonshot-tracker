@@ -43,6 +43,7 @@ const TaskDataSchema = new Schema<TaskData>(
         retries: { type: TaskRetriesSchema, required: false },
         delay: { type: Number, required: false },
         daemon: { type: Boolean, required: false },
+        config: { type: Schema.Types.Mixed },
         scheduledExecutionTime: { type: Date, required: false },
     },
     { _id: false },
