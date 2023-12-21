@@ -7,15 +7,18 @@ type CredibilityScoreConfig = { threshold: number };
 
 export class CredibilityScoreCheck extends TaskExecutor {
     protected async run(context: ContextExecutor): Promise<void> {
-        const dependentTaskId = TaskId.DEX_TOOLS_AUDIT_CHECK;
-        const dextoolsInsights = await context.getLatestResolvedTaskInsights(dependentTaskId);
-        if (!context.isTaskAlive(dependentTaskId)) {
+        const dexToolsAuditTaskId = TaskId.DEX_TOOLS_AUDIT_CHECK;
+        const dexToolsInsights = await context.getLatestResolvedTaskInsights(dexToolsAuditTaskId);
+        const isDexToolsAuditAlive = context.isTaskAlive(dexToolsAuditTaskId);
+        const isDexToolsAuditCompleted = context.isTaskCompleted(dexToolsAuditTaskId);
+        if (!isDexToolsAuditAlive) {
             this.halt();
             return;
         }
 
-        const { total: dextScore } = dextoolsInsights?.topPair.dextScore ?? {};
-        if (dextScore && dextScore >= this.threshold) {
+        const { total: dextScore } = dexToolsInsights?.topPair.dextScore ?? {};
+        const isCredibleScore = dextScore! >= this.threshold;
+        if (isDexToolsAuditCompleted && isCredibleScore) {
             this.setCompleted();
         }
     }
