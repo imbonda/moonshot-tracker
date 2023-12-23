@@ -22,7 +22,7 @@ export const TASKS_TEMPLATE: TrackedToken['tasks'] = {
             interval: undefined,
         },
         config: {
-            threshold: 80,
+            threshold: 70,
         },
     },
 };

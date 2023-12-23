@@ -54,8 +54,9 @@ export class PipelineExecutor {
     }
 
     public get halted(): boolean {
-        // TODO: consider next stage can be unlocked after a completed task from a previous stage.
-        return this.currentStage.halted;
+        const previousStages = this.stages.slice(0, this.currentStageIndex);
+        const isPreviousStageInactive = previousStages.every((stage) => !stage.isActive);
+        return this.currentStage.halted && isPreviousStageInactive;
     }
 
     public get completed(): boolean {

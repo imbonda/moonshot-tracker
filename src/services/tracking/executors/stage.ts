@@ -33,8 +33,16 @@ export class StageExecutor {
         this.tracer = tracer;
     }
 
+    public get isActive(): boolean {
+        return this.unlocked || this.inProgress;
+    }
+
     public get unlocked(): boolean {
         return this.stageState === StageState.UNLOCKED;
+    }
+
+    public get inProgress(): boolean {
+        return this.stageState === StageState.IN_PROGRESS;
     }
 
     public get halted(): boolean {
@@ -63,8 +71,8 @@ export class StageExecutor {
     }
 
     public async execute(context: ContextExecutor): Promise<void> {
-        const aliveTasks = this.tasks.filter((task) => task.isAlive);
-        if (!aliveTasks.length) {
+        const activeTasks = this.tasks.filter((task) => task.isActive);
+        if (!activeTasks.length) {
             return;
         }
 
@@ -78,7 +86,7 @@ export class StageExecutor {
                 }
 
                 await Promise.all(
-                    aliveTasks.map((task) => context.execute(task.id)),
+                    activeTasks.map((task) => context.execute(task.id)),
                 );
 
                 const { tasks } = this;

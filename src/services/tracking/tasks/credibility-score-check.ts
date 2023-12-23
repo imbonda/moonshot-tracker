@@ -9,9 +9,9 @@ export class CredibilityScoreCheck extends TaskExecutor {
     protected async run(context: ContextExecutor): Promise<void> {
         const dexToolsAuditTaskId = TaskId.DEX_TOOLS_AUDIT_CHECK;
         const dexToolsInsights = await context.getLatestResolvedTaskInsights(dexToolsAuditTaskId);
-        const isDexToolsAuditAlive = context.isTaskAlive(dexToolsAuditTaskId);
+        const isDexToolsAuditActive = context.isTaskActive(dexToolsAuditTaskId);
         const isDexToolsAuditCompleted = context.isTaskCompleted(dexToolsAuditTaskId);
-        if (!isDexToolsAuditAlive) {
+        if (!isDexToolsAuditActive) {
             this.halt();
             return;
         }

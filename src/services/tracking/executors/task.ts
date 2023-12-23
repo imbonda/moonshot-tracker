@@ -64,7 +64,7 @@ export abstract class TaskExecutor {
         return this.taskData.config;
     }
 
-    public get isAlive(): boolean {
+    public get isActive(): boolean {
         return (this.taskState === TaskState.ACTIVATED)
             || (this.taskState === TaskState.IN_PROGRESS)
             || (this.isDaemon && !this.halted);
@@ -133,7 +133,7 @@ export abstract class TaskExecutor {
     }
 
     private get nextScheduledTime(): TaskData['scheduledExecutionTime'] {
-        if (!this.isAlive || this.isLazy) {
+        if (!this.isActive || this.isLazy) {
             return undefined;
         }
 
@@ -164,7 +164,7 @@ export abstract class TaskExecutor {
         const { scheduledExecutionTime } = this.data;
         const now = new Date();
         const isScheduled = !scheduledExecutionTime || (new Date(scheduledExecutionTime) <= now);
-        const shouldExecute = this.isAlive && isScheduled && !this.shouldNotRepeat;
+        const shouldExecute = this.isActive && isScheduled && !this.shouldNotRepeat;
         return shouldExecute;
     }
 
@@ -175,7 +175,7 @@ export abstract class TaskExecutor {
      * @returns
      */
     public async execute(context: ContextExecutor): Promise<void> {
-        if (this.isAlive && this.shouldNotRepeat) {
+        if (this.isActive && this.shouldNotRepeat) {
             this.halt();
         }
 

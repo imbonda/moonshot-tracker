@@ -42,8 +42,8 @@ export class ContextExecutor {
         return task.insights?.[task.insightsKey] ?? null;
     }
 
-    public isTaskAlive(taskId: TaskId): boolean {
-        return !!this.taskById[taskId]?.isAlive;
+    public isTaskActive(taskId: TaskId): boolean {
+        return !!this.taskById[taskId]?.isActive;
     }
 
     public isTaskCompleted(taskId: TaskId): boolean {

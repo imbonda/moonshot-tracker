@@ -88,7 +88,7 @@ export function testStageExecutor() {
         it('should execute tasks at an unlocked stage', async () => {
             const stage = new StageExecutor(token, firstStage);
             sandbox.stub(stage, 'tasks').value([task1, task2]);
-            sandbox.stub(task2, 'shouldExecute').value(true);
+            sandbox.stub(task2, 'isActive').value(true);
             await stage.execute(context);
             assert.equal(spyTask1Execute.callCount, 0);
             assert.equal(spyTask2Execute.callCount, 1);
@@ -99,8 +99,8 @@ export function testStageExecutor() {
         it('should not execute tasks at a finished stage', async () => {
             const stage = new StageExecutor(token, finishedStage);
             sandbox.stub(stage, 'tasks').value([task1, task2]);
-            sandbox.stub(task1, 'shouldExecute').value(false);
-            sandbox.stub(task2, 'shouldExecute').value(false);
+            sandbox.stub(task1, 'isActive').value(false);
+            sandbox.stub(task2, 'isActive').value(false);
             await stage.execute(context);
             assert.equal(spyTask1Execute.callCount, 0);
             assert.equal(spyTask2Execute.callCount, 0);
@@ -166,7 +166,7 @@ export function testStageExecutor() {
             } = firstStage;
             const stage = new StageExecutor(token, firstStage);
             sandbox.stub(stage, 'tasks').value([task1, task2]);
-            sandbox.stub(task1, 'shouldExecute').value(true);
+            sandbox.stub(task1, 'isActive').value(true);
             await stage.execute(context);
             const updated = stage.toJSON();
             assert.equal(updated.stageId, stageId);
@@ -183,8 +183,8 @@ export function testStageExecutor() {
             } = firstStage;
             const stage = new StageExecutor(token, firstStage);
             sandbox.stub(stage, 'tasks').value([task1, task2]);
-            sandbox.stub(task1, 'shouldExecute').value(true);
-            sandbox.stub(task2, 'shouldExecute').value(true);
+            sandbox.stub(task1, 'isActive').value(true);
+            sandbox.stub(task2, 'isActive').value(true);
             sandbox.stub(task1, 'halted').value(true);
             sandbox.stub(task2, 'halted').value(true);
             await stage.execute(context);
@@ -203,8 +203,8 @@ export function testStageExecutor() {
             } = firstStage;
             const stage = new StageExecutor(token, firstStage);
             sandbox.stub(stage, 'tasks').value([task1, task2]);
-            sandbox.stub(task1, 'shouldExecute').value(true);
-            sandbox.stub(task2, 'shouldExecute').value(true);
+            sandbox.stub(task1, 'isActive').value(true);
+            sandbox.stub(task2, 'isActive').value(true);
             sandbox.stub(task1, 'completed').value(true);
             sandbox.stub(task2, 'completed').value(true);
             await stage.execute(context);
