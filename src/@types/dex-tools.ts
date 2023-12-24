@@ -1,7 +1,7 @@
 // Internal.
 import type { Modify, WithRequired, valueof } from './generics';
 
-export type AuditProvider = 'goplus' | 'hapi' | 'quickintel' | 'tokensniffer';
+export type AuditProvider = 'goplus' | 'hapi' | 'quickintel' | 'tokensniffer' | 'dextools';
 
 export type RawAudit = {
     anti_whale_modifiable?: string | number | boolean,
@@ -137,11 +137,17 @@ export interface TokenPairResponse {
  * Parsed.
  */
 
+export type TaxValueRange = {
+    min: number,
+    max: number,
+    status: 'clear' | string,
+};
+
 export interface Audit {
     is_open_source?: boolean,
     is_honeypot?: boolean,
-    buy_tax?: number,
-    sell_tax?: number,
+    buy_tax?: number | TaxValueRange,
+    sell_tax?: number | TaxValueRange,
     is_proxy?: boolean,
     owner_percent?: number,
     creator_percent?: number,

@@ -129,8 +129,8 @@ export function parseExternalTokenAudits(
 ): FullyAuditedPairData['token']['audit']['external'] {
     const { createdAt, ...externalAudits } = rawExternal!;
 
-    const positiveValues = [true, 'Yes', '1'];
-    const negativeValues = [false, 'No', '0'];
+    const positiveValues = [true, 'Yes', 'yes', '1'];
+    const negativeValues = [false, 'No', 'no', '0'];
     const auditChecks = AUDIT_CHECKS;
 
     const external = Object.fromEntries(
@@ -139,13 +139,17 @@ export function parseExternalTokenAudits(
                 const value = audit[check];
                 if (positiveValues.includes(value as string | boolean)) {
                     (accum[check] as boolean) = true;
+                    return accum;
                 }
                 if (negativeValues.includes(value as string | boolean)) {
                     (accum[check] as boolean) = false;
+                    return accum;
                 }
                 if (typeof value === 'number') {
                     (accum[check] as number) = value;
+                    return accum;
                 }
+                (accum[check] as unknown) = value;
                 return accum;
             }, {} as Audit);
             return [provider, parsedAudit];

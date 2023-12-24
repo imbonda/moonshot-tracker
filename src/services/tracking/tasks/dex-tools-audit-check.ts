@@ -1,6 +1,6 @@
 // Internal.
 import type {
-    Audit, AuditMatrix, AuditProvider, RedFlags, DexToolsTokenInsights,
+    Audit, AuditMatrix, AuditProvider, RedFlags, DexToolsTokenInsights, TaxValueRange,
 } from '../../../@types/dex-tools';
 import type { valueof } from '../../../@types/generics';
 import { scraper, AudicCheck, AUDIT_CHECKS } from '../../../lib/scraping/dex-tools/scraper';
@@ -11,8 +11,20 @@ type AuditPredicate = (value: boolean | number) => boolean
 const RED_FLAG_PREDICATES = {
     [AudicCheck.CONTRACT_VERIFIED]: (isVerified: boolean) => !isVerified,
     [AudicCheck.HONEYPOT]: (isHoneypot: boolean) => isHoneypot,
-    [AudicCheck.BUY_TAX]: (tax: number) => tax >= 0.2,
-    [AudicCheck.SELL_TAX]: (tax: number) => tax >= 0.2,
+    [AudicCheck.BUY_TAX]: (tax: number | TaxValueRange) => {
+        const threshold = 0.2;
+        if (typeof tax === 'number') {
+            return tax >= threshold;
+        }
+        return tax.max >= threshold;
+    },
+    [AudicCheck.SELL_TAX]: (tax: number | TaxValueRange) => {
+        const threshold = 0.2;
+        if (typeof tax === 'number') {
+            return tax >= threshold;
+        }
+        return tax.max >= threshold;
+    },
     [AudicCheck.PROXY]: (isProxy: boolean) => isProxy,
     [AudicCheck.OWNER_PERCENT]: (ownerShare: number) => ownerShare >= 0.05,
     [AudicCheck.CREATOR_PERCENT]: (creatorShare: number) => creatorShare >= 0.05,
