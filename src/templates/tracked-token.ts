@@ -3,7 +3,7 @@ import type { TrackedToken } from '../@types/tracking';
 import { MS_IN_SECOND } from '../lib/constants';
 import { PIPELINE_TEMPLATE, TASKS_TEMPLATE } from './tracking-pipeline';
 
-const DEFAULT_DELAY_MS = 60 * 60 * MS_IN_SECOND; // 1 hour.
+const DEFAULT_DELAY_MS = 30 * 60 * MS_IN_SECOND; // 30 minutes.
 
 export function createTrackedToken(
     chainId: number,
