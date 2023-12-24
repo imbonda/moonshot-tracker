@@ -13,17 +13,11 @@ const RED_FLAG_PREDICATES = {
     [AudicCheck.HONEYPOT]: (isHoneypot: boolean) => isHoneypot,
     [AudicCheck.BUY_TAX]: (tax: number | TaxValueRange) => {
         const threshold = 0.2;
-        if (typeof tax === 'number') {
-            return tax >= threshold;
-        }
-        return tax.max >= threshold;
+        return ((tax as TaxValueRange)?.max || (tax as number)) >= threshold;
     },
     [AudicCheck.SELL_TAX]: (tax: number | TaxValueRange) => {
         const threshold = 0.2;
-        if (typeof tax === 'number') {
-            return tax >= threshold;
-        }
-        return tax.max >= threshold;
+        return ((tax as TaxValueRange)?.max || (tax as number)) >= threshold;
     },
     [AudicCheck.PROXY]: (isProxy: boolean) => isProxy,
     [AudicCheck.OWNER_PERCENT]: (ownerShare: number) => ownerShare >= 0.05,

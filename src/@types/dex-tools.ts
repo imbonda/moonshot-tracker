@@ -140,7 +140,7 @@ export interface TokenPairResponse {
 export type TaxValueRange = {
     min: number,
     max: number,
-    status: 'clear' | string,
+    status: 'clear' | 'warning' | string,
 };
 
 export interface Audit {
