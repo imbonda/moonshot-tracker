@@ -58,7 +58,7 @@ services:
             context: .
             dockerfile: Dockerfile
         deploy:
-            replicas: 2
+            replicas: 4
         env_file:
             - .env
         environment:

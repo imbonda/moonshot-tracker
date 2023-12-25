@@ -2,6 +2,7 @@
 import { Job } from 'bull';
 // Internal.
 import { Dal } from '../../../../dal';
+import { prettyTime } from '../../../../lib/utils';
 import type { ConsumeHandler, Message } from '../../../message-queue/consumer';
 import { BaseQueueRole } from './base';
 
@@ -30,6 +31,7 @@ export class QueueConsumer extends BaseQueueRole {
         this.queue.process(async (job: Job) => {
             let message: Message;
             try {
+                this.logger.info('Consumed new message', { age: this.getJobAge(job) });
                 message = {
                     content: Buffer.from(job.data as Buffer),
                 };
@@ -53,5 +55,10 @@ export class QueueConsumer extends BaseQueueRole {
             // Defer job's success/failure till after the consumer's callback.
             await fulfill;
         });
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    private getJobAge(job: Job): string {
+        return prettyTime(Date.now() - job.timestamp);
     }
 }

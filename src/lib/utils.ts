@@ -1,5 +1,6 @@
 // 3rd party.
 import { BigNumberish, toBeHex } from 'ethers';
+import _prettyTime from 'pretty-time';
 import millify from 'millify';
 // Internal.
 import { MS_IN_SECOND } from './constants';
@@ -36,8 +37,12 @@ export function calcBlockNumber(blockNumber: BigNumberish, offset: BigNumberish)
     return hexifyNumber(BigInt(blockNumber) + BigInt(offset));
 }
 
-export function pretifyNumber(value: number): string {
+export function prettyNumber(value: number): string {
     return millify(value, { precision: 2 });
+}
+
+export function prettyTime(timeMs: number, smallestUnit: string = 'ms'): string {
+    return _prettyTime(timeMs * MS_IN_SECOND, smallestUnit);
 }
 
 export function formatUSD(value: number, nanStringValue: string = ''): string {
@@ -53,7 +58,7 @@ export function formatUSD(value: number, nanStringValue: string = ''): string {
     if (!isFinite) {
         return 'Infinity';
     }
-    return `$${pretifyNumber(value)}`;
+    return `$${prettyNumber(value)}`;
 }
 
 const NUMBER_EMOJI_MAP: Record<number, string> = {
