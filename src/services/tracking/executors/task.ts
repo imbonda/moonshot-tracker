@@ -138,7 +138,7 @@ export abstract class TaskExecutor {
      * Lazy task run only when other tasks have scheduled tracking.
      */
     private get isLazy(): boolean {
-        const interval = this.data.repetitions;
+        const { interval } = this.data.repetitions;
         return interval === null || interval === undefined;
     }
 
