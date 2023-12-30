@@ -1,7 +1,7 @@
 // Internal.
 import { ChainId } from '../../constants';
 import type {
-    Audit,
+    Audit, EnrichedAudit,
     RawPairData, PairData,
     RawFullyAuditedPairData, FullyAuditedPairData,
 } from '../../../@types/dex-tools';
@@ -137,6 +137,9 @@ export function parseExternalTokenAudits(
         Object.entries(externalAudits ?? []).map(([provider, audit]) => {
             const parsedAudit = auditChecks.reduce((accum, check) => {
                 const value = audit[check];
+                if (value === undefined) {
+                    return accum;
+                }
                 if (positiveValues.includes(value as string | boolean)) {
                     (accum[check] as boolean) = true;
                     return accum;
@@ -152,6 +155,11 @@ export function parseExternalTokenAudits(
                 (accum[check] as unknown) = value;
                 return accum;
             }, {} as Audit);
+
+            if (provider === 'tokensniffer') {
+                Object.assign(parsedAudit, parseTokenSnifferAudit(audit));
+            }
+
             return [provider, parsedAudit];
         }),
     );
@@ -160,4 +168,23 @@ export function parseExternalTokenAudits(
         createdAt: new Date(createdAt),
         ...external,
     };
+}
+
+export function parseTokenSnifferAudit(
+    rawTokenSnifferAudit: RawFullyAuditedPairData['token']['audit']['external']['tokensniffer'],
+): FullyAuditedPairData['token']['audit']['external']['tokensniffer'] {
+    const audit = (rawTokenSnifferAudit?.tests ?? []).reduce((accum, test) => {
+        switch (test.id) {
+            case 'testForInadequateInitialLiquidity':
+                accum.initial_liquidity_percent = test.valuePct;
+                break;
+            case 'testForInadeqateLiquidityLockedOrBurned':
+                accum.liquidity_locked_or_burned_percent = test.valuePct;
+                break;
+            default:
+                break;
+        }
+        return accum;
+    }, {} as EnrichedAudit);
+    return audit;
 }

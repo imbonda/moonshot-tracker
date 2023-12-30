@@ -2,12 +2,14 @@
 import type { TaskData, TrackedToken } from '../../../@types/tracking';
 import { TaskExecutor, TaskExecutorClass } from '../executors/task';
 import { TaskId } from '../static';
-import { CredibilityScoreCheck } from './credibility-score-check';
-import { DEXToolsAuditCheck } from './dex-tools-audit-check';
+import { CredibilityCheck } from './credibility-check';
+import { AuditCheck } from './audit-check';
+import { DEXToolsScraper } from './dex-tools-scraper';
 
 const TASK_CLASS_BY_ID: Record<TaskData['taskId'], TaskExecutorClass> = {
-    [TaskId.DEX_TOOLS_AUDIT_CHECK]: DEXToolsAuditCheck,
-    [TaskId.CREDIBILITY_SCORE_CHECK]: CredibilityScoreCheck,
+    [TaskId.DEX_TOOLS_SCRAPER]: DEXToolsScraper,
+    [TaskId.AUDIT_CHECK]: AuditCheck,
+    [TaskId.CREDIBILITY_CHECK]: CredibilityCheck,
 };
 
 export class TaskFactory {

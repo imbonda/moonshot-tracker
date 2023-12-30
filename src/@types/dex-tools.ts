@@ -3,7 +3,16 @@ import type { Modify, WithRequired, valueof } from './generics';
 
 export type AuditProvider = 'goplus' | 'hapi' | 'quickintel' | 'tokensniffer' | 'dextools';
 
-export type RawAudit = {
+export interface TokenSnifferAuditTest {
+    id: string | 'testForInadequateInitialLiquidity' | 'testForInadeqateLiquidityLockedOrBurned',
+    description: string,
+    // true iff identified an inadequate state or condition.
+    result: boolean,
+    value?: number,
+    valuePct?: number,
+}
+
+export interface RawAudit {
     anti_whale_modifiable?: string | number | boolean,
     buy_tax?: number,
     can_take_back_ownership?: string | number | boolean,
@@ -37,6 +46,7 @@ export type RawAudit = {
     trading_cooldown?: string | number | boolean,
     transfer_pausable?: string | number | boolean,
     trust_list?: string | number | boolean,
+    tests?: TokenSnifferAuditTest[],
     updatedResult?: boolean,
 }
 
@@ -153,9 +163,14 @@ export interface Audit {
     creator_percent?: number,
 }
 
+export interface EnrichedAudit extends Audit {
+    initial_liquidity_percent?: number,
+    liquidity_locked_or_burned_percent?: number,
+}
+
 export type AuditMatrix = {
-    [check in keyof Audit]: {
-        [provider in AuditProvider]: Audit[check]
+    [check in keyof EnrichedAudit]: {
+        [provider in AuditProvider]: EnrichedAudit[check]
     }
 };
 
@@ -177,7 +192,7 @@ export type PairData = Modify<RawPairData, {
         audit: Modify<RawPairData['token']['audit'], {
             date: Date,
             external?: { createdAt: Date } & {
-                [key in AuditProvider]?: Audit;
+                [key in AuditProvider]?: EnrichedAudit;
             },
         }>,
     }>,
@@ -209,7 +224,7 @@ export interface DexToolsTokenInsights {
     },
 }
 
-export interface DexToolsInsights extends DexToolsTokenInsights {
+export interface DexToolsAuditInsights {
     auditMatrix: AuditMatrix,
     redFlags: RedFlags,
 }

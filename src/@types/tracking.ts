@@ -1,9 +1,10 @@
 // Internal.
-import type { DexToolsInsights } from './dex-tools';
+import type { DexToolsTokenInsights, DexToolsAuditInsights } from './dex-tools';
 
 export interface TaskData {
     taskId: string,
     state: string,
+    active: boolean,
     repetitions: {
         count: number,
         repeat?: number,
@@ -38,7 +39,8 @@ export interface TrackedToken {
     pipeline: TrackingPipeline,
     tasks: Record<TaskData['taskId'], TaskData>,
     insights: null | {
-        dextools?: DexToolsInsights,
+        dextools?: DexToolsTokenInsights,
+        audit?: DexToolsAuditInsights,
     },
     halted: boolean,
     aborted: boolean,

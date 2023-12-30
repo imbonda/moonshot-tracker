@@ -1,6 +1,6 @@
 // Internals.
 import type { TaskData } from '../../../@types/tracking';
-import { type ResolvedTaskInsights, TaskExecutor } from './task';
+import { type TaskInsightsUnwrapped, TaskExecutor } from './task';
 
 type TaskId = TaskData['taskId'];
 type TaskById = Record<TaskId, TaskExecutor>;
@@ -36,7 +36,7 @@ export class ContextExecutor {
      * @param taskId
      * @returns
      */
-    public async getLatestResolvedTaskInsights(taskId: TaskId): Promise<ResolvedTaskInsights> {
+    public async getLatestTaskInsightsUnwrapped(taskId: TaskId): Promise<TaskInsightsUnwrapped> {
         await this.execute(taskId);
         const task = this.taskById[taskId];
         return task.insights?.[task.insightsKey] ?? null;

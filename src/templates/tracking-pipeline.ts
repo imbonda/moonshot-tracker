@@ -3,9 +3,10 @@ import type { TrackedToken } from '../@types/tracking';
 import { StageState, TaskState, TaskId } from '../services/tracking/static';
 
 export const TASKS_TEMPLATE: TrackedToken['tasks'] = {
-    [TaskId.DEX_TOOLS_AUDIT_CHECK]: {
-        taskId: TaskId.DEX_TOOLS_AUDIT_CHECK,
+    [TaskId.DEX_TOOLS_SCRAPER]: {
+        taskId: TaskId.DEX_TOOLS_SCRAPER,
         state: TaskState.ACTIVATED,
+        active: true,
         repetitions: {
             count: 0,
             interval: 30 * 60, // 30 minutes.
@@ -13,16 +14,30 @@ export const TASKS_TEMPLATE: TrackedToken['tasks'] = {
         },
         daemon: true,
     },
-    [TaskId.CREDIBILITY_SCORE_CHECK]: {
-        taskId: TaskId.CREDIBILITY_SCORE_CHECK,
+    [TaskId.AUDIT_CHECK]: {
+        taskId: TaskId.AUDIT_CHECK,
         state: TaskState.ACTIVATED,
+        active: true,
         repetitions: {
             count: 0,
             // Lazy task does not schedule tracking.
             interval: undefined,
         },
+        daemon: true,
+    },
+    [TaskId.CREDIBILITY_CHECK]: {
+        taskId: TaskId.CREDIBILITY_CHECK,
+        state: TaskState.ACTIVATED,
+        active: true,
+        repetitions: {
+            count: 0,
+            // Lazy task does not schedule tracking.
+            interval: undefined,
+        },
+        daemon: true,
         config: {
-            threshold: 70,
+            lockedOrBurnedLiquidityThreshold: 0.8,
+            scoreThreshold: 70,
         },
     },
 };
@@ -32,8 +47,9 @@ export const PIPELINE_TEMPLATE: TrackedToken['pipeline'] = [
         stageId: 'stage1',
         state: StageState.UNLOCKED,
         taskIds: [
-            TaskId.DEX_TOOLS_AUDIT_CHECK,
-            TaskId.CREDIBILITY_SCORE_CHECK,
+            TaskId.DEX_TOOLS_SCRAPER,
+            TaskId.AUDIT_CHECK,
+            TaskId.CREDIBILITY_CHECK,
         ],
         prerequisiteTasks: [],
     },

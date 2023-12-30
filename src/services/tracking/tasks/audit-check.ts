@@ -3,8 +3,10 @@ import type {
     Audit, AuditMatrix, AuditProvider, RedFlags, DexToolsTokenInsights, TaxValueRange,
 } from '../../../@types/dex-tools';
 import type { valueof } from '../../../@types/generics';
-import { scraper, AudicCheck, AUDIT_CHECKS } from '../../../lib/scraping/dex-tools/scraper';
+import { AudicCheck, AUDIT_CHECKS } from '../../../lib/scraping/dex-tools/scraper';
+import { ContextExecutor } from '../executors/context';
 import { type InsightsKey, type TaskInsights, TaskExecutor } from '../executors/task';
+import { TaskId } from '../static';
 
 type AuditPredicate = (value: boolean | number) => boolean
 
@@ -24,24 +26,29 @@ const RED_FLAG_PREDICATES = {
     [AudicCheck.CREATOR_PERCENT]: (creatorShare: number) => creatorShare >= 0.05,
 } as Record<AudicCheck, AuditPredicate>;
 
-export class DEXToolsAuditCheck extends TaskExecutor {
+export class AuditCheck extends TaskExecutor {
     private tokenInsights?: DexToolsTokenInsights;
 
     private auditMatrix?: AuditMatrix;
 
     private redFlags?: RedFlags;
 
-    protected async run(): Promise<void> {
-        const { chainId } = this.token;
-        const tokenAddress = this.token.address;
-
-        const result = await scraper.fetchTokenInsights(chainId, tokenAddress);
-
-        if (!result) {
+    protected async run(context: ContextExecutor): Promise<void> {
+        const dexToolsScraperTaskId = TaskId.DEX_TOOLS_SCRAPER;
+        const dexToolsInsights = await context.getLatestTaskInsightsUnwrapped(
+            dexToolsScraperTaskId,
+        ) as DexToolsTokenInsights;
+        const isDexToolsScraperActive = context.isTaskActive(dexToolsScraperTaskId);
+        if (!isDexToolsScraperActive) {
+            this.halt();
             return;
         }
 
-        this.tokenInsights = result;
+        if (!dexToolsInsights) {
+            return;
+        }
+
+        this.tokenInsights = dexToolsInsights as DexToolsTokenInsights;
         this.auditMatrix = this.buildAuditMatrix();
         this.setRedFlags();
 
@@ -55,9 +62,9 @@ export class DEXToolsAuditCheck extends TaskExecutor {
             return;
         }
 
-        if (this.completedAudit) {
-            this.setCompleted();
-        }
+        // Setting task state to be completed so that the pipeline can continue.
+        // This task should be a daemon so it can continue checking audit until halting/aborting.
+        this.setCompleted();
     }
 
     private buildAuditMatrix(): AuditMatrix {
@@ -90,19 +97,17 @@ export class DEXToolsAuditCheck extends TaskExecutor {
 
     // eslint-disable-next-line class-methods-use-this
     public get insightsKey(): InsightsKey {
-        return 'dextools';
+        return 'audit';
     }
 
     public get insights(): TaskInsights {
         if (!this.tokenInsights) {
             return super.insights;
         }
+
+        const { auditMatrix, redFlags } = this;
         return {
-            [this.insightsKey]: {
-                ...this.tokenInsights,
-                auditMatrix: this.auditMatrix!,
-                redFlags: this.redFlags!,
-            },
+            [this.insightsKey]: { auditMatrix, redFlags },
         };
     }
 
@@ -112,10 +117,6 @@ export class DEXToolsAuditCheck extends TaskExecutor {
 
     private get externalAudit(): DexToolsTokenInsights['audit']['external'] {
         return this.audit.external;
-    }
-
-    private get links(): DexToolsTokenInsights['links'] {
-        return this.tokenInsights!.links;
     }
 
     private get sufficientIntel(): boolean {
@@ -133,10 +134,5 @@ export class DEXToolsAuditCheck extends TaskExecutor {
 
     private get isFraud(): boolean {
         return !this.audit.codeVerified || this.hasRedFlags;
-    }
-
-    private get completedAudit(): boolean {
-        // TODO: make sure has all relevant data for next stage.
-        return !!this.links.telegram;
     }
 }

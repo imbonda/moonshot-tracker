@@ -26,6 +26,7 @@ export const enum TaskState {
 }
 
 export const enum TaskId {
-    DEX_TOOLS_AUDIT_CHECK = 'dexToolsAuditCheck',
-    CREDIBILITY_SCORE_CHECK = 'credibilityScoreCheck',
+    DEX_TOOLS_SCRAPER = 'dexToolsAuditScraper',
+    AUDIT_CHECK = 'auditCheck',
+    CREDIBILITY_CHECK = 'credibilityCheck',
 }

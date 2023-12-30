@@ -39,6 +39,7 @@ const TaskDataSchema = new Schema<TaskData>(
     {
         taskId: { type: String },
         state: { type: String },
+        active: { type: Boolean },
         repetitions: { type: TaskRepetitionsSchema },
         retries: { type: TaskRetriesSchema, required: false },
         delay: { type: Number, required: false },

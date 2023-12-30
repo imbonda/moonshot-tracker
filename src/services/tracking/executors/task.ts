@@ -1,5 +1,5 @@
 // Internal.
-import type { valueof } from '../../../@types/generics';
+import type { DeepPartial, valueof } from '../../../@types/generics';
 import type { TaskData, TrackedToken } from '../../../@types/tracking';
 import { MS_IN_SECOND } from '../../../lib/constants';
 import { Logger } from '../../../lib/logger';
@@ -7,10 +7,8 @@ import { TaskState, tracer, type Tracer } from '../static';
 import { type ContextExecutor } from './context';
 
 export type InsightsKey = keyof NonNullable<TrackedToken['insights']>;
-export type TaskInsights = {
-    [key in InsightsKey]: NonNullable<TrackedToken['insights']>[key]
-} | null;
-export type ResolvedTaskInsights = valueof<NonNullable<TaskInsights>> | null;
+export type TaskInsights = DeepPartial<TrackedToken['insights']>;
+export type TaskInsightsUnwrapped = valueof<NonNullable<TaskInsights>> | null;
 
 /**
  * The following describes the different task configurations:
@@ -38,6 +36,8 @@ export abstract class TaskExecutor {
 
     protected tracer: Tracer;
 
+    private _active: boolean;
+
     private _aborted: boolean;
 
     constructor(token: TrackedToken, taskData: TaskData) {
@@ -53,6 +53,7 @@ export abstract class TaskExecutor {
             },
         );
         this.tracer = tracer;
+        this._active = taskData.active;
         this._aborted = false;
     }
 
@@ -64,10 +65,12 @@ export abstract class TaskExecutor {
         return this.taskData.config;
     }
 
-    public get isActive(): boolean {
-        return (this.taskState === TaskState.ACTIVATED)
-            || (this.taskState === TaskState.IN_PROGRESS)
-            || (this.isDaemon && !this.halted);
+    public get active(): boolean {
+        return this._active;
+    }
+
+    protected set active(value: boolean) {
+        this._active = value;
     }
 
     public get completed(): boolean {
@@ -82,7 +85,8 @@ export abstract class TaskExecutor {
         return this._aborted;
     }
 
-    public setActivated(): void {
+    public activate(): void {
+        this.active = true;
         this.taskState = TaskState.ACTIVATED;
     }
 
@@ -91,6 +95,7 @@ export abstract class TaskExecutor {
      */
     protected abort(): void {
         this._aborted = true;
+        this._active = false;
     }
 
     protected halt(): void {
@@ -98,9 +103,13 @@ export abstract class TaskExecutor {
         if (!this.completed) {
             this.taskState = TaskState.HALTED;
         }
+        this.active = false;
     }
 
     protected setCompleted(): void {
+        if (!this.isDaemon) {
+            this.active = false;
+        }
         this.taskState = TaskState.DONE;
     }
 
@@ -133,7 +142,7 @@ export abstract class TaskExecutor {
     }
 
     private get nextScheduledTime(): TaskData['scheduledExecutionTime'] {
-        if (!this.isActive || this.isLazy) {
+        if (!this.active || this.isLazy) {
             return undefined;
         }
 
@@ -164,7 +173,7 @@ export abstract class TaskExecutor {
         const { scheduledExecutionTime } = this.data;
         const now = new Date();
         const isScheduled = !scheduledExecutionTime || (new Date(scheduledExecutionTime) <= now);
-        const shouldExecute = this.isActive && isScheduled && !this.shouldNotRepeat;
+        const shouldExecute = this.active && isScheduled && !this.shouldNotRepeat;
         return shouldExecute;
     }
 
@@ -175,7 +184,7 @@ export abstract class TaskExecutor {
      * @returns
      */
     public async execute(context: ContextExecutor): Promise<void> {
-        if (this.isActive && this.shouldNotRepeat) {
+        if (this.active && this.shouldNotRepeat) {
             this.halt();
         }
 
@@ -210,6 +219,7 @@ export abstract class TaskExecutor {
         return {
             ...this.data,
             state: this.state,
+            active: this.active,
             repetitions: {
                 ...this.data.repetitions,
                 count: this.repetition,
@@ -232,9 +242,9 @@ export abstract class TaskExecutor {
     // eslint-disable-next-line class-methods-use-this
     public get insights(): TaskInsights {
         const { insights } = this.token;
-        return insights?.[this.insightsKey]
-            ? { [this.insightsKey]: insights[this.insightsKey] }
-            : null;
+        const unwrapped = insights?.[this.insightsKey];
+        const wrapped = { [this.insightsKey]: unwrapped };
+        return unwrapped ? wrapped : null;
     }
 }
 

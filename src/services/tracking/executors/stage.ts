@@ -71,7 +71,7 @@ export class StageExecutor {
     }
 
     public async execute(context: ContextExecutor): Promise<void> {
-        const activeTasks = this.tasks.filter((task) => task.isActive);
+        const activeTasks = this.tasks.filter((task) => task.active);
         if (!activeTasks.length) {
             return;
         }
@@ -116,7 +116,7 @@ export class StageExecutor {
 
         if (unlocked) {
             this.stageState = StageState.UNLOCKED;
-            this.tasks.forEach((task) => task.setActivated());
+            this.tasks.forEach((task) => task.activate());
         }
     }
 
