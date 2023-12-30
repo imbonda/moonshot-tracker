@@ -43,7 +43,7 @@ export class ContextExecutor {
     }
 
     public isTaskActive(taskId: TaskId): boolean {
-        return !!this.taskById[taskId]?.isActive;
+        return !!this.taskById[taskId]?.active;
     }
 
     public isTaskCompleted(taskId: TaskId): boolean {
