@@ -36,7 +36,7 @@ export class CredibilityCheck extends TaskExecutor {
     }
 
     private isEnoughLiquidityLockedOrBurned(insights?: DexToolsTokenInsights | null): boolean {
-        const tokensnifferAudit = insights?.audit.external.tokensniffer;
+        const tokensnifferAudit = insights?.audit?.external?.tokensniffer;
         const lockedOrBurnedPercent = tokensnifferAudit?.liquidity_locked_or_burned_percent ?? 0;
         return lockedOrBurnedPercent >= this.lockedOrBurnedLiquidityThreshold;
     }
