@@ -96,16 +96,16 @@ export abstract class TaskExecutor {
     }
 
     /**
-     * Begin proabtion period before abort.
+     * Set proabtion period before abort.
      */
-    protected beginProbation(): void {
+    protected setProbation(): void {
         this._probationDeadline ||= new Date(Date.now() + PROBATION_TTL);
     }
 
     /**
-     * End proabtion period before abort.
+     * Clear proabtion period before abort.
      */
-    protected endProbation(): void {
+    protected clearProbation(): void {
         this._probationDeadline = undefined;
     }
 

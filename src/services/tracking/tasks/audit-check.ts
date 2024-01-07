@@ -56,9 +56,10 @@ export class AuditCheck extends TaskExecutor {
         }
 
         if (this.isFraud) {
-            this.abort();
+            this.setProbation();
             return;
         }
+        this.clearProbation();
 
         // Setting task state to be completed so that the pipeline can continue.
         // This task should be a daemon so it can continue checking audit until halting/aborting.
