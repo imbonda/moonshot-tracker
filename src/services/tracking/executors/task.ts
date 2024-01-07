@@ -10,6 +10,8 @@ export type InsightsKey = keyof NonNullable<TrackedToken['insights']>;
 export type TaskInsights = DeepPartial<TrackedToken['insights']>;
 export type TaskInsightsUnwrapped = valueof<NonNullable<TaskInsights>> | null;
 
+const PROBATION_TTL = 24 * 60 * 60 * MS_IN_SECOND; // 1 day.
+
 /**
  * The following describes the different task configurations:
  * @delay Number of seconds by which the initial task execution would be delayed.
@@ -40,6 +42,8 @@ export abstract class TaskExecutor {
 
     private _aborted: boolean;
 
+    private _probationDeadline?: Date;
+
     constructor(token: TrackedToken, taskData: TaskData) {
         this.token = token;
         this.taskData = taskData;
@@ -55,6 +59,7 @@ export abstract class TaskExecutor {
         this.tracer = tracer;
         this._active = taskData.active;
         this._aborted = false;
+        this._probationDeadline = taskData.probationDeadline;
     }
 
     public get id(): TaskData['taskId'] {
@@ -91,19 +96,34 @@ export abstract class TaskExecutor {
     }
 
     /**
+     * Begin proabtion period before abort.
+     */
+    protected beginProbation(): void {
+        this._probationDeadline ||= new Date(Date.now() + PROBATION_TTL);
+    }
+
+    /**
+     * End proabtion period before abort.
+     */
+    protected endProbation(): void {
+        this._probationDeadline = undefined;
+    }
+
+    /**
      * Circuit breaker.
      */
     protected abort(): void {
         this._aborted = true;
         this._active = false;
+        this.taskState = TaskState.ABORTED;
     }
 
     protected halt(): void {
+        this.active = false;
         // Do not override resolved state (e.g. in case of a completed daemon task).
         if (!this.completed) {
             this.taskState = TaskState.HALTED;
         }
-        this.active = false;
     }
 
     protected setCompleted(): void {
@@ -132,6 +152,11 @@ export abstract class TaskExecutor {
 
     private get isFirstRepetition(): boolean {
         return this.repetition === 1;
+    }
+
+    private get failedProbation(): boolean {
+        const now = new Date();
+        return !!this._probationDeadline && this._probationDeadline >= now;
     }
 
     /**
@@ -185,6 +210,10 @@ export abstract class TaskExecutor {
      * @returns
      */
     public async execute(context: ContextExecutor): Promise<void> {
+        if (this.failedProbation) {
+            this.abort();
+        }
+
         if (this.active && this.shouldNotRepeat) {
             this.halt();
         }
@@ -225,6 +254,7 @@ export abstract class TaskExecutor {
                 ...this.data.repetitions,
                 count: this.repetition,
             },
+            probationDeadline: this._probationDeadline,
             scheduledExecutionTime: this.nextScheduledTime,
         };
     }

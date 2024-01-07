@@ -20,6 +20,7 @@ export const enum TaskState {
     ACTIVATED = 'activated',
     IN_PROGRESS = 'inProgress',
     HALTED = 'halted',
+    ABORTED = 'aborted',
     DONE = 'done',
     // @not-supported
     FAILED = 'failed',

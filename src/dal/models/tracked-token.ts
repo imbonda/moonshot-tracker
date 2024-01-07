@@ -45,6 +45,7 @@ const TaskDataSchema = new Schema<TaskData>(
         delay: { type: Number, required: false },
         daemon: { type: Boolean, required: false },
         config: { type: Schema.Types.Mixed },
+        probationDeadline: { type: Date, required: false },
         scheduledExecutionTime: { type: Date, required: false },
     },
     { _id: false },

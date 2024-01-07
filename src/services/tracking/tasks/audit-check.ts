@@ -22,8 +22,6 @@ const RED_FLAG_PREDICATES = {
         return ((tax as TaxValueRange)?.max || (tax as number)) >= threshold;
     },
     [AudicCheck.PROXY]: (isProxy: boolean) => isProxy,
-    [AudicCheck.OWNER_PERCENT]: (ownerShare: number) => ownerShare >= 0.05,
-    [AudicCheck.CREATOR_PERCENT]: (creatorShare: number) => creatorShare >= 0.05,
 } as Record<AudicCheck, AuditPredicate>;
 
 export class AuditCheck extends TaskExecutor {

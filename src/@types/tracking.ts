@@ -19,6 +19,7 @@ export interface TaskData {
     delay?: number,
     daemon?: boolean,
     config?: Record<string, unknown>,
+    probationDeadline?: Date,
     scheduledExecutionTime?: Date,
 }
 

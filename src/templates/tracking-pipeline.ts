@@ -35,10 +35,6 @@ export const TASKS_TEMPLATE: TrackedToken['tasks'] = {
             interval: undefined,
         },
         daemon: true,
-        config: {
-            lockedOrBurnedLiquidityThreshold: 0.8,
-            scoreThreshold: 70,
-        },
     },
 };
 
