@@ -46,8 +46,9 @@ class DexToolsScraper {
                 ? this.createTokenInsights(auditedPair)
                 : null;
             return insights;
-        } finally {
+        } catch (err) {
             await this.browser?.close();
+            throw err;
         }
     }
 
