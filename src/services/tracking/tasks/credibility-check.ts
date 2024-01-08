@@ -45,7 +45,7 @@ export class CredibilityCheck extends TaskExecutor {
 
     private isEnoughLiquidityLockedOrBurned(insights?: DexToolsTokenInsights | null): boolean {
         const tokensnifferAudit = insights?.audit?.external?.tokensniffer;
-        const lockedOrBurnedPercent = tokensnifferAudit?.liquidity_locked_or_burned_percent ?? 0;
+        const lockedOrBurnedPercent = tokensnifferAudit?.liquidity_locked_or_burned_percent || 0;
         return lockedOrBurnedPercent >= this.lockedOrBurnedLiquidityThreshold;
     }
 
@@ -54,14 +54,14 @@ export class CredibilityCheck extends TaskExecutor {
         const ownershipAuditChecks = [AudicCheck.OWNER_PERCENT, AudicCheck.CREATOR_PERCENT];
         return !ownershipAuditChecks.some((check) => {
             const audits = insights?.auditMatrix?.[check];
-            const alertingAuditValues = Object.values(audits ?? {})
+            const alertingAuditValues = Object.values(audits || {})
                 .filter((audit) => audit >= threshold);
             return alertingAuditValues.length > 0;
         });
     }
 
     private isCredibleScore(insights?: DexToolsTokenInsights | null): boolean {
-        const { total: dextScore } = insights?.topPair.dextScore ?? {};
+        const { total: dextScore } = insights?.topPair.dextScore || {};
         const isCredibleScore = dextScore! >= this.scoreThreshold;
         return isCredibleScore;
     }

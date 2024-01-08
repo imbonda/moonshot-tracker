@@ -39,7 +39,7 @@ class Dal {
     }
 
     public async connect(options?: Options): Promise<void> {
-        this.options = options ?? {};
+        this.options = options || {};
         await Promise.all([
             this.options.noRedis ? Promise.resolve() : this.redis.connect(),
             this.options.noMongo ? Promise.resolve() : this.mongodb.connect(),

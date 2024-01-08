@@ -161,7 +161,7 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
     }
 
     private getProvider(endpoint: string) {
-        const provider = providers[endpoint] ?? new JsonRpcProvider(endpoint, this.chainId);
+        const provider = providers[endpoint] || new JsonRpcProvider(endpoint, this.chainId);
         provider.pollingInterval = this.pollingInterval;
         providers[endpoint] = provider;
         return provider;
@@ -226,7 +226,7 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
             'alchemy_getTransactionReceipts',
             [{ blockNumber }],
         );
-        return result?.receipts ?? null;
+        return result?.receipts || null;
     }
 
     public async send<T>(
@@ -275,7 +275,7 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
                     throw new Error(error.message);
                 }
 
-                return result?.data?.result ?? null;
+                return result?.data?.result || null;
             } finally {
                 span.end();
             }

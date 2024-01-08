@@ -13,6 +13,6 @@ export class MonitorCache {
     }
 
     public isERC20(address: string): boolean {
-        return this.erc20Cache.get<boolean>(address) ?? false;
+        return this.erc20Cache.get<boolean>(address) || false;
     }
 }

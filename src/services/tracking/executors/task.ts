@@ -175,9 +175,9 @@ export abstract class TaskExecutor {
         const { delay } = this.data;
         const { interval } = this.data.repetitions;
         const executionDelayMs = this.isFirstRepetition
-            ? (delay ?? 0) * MS_IN_SECOND
+            ? (delay || 0) * MS_IN_SECOND
             : 0;
-        const repetitionIntervalMs = (interval ?? 0) * MS_IN_SECOND;
+        const repetitionIntervalMs = (interval || 0) * MS_IN_SECOND;
         return new Date(Date.now() + executionDelayMs + repetitionIntervalMs);
     }
 
@@ -191,7 +191,7 @@ export abstract class TaskExecutor {
         } = this.data.repetitions;
         const now = new Date();
         const isExpired = (!!deadline) && (new Date(deadline) <= now);
-        const isFinishedRepeating = ((repeat ?? 0) <= this.repetition);
+        const isFinishedRepeating = ((repeat || 0) <= this.repetition);
         return isExpired || isFinishedRepeating;
     }
 

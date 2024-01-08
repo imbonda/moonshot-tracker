@@ -55,7 +55,7 @@ export class LPTokenReceiptProcessor extends BaseProcessor {
             this.isNewERC20(token2Addr, log.blockNumber),
         ]);
         let newTokenAddr = isNewToken1 ? token1Addr : undefined;
-        newTokenAddr ??= isNewToken2 ? token2Addr : undefined;
+        newTokenAddr ||= isNewToken2 ? token2Addr : undefined;
         this.logger.info('LP created', { lp, newToken: !!newTokenAddr });
         if (newTokenAddr) {
             this.logger.info('Saving token for tracking', { token: newTokenAddr });

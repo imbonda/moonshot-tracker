@@ -134,7 +134,7 @@ export function parseExternalTokenAudits(
     const auditChecks = AUDIT_CHECKS;
 
     const external = Object.fromEntries(
-        Object.entries(externalAudits ?? []).map(([provider, audit]) => {
+        Object.entries(externalAudits || []).map(([provider, audit]) => {
             const parsedAudit = auditChecks.reduce((accum, check) => {
                 const value = audit[check];
                 if (value === undefined) {
@@ -173,7 +173,7 @@ export function parseExternalTokenAudits(
 export function parseTokenSnifferAudit(
     rawTokenSnifferAudit: RawFullyAuditedPairData['token']['audit']['external']['tokensniffer'],
 ): FullyAuditedPairData['token']['audit']['external']['tokensniffer'] {
-    const audit = (rawTokenSnifferAudit?.tests ?? []).reduce((accum, test) => {
+    const audit = (rawTokenSnifferAudit?.tests || []).reduce((accum, test) => {
         switch (test.id) {
             case 'testForInadequateInitialLiquidity':
                 accum.initial_liquidity_percent = test.valuePct;

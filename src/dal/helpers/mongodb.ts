@@ -59,7 +59,7 @@ export function createPagination(
     pipeline: PipelineStage[],
     params?: QueryParams,
 ): PipelineStage[] {
-    const { range } = params ?? {};
+    const { range } = params || {};
 
     const pageNumber = range?.pageNumber || DEFAULTS.pageNumber;
     const pageSize = Math.min(

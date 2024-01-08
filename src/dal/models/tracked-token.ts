@@ -131,8 +131,8 @@ export class TrackedTokenModel extends BaseDalModule {
         params: TrackedTokenQueryParams,
     ): Promise<Paginated<TrackedTokenDocument>> {
         const { range, set } = params;
-        const { startDate, endDate } = range ?? {};
-        const { schedulerLockDuration } = set ?? {};
+        const { startDate, endDate } = range || {};
+        const { schedulerLockDuration } = set || {};
         const pipeline = createPagination(
             [
                 {

@@ -22,7 +22,7 @@ export class RedisAdapter {
     // eslint-disable-next-line class-methods-use-this
     public get options(): RedisOptions {
         const { auth, hostname, port } = parse(dbConfig.REDIS_URL);
-        const [username, password] = (auth ?? '').split(':');
+        const [username, password] = (auth || '').split(':');
         return {
             host: hostname!,
             port: parseInt(port!),
@@ -75,7 +75,7 @@ export class RedisAdapter {
             return null;
         }
 
-        const deserialize = options?.deserialize ?? true;
+        const deserialize = options?.deserialize || true;
         if (!deserialize) {
             const output = options?.hashKey
                 ? await this.client.hget(options.hashKey, key)
@@ -100,7 +100,7 @@ export class RedisAdapter {
             return null;
         }
 
-        const deserialize = options?.deserialize ?? true;
+        const deserialize = options?.deserialize || true;
         if (!deserialize) {
             const result = await this.client.hgetall(hashKey);
             return isEmpty(result)
@@ -132,7 +132,7 @@ export class RedisAdapter {
             return;
         }
 
-        const serialize = options?.serialize ?? true;
+        const serialize = options?.serialize || true;
         const data = serialize
             ? v8.serialize(value)
             : value as string | number | Buffer;
@@ -168,7 +168,7 @@ export class RedisAdapter {
             return;
         }
 
-        const serialize = options?.serialize ?? true;
+        const serialize = options?.serialize || true;
         const keyDataMap = keyValues.reduce(
             (accum, { key, value }) => {
                 accum[key] = serialize

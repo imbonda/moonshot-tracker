@@ -76,7 +76,7 @@ class DexToolsScraper {
                 // wait for website to load
                 waitUntil: 'load',
             });
-            const headers = landing?.request().headers() ?? {};
+            const headers = landing?.request().headers() || {};
             this.reqInit = {
                 headers: {
                     accept: 'application/json',
@@ -104,7 +104,7 @@ class DexToolsScraper {
     ): Promise<PairData | null> {
         const url = buildGetTopTokenPairsUrl(tokenAddress);
         const response = await this.fetchDexTools<TopTokenPairsResponse>(url);
-        const [rawTopPair] = response?.results ?? [];
+        const [rawTopPair] = response?.results || [];
         if (!rawTopPair) {
             this.logger.warn('Failed to fetch token pairs', { token: tokenAddress });
             return null;
@@ -119,7 +119,7 @@ class DexToolsScraper {
     ): Promise<FullyAuditedPairData | null> {
         const url = buildGetPairUrl(chainId, pairAddress);
         const response = await this.fetchDexTools<TokenPairResponse>(url);
-        const [rawPair] = response?.data ?? [];
+        const [rawPair] = response?.data || [];
         if (!rawPair) {
             this.logger.warn('Failed to fetch token pair', {
                 chainId,

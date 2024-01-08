@@ -67,10 +67,10 @@ export class AuditCheck extends TaskExecutor {
     }
 
     private buildAuditMatrix(): AuditMatrix {
-        const { createdAt: _, ...auditors } = this.externalAudit ?? {};
+        const { createdAt: _, ...auditors } = this.externalAudit || {};
         const matrix = Object.entries(auditors).reduce((mat, [provider, audit]) => {
             Object.entries(audit).forEach(([check, value]) => {
-                mat[check as keyof Audit] ??= {} as never;
+                mat[check as keyof Audit] ||= {} as never;
                 mat[check as keyof Audit]![provider as AuditProvider] = value;
             });
             return mat;
@@ -83,7 +83,7 @@ export class AuditCheck extends TaskExecutor {
             .entries(RED_FLAG_PREDICATES)
             .reduce((accum, [check, predicate]) => {
                 const audits = this.auditMatrix![check as AudicCheck];
-                const alertingAuditEntries = Object.entries(audits ?? {})
+                const alertingAuditEntries = Object.entries(audits || {})
                     .filter(([_, audit]) => !!predicate(audit));
                 const alertingAudits = Object.fromEntries(alertingAuditEntries);
                 const hasAlertingAudits = alertingAuditEntries.length > 0;
@@ -120,7 +120,7 @@ export class AuditCheck extends TaskExecutor {
 
     private get sufficientIntel(): boolean {
         AUDIT_CHECKS.every((check) => {
-            const externalAudits = this.auditMatrix![check] ?? {};
+            const externalAudits = this.auditMatrix![check] || {};
             const auditsCount = Object.keys(externalAudits).length;
             return auditsCount >= 1;
         });

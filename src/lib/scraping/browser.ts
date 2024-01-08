@@ -39,7 +39,7 @@ export class Browser {
     }
 
     public async getPage(id: string): Promise<Page> {
-        this.pagesById[id] ??= await this.newPage();
+        this.pagesById[id] ||= await this.newPage();
         const page = this.pagesById[id];
         return page;
     }

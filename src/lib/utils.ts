@@ -13,8 +13,8 @@ interface ExponentialBackoffOptions {
 }
 
 export function exponentialBackoff(times: number, options?: ExponentialBackoffOptions): number {
-    const minDelay = options?.minDelay ?? 1 * MS_IN_SECOND;
-    const maxDelay = options?.maxDelay ?? 60 * MS_IN_SECOND;
+    const minDelay = options?.minDelay || 1 * MS_IN_SECOND;
+    const maxDelay = options?.maxDelay || 60 * MS_IN_SECOND;
     return Math.max(Math.min(Math.exp(times), maxDelay), minDelay);
 }
 

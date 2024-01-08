@@ -24,7 +24,7 @@ export class ContextExecutor {
      * @param task
      */
     public async execute(taskId: TaskId): Promise<void> {
-        this.executionById[taskId] ??= this.taskById[taskId].execute(this);
+        this.executionById[taskId] ||= this.taskById[taskId].execute(this);
         await this.executionById[taskId];
     }
 
@@ -39,7 +39,7 @@ export class ContextExecutor {
     public async getLatestTaskInsightsUnwrapped(taskId: TaskId): Promise<TaskInsightsUnwrapped> {
         await this.execute(taskId);
         const task = this.taskById[taskId];
-        return task.insights?.[task.insightsKey] ?? null;
+        return task.insights?.[task.insightsKey] || null;
     }
 
     public isTaskActive(taskId: TaskId): boolean {

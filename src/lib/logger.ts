@@ -33,7 +33,7 @@ const loggerConfig = {
                     } catch (_err) {
                         metaStr = '';
                     }
-                    const stackTrace = (err?.stack ?? stack) ? `\r\n${err?.stack ?? stack}` : '';
+                    const stackTrace = (err?.stack || stack) ? `\r\n${err?.stack || stack}` : '';
                     return `[${level.toUpperCase()}] ${timestamp} [${process.pid}]: [${loggerName}] ${message}${metaStr}${stackTrace}`;
                 },
             ),

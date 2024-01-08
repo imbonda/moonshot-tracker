@@ -104,7 +104,7 @@ export class PipelineExecutor {
             (soonest: Date | undefined, task) => {
                 const scheduledTime = task.scheduledExecutionTime;
                 if (!soonest || !scheduledTime) {
-                    return soonest ?? scheduledTime;
+                    return soonest || scheduledTime;
                 }
                 return (soonest < scheduledTime)
                     ? soonest

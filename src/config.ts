@@ -40,7 +40,7 @@ export const web3Config = {
         CHAIN_IDS.map((chainId) => [
             chainId,
             {
-                endpoints: JSON.parse(process.env[`${chainId}_RPC_ENDPOINTS`]! ?? '[]'),
+                endpoints: JSON.parse(process.env[`${chainId}_RPC_ENDPOINTS`]! || '[]'),
                 avgBlockTime: parseInt(process.env[`${chainId}_RPC_AVG_BLOCK_TIME_MS`]!),
                 pollingInterval: parseInt(process.env[`${chainId}_RPC_POLLING_INTERVAL_MS`]!),
                 isAlchemy: (process.env[`${chainId}_RPC_IS_ALCHEMY`]!) === 'true',
@@ -72,7 +72,7 @@ export const ipcConfig = {
  */
 export const logConfig = {
     SILENT: process.env.LOGGER_SILENT?.toLocaleLowerCase() === 'true',
-    LEVEL: process.env.LOGGER_LEVEL?.toLocaleLowerCase() ?? 'debug',
+    LEVEL: process.env.LOGGER_LEVEL?.toLocaleLowerCase() || 'debug',
 };
 
 /**
@@ -82,7 +82,7 @@ export const opentelemetryConfig = {
     EXPORTER_API_KEY: process.env.OTEL_EXPORTER_API_KEY!,
     EXPORTER_API_KEY_NAME: process.env.OTEL_EXPORTER_API_KEY_NAME!,
     EXPORTER_TRACES_ENDPOINT: process.env.OTEL_EXPORTER_TRACES_ENDPOINT!,
-    SAMPLE_RATE: parseInt(process.env.OTEL_SAMPLE_RATE ?? '1'),
+    SAMPLE_RATE: parseInt(process.env.OTEL_SAMPLE_RATE || '1'),
 };
 
 /**
