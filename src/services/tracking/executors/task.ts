@@ -2,6 +2,7 @@
 import type { DeepPartial, valueof } from '../../../@types/generics';
 import type { TaskData, TrackedToken } from '../../../@types/tracking';
 import { MS_IN_SECOND } from '../../../lib/constants';
+import { safe } from '../../../lib/decorators';
 import { Logger } from '../../../lib/logger';
 import { TaskState, tracer, type Tracer } from '../static';
 import { type ContextExecutor } from './context';
@@ -156,7 +157,7 @@ export abstract class TaskExecutor {
 
     private get failedProbation(): boolean {
         const now = new Date();
-        return !!this._probationDeadline && this._probationDeadline >= now;
+        return !!this._probationDeadline && this._probationDeadline <= now;
     }
 
     /**
@@ -222,6 +223,16 @@ export abstract class TaskExecutor {
             return;
         }
 
+        await this.safeExecute(context);
+
+        this.repetition += 1;
+        if (this.shouldNotRepeat) {
+            this.halt();
+        }
+    }
+
+    @safe()
+    private async safeExecute(context: ContextExecutor): Promise<void> {
         await this.tracer.startActiveSpan(`task.${this.id}`, async (span) => {
             try {
                 span.setAttributes({ taskId: this.id });
@@ -230,17 +241,13 @@ export abstract class TaskExecutor {
                     this.taskState = TaskState.IN_PROGRESS;
                 }
                 await this.run(context);
+            } catch (err) {
+                this.logger.error('Execution failed', err);
             } finally {
                 span.end();
                 this.logger.info('Execution ended');
             }
         });
-
-        this.repetition += 1;
-
-        if (this.shouldNotRepeat) {
-            this.halt();
-        }
     }
 
     protected abstract run(context: ContextExecutor): Promise<void>;
