@@ -1,6 +1,10 @@
 // Internal.
 import type {
-    Audit, AuditMatrix, AuditProvider, RedFlags, DexToolsTokenInsights, TaxValueRange,
+    DexToolsTokenInsights,
+    Audit, AuditProvider,
+    TokenAudit, ExternalTokenAudits,
+    AuditMatrix, RedFlags,
+    TaxValueRange,
 } from '../../../@types/dex-tools';
 import type { valueof } from '../../../@types/generics';
 import { AudicCheck, AUDIT_CHECKS } from '../../../lib/scraping/dex-tools/scraper';
@@ -42,11 +46,11 @@ export class AuditCheck extends TaskExecutor {
             return;
         }
 
-        if (!dexToolsInsights) {
+        this.tokenInsights = dexToolsInsights as DexToolsTokenInsights;
+        if (!this.audit) {
             return;
         }
 
-        this.tokenInsights = dexToolsInsights as DexToolsTokenInsights;
         this.auditMatrix = this.buildAuditMatrix();
         this.setRedFlags();
 
@@ -67,7 +71,7 @@ export class AuditCheck extends TaskExecutor {
     }
 
     private buildAuditMatrix(): AuditMatrix {
-        const { createdAt: _, ...auditors } = this.externalAudit || {};
+        const { createdAt: _, ...auditors } = this.externalAudits || {};
         const matrix = Object.entries(auditors).reduce((mat, [provider, audit]) => {
             Object.entries(audit).forEach(([check, value]) => {
                 mat[check as keyof Audit] ||= {} as never;
@@ -110,12 +114,12 @@ export class AuditCheck extends TaskExecutor {
         };
     }
 
-    private get audit(): DexToolsTokenInsights['audit'] {
-        return this.tokenInsights!.audit;
+    private get audit(): TokenAudit | undefined {
+        return this.tokenInsights?.audit;
     }
 
-    private get externalAudit(): DexToolsTokenInsights['audit']['external'] {
-        return this.audit.external;
+    private get externalAudits(): ExternalTokenAudits | undefined {
+        return this.audit?.external;
     }
 
     private get sufficientIntel(): boolean {
@@ -132,6 +136,7 @@ export class AuditCheck extends TaskExecutor {
     }
 
     private get isFraud(): boolean {
-        return !this.audit.codeVerified || this.hasRedFlags;
+        const unverified = this.audit?.codeVerified === false;
+        return unverified || this.hasRedFlags;
     }
 }

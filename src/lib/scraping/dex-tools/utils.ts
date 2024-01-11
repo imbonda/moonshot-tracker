@@ -3,7 +3,8 @@ import { ChainId } from '../../constants';
 import type {
     Audit, EnrichedAudit,
     RawPairData, PairData,
-    RawFullyAuditedPairData, FullyAuditedPairData,
+    RawTokenAudit, TokenAudit,
+    RawExternalTokenAudits, ExternalTokenAudits,
 } from '../../../@types/dex-tools';
 
 export function buildGetTopTokenPairsUrl(token: string): string {
@@ -58,6 +59,11 @@ export function parseTokenPair(
     return {
         creationTime: new Date(creationTime),
         dextScore,
+        votes,
+        fee,
+        swaps,
+        price,
+        volume,
         ...(!!id && {
             id: {
                 chainId: resolveChainId(id.chain) as number,
@@ -76,11 +82,6 @@ export function parseTokenPair(
         ...(!!token && {
             token: parseToken(token),
         }),
-        votes,
-        fee,
-        swaps,
-        price,
-        volume,
     };
 }
 
@@ -95,8 +96,11 @@ export function parseToken(
     return {
         creationBlock,
         creationTime: new Date(creationTime),
-        audit: parseTokenAudit(audit),
+        decimals,
+        symbol,
+        name,
         links,
+        ...(!!audit && { audit: parseTokenAudit(audit) }),
         ...(!!metrics && {
             metrics: {
                 ...metrics,
@@ -105,15 +109,12 @@ export function parseToken(
                 updatedAt: new Date(metrics.updatedAt),
             },
         }),
-        decimals,
-        symbol,
-        name,
     };
 }
 
 export function parseTokenAudit(
-    rawAudit: RawPairData['token']['audit'],
-): PairData['token']['audit'] {
+    rawAudit: RawTokenAudit,
+): TokenAudit {
     const parsedAudit = {
         ...rawAudit,
         date: new Date(rawAudit.date),
@@ -125,8 +126,8 @@ export function parseTokenAudit(
 }
 
 export function parseExternalTokenAudits(
-    rawExternal: RawFullyAuditedPairData['token']['audit']['external'],
-): FullyAuditedPairData['token']['audit']['external'] {
+    rawExternal: RawExternalTokenAudits,
+): ExternalTokenAudits {
     const { createdAt, ...externalAudits } = rawExternal!;
 
     const positiveValues = [true, 'Yes', 'yes', '1'];
@@ -171,8 +172,8 @@ export function parseExternalTokenAudits(
 }
 
 export function parseTokenSnifferAudit(
-    rawTokenSnifferAudit: RawFullyAuditedPairData['token']['audit']['external']['tokensniffer'],
-): FullyAuditedPairData['token']['audit']['external']['tokensniffer'] {
+    rawTokenSnifferAudit: RawExternalTokenAudits['tokensniffer'],
+): ExternalTokenAudits['tokensniffer'] {
     const audit = (rawTokenSnifferAudit?.tests || []).reduce((accum, test) => {
         switch (test.id) {
             case 'testForInadequateInitialLiquidity':

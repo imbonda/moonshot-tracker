@@ -1,7 +1,7 @@
 // Internal.
 import type { Modify, WithRequired, valueof } from './generics';
 
-export type AuditProvider = 'goplus' | 'hapi' | 'quickintel' | 'tokensniffer' | 'dextools';
+export type AuditProvider = 'goplus' | 'hapi' | 'quickintel' | 'tokensniffer' | 'dextools' | 'honeypotis';
 
 export interface TokenSnifferAuditTest {
     id: string | 'testForInadequateInitialLiquidity' | 'testForInadeqateLiquidityLockedOrBurned',
@@ -50,6 +50,21 @@ export interface RawAudit {
     updatedResult?: boolean,
 }
 
+export type RawExternalTokenAudits = { createdAt: string } & {
+    [key in AuditProvider]?: RawAudit;
+}
+
+export interface RawTokenAudit {
+    provider: string,
+    date: string,
+    codeVerified: boolean,
+    is_contract_renounced: boolean,
+    lockTransactions: boolean,
+    unlimitedFeed: boolean,
+    mint: boolean,
+    external?: RawExternalTokenAudits,
+}
+
 export interface RawPairData {
     creationTime: string,
     dextScore: {
@@ -76,18 +91,9 @@ export interface RawPairData {
     token: {
         creationBlock: number,
         creationTime: string,
-        audit: {
-            provider: string,
-            date: string,
-            codeVerified: boolean,
-            is_contract_renounced: boolean,
-            lockTransactions: boolean,
-            unlimitedFeed: boolean,
-            mint: boolean,
-            external?: { createdAt: string } & {
-                [key in AuditProvider]?: RawAudit;
-            },
-        },
+        decimals: number,
+        symbol: string,
+        name: string,
         links: {
             reddit: string,
             telegram: string,
@@ -105,9 +111,7 @@ export interface RawPairData {
             totalSupplyUpdatedAt: string,
             updatedAt: string,
         },
-        decimals: number,
-        symbol: string,
-        name: string,
+        audit?: RawTokenAudit,
     },
     votes: {
         _warning: number,
@@ -122,7 +126,7 @@ export interface RawPairData {
 
 export type RawFullyAuditedPairData = Modify<RawPairData, {
     token: Modify<RawPairData['token'], {
-        audit: WithRequired<RawPairData['token']['audit'], 'external'>,
+        audit?: WithRequired<RawTokenAudit, 'external'>,
     }>,
 }>
 
@@ -168,11 +172,14 @@ export interface EnrichedAudit extends Audit {
     liquidity_locked_or_burned_percent?: number,
 }
 
-export type AuditMatrix = {
-    [check in keyof EnrichedAudit]: {
-        [provider in AuditProvider]: EnrichedAudit[check]
-    }
-};
+export type ExternalTokenAudits = { createdAt: Date } & {
+    [key in AuditProvider]?: EnrichedAudit;
+}
+
+export type TokenAudit = Modify<RawTokenAudit, {
+    date: Date,
+    external?: ExternalTokenAudits,
+}>
 
 export type PairData = Modify<RawPairData, {
     creationTime: Date,
@@ -189,22 +196,15 @@ export type PairData = Modify<RawPairData, {
             totalSupplyUpdatedAt: Date,
             updatedAt: Date,
         }>,
-        audit: Modify<RawPairData['token']['audit'], {
-            date: Date,
-            external?: { createdAt: Date } & {
-                [key in AuditProvider]?: EnrichedAudit;
-            },
-        }>,
+        audit?: TokenAudit,
     }>,
 }>
 
 export type FullyAuditedPairData = Modify<PairData, {
     token: Modify<PairData['token'], {
-        audit: WithRequired<PairData['token']['audit'], 'external'>,
+        audit?: WithRequired<TokenAudit, 'external'>,
     }>,
 }>
-
-export type RedFlags = Record<keyof AuditMatrix, valueof<AuditMatrix>>;
 
 export interface DexToolsTokenInsights {
     audit: FullyAuditedPairData['token']['audit'],
@@ -223,6 +223,14 @@ export interface DexToolsTokenInsights {
         url: string,
     },
 }
+
+export type AuditMatrix = {
+    [check in keyof EnrichedAudit]: {
+        [provider in AuditProvider]: EnrichedAudit[check]
+    }
+};
+
+export type RedFlags = Record<keyof AuditMatrix, valueof<AuditMatrix>>;
 
 export interface DexToolsAuditInsights {
     auditMatrix: AuditMatrix,
