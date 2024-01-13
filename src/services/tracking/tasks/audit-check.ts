@@ -15,8 +15,9 @@ import { TaskId } from '../static';
 type AuditPredicate = (value: boolean | number) => boolean
 
 const RED_FLAG_PREDICATES = {
-    [AudicCheck.CONTRACT_VERIFIED]: (isVerified: boolean) => !isVerified,
-    [AudicCheck.HONEYPOT]: (isHoneypot: boolean) => isHoneypot,
+    [AudicCheck.CONTRACT_VERIFIED]: (isVerified: boolean) => isVerified === false,
+    [AudicCheck.PROXY]: (isProxy: boolean) => isProxy === true,
+    [AudicCheck.HONEYPOT]: (isHoneypot: boolean) => isHoneypot === true,
     [AudicCheck.BUY_TAX]: (tax: number | TaxValueRange) => {
         const threshold = 0.2;
         return ((tax as TaxValueRange)?.max || (tax as number)) >= threshold;
@@ -25,7 +26,6 @@ const RED_FLAG_PREDICATES = {
         const threshold = 0.2;
         return ((tax as TaxValueRange)?.max || (tax as number)) >= threshold;
     },
-    [AudicCheck.PROXY]: (isProxy: boolean) => isProxy,
 } as Record<AudicCheck, AuditPredicate>;
 
 export class AuditCheck extends TaskExecutor {
