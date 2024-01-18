@@ -1,9 +1,17 @@
 // 3rd party.
-import { PipelineStage } from 'mongoose';
+import { Types, PipelineStage } from 'mongoose';
 // Internal.
 import { DalError } from '../errors/dal-error';
 import { DEFAULTS, RESTRICTIONS } from '../static';
 import type { QueryParams } from '../types';
+
+export function createId(id?: Types.ObjectId | string): Types.ObjectId {
+    return new Types.ObjectId(id);
+}
+
+export function generateId(): Types.ObjectId {
+    return createId();
+}
 
 export function validatePageSize(pageSize: number) {
     if (pageSize > RESTRICTIONS.pageSize) {
@@ -13,15 +21,35 @@ export function validatePageSize(pageSize: number) {
 
 export function createTimeRangeFilter(
     key: string,
-    startDate?: Date,
-    endDate?: Date,
+    {
+        startDate,
+        endDate,
+        negate,
+    }: {
+        startDate?: Date,
+        endDate?: Date,
+        negate?: boolean,
+    } = {},
 ) {
-    // TODO: Consider adding restriction on querying old data.
+    const startDateFilter = {
+        ...(startDate && (
+            negate
+                ? { $not: { $gte: new Date(startDate) } }
+                : { $gte: new Date(startDate) }
+        )),
+    };
+    const endDateFilter = {
+        ...(endDate && (
+            negate
+                ? { $not: { $lte: new Date(endDate) } }
+                : { $lte: new Date(endDate) }
+        )),
+    };
     return {
         ...((startDate || endDate) && {
             [key]: {
-                ...(startDate && { $gte: new Date(startDate) }),
-                ...(endDate && { $lte: new Date(endDate) }),
+                ...startDateFilter,
+                ...endDateFilter,
             },
         }),
     };
@@ -31,7 +59,7 @@ export function createPagination(
     pipeline: PipelineStage[],
     params?: QueryParams,
 ): PipelineStage[] {
-    const { range } = params ?? {};
+    const { range } = params || {};
 
     const pageNumber = range?.pageNumber || DEFAULTS.pageNumber;
     const pageSize = Math.min(

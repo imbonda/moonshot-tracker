@@ -2,6 +2,7 @@
 import { RpcError, RawRpcError } from '../rpc-error';
 
 export interface RawCallRevertError extends RawRpcError {
+    action: string,
     address: string,
     args: Array<string>,
     method: string,
@@ -11,6 +12,8 @@ export interface RawCallRevertError extends RawRpcError {
 }
 
 export class CallRevertError extends RpcError {
+    public readonly action: string;
+
     public readonly address: string;
 
     public readonly args: Array<string>;
@@ -22,6 +25,7 @@ export class CallRevertError extends RpcError {
     constructor(err: RawCallRevertError) {
         // Non-retryable.
         super(err, false);
+        this.action = err.action;
         this.address = err.address;
         this.args = err.args;
         this.method = err.method;

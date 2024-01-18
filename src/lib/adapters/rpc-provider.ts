@@ -1,18 +1,24 @@
 /* eslint-disable max-classes-per-file */
 // 3rd party.
+import { trace, type Tracer } from '@opentelemetry/api';
 import axios from 'axios';
 import Bottleneck from 'bottleneck';
-import { Contract, JsonRpcProvider, TransactionReceipt } from 'ethers';
-import { Retryable } from 'typescript-retry-decorator';
+import {
+    Contract, JsonRpcProvider, TransactionReceipt,
+} from 'ethers';
+import { BackOffPolicy, Retryable } from 'typescript-retry-decorator';
 // Internal.
+import type { UnknownFunction } from '../../@types/general';
+import type { ERC20 } from '../../@types/web3';
 import erc20ABI from '../../abi/erc20.json';
 import { web3Config } from '../../config';
-import { MS_IN_SECOND } from '../constants';
+import { HEX_NONE, MS_IN_SECOND } from '../constants';
 import { wrapRpcError } from '../decorators';
 import { isRetryableError } from '../errors';
 
 interface ProviderConfig {
     endpoints: string[],
+    avgBlockTime: number,
     pollingInterval: number,
     isAlchemy: boolean,
 }
@@ -25,11 +31,21 @@ const NO_RETRY_METHODS = new Set(['on']);
 const JsonRpcProviderClass = (): new () => JsonRpcProvider => (class {} as never);
 
 export class Web3RpcProvider extends JsonRpcProviderClass() {
-    private chainId: number;
+    private static tracer: Tracer;
+
+    static {
+        this.tracer = trace.getTracer(this.name);
+    }
+
+    public chainId: number;
 
     private _provider: JsonRpcProvider;
 
     private _nextReqId: number;
+
+    #proxyFuncCache: Map<string, UnknownFunction>;
+
+    #proxy;
 
     private handler = {
         get(target: Web3RpcProvider, prop: string, receiver: unknown) {
@@ -37,26 +53,30 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         },
     };
 
-    private proxy(prop: string, receiver: unknown) {
-        const reflectedValue = Reflect.get(this._provider, prop, receiver);
+    private proxy(prop: string, _receiver: unknown) {
+        const reflectedValue = this._provider[prop as keyof JsonRpcProvider];
         const selfValue = this[prop as keyof Web3RpcProvider];
 
-        let value = reflectedValue;
-        let bindTarget = this._provider;
+        let value: unknown = selfValue;
+        let bindTarget = this as JsonRpcProvider;
         if (!value) {
-            value = selfValue;
-            bindTarget = this as JsonRpcProvider;
+            value = reflectedValue;
+            bindTarget = this._provider;
         }
 
-        if (typeof reflectedValue === 'function') {
-            value = reflectedValue.bind(bindTarget);
-        }
+        if (typeof value === 'function') {
+            if (this.#proxyFuncCache.has(prop)) {
+                return this.#proxyFuncCache.get(prop);
+            }
 
-        if (typeof value === 'function' && !NO_RETRY_METHODS.has(prop)) {
-            const original = value;
-            value = (...args: unknown[]) => (
-                this.withRetry(original.bind(bindTarget), ...args)
-            );
+            value = value.bind(bindTarget);
+            if (!NO_RETRY_METHODS.has(prop)) {
+                const original = value as UnknownFunction;
+                value = (...args: unknown[]) => (
+                    this.withRetry(original, ...args)
+                );
+            }
+            this.#proxyFuncCache.set(prop, value as UnknownFunction);
         }
 
         return value;
@@ -68,8 +88,13 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
      */
     // eslint-disable-next-line class-methods-use-this
     @Retryable({
-        maxAttempts: 3,
+        maxAttempts: 10,
         backOff: 100,
+        backOffPolicy: BackOffPolicy.ExponentialBackOffPolicy,
+        exponentialOption: {
+            maxInterval: 500,
+            multiplier: 2,
+        },
         doRetry: isRetryableError,
     })
     @wrapRpcError
@@ -79,12 +104,14 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
 
     constructor(chainId: number) {
         super();
-        this.setRatelimit();
         this.chainId = chainId;
         this._provider = this.getProvider(this.endpoints[rotatingProviderIndex]);
         this._nextReqId = 1;
         rotatingProviderIndex = (rotatingProviderIndex + 1) % this.endpoints.length;
-        return new Proxy(this, this.handler);
+        this.#proxyFuncCache = new Map();
+        this.#proxy = new Proxy(this, this.handler);
+        this.setRatelimit();
+        return this.#proxy;
     }
 
     public get config(): ProviderConfig {
@@ -93,6 +120,10 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
 
     public get endpoints(): string[] {
         return this.config.endpoints;
+    }
+
+    public get avgBlockTime(): number {
+        return this.config.avgBlockTime;
     }
 
     public get pollingInterval(): number {
@@ -113,10 +144,15 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
      * Instance specific rate-limiting, rather than class specific (via a decorator).
      */
     private setRatelimit() {
-        this.isERC20 = new Bottleneck({
+        this.#proxy.call = new Bottleneck({
             maxConcurrent: 1,
             minTime: MS_IN_SECOND / 3,
-        }).wrap(this.isERC20.bind(this));
+        }).wrap(this.#proxy.call.bind(this.#proxy));
+
+        this.send<unknown> = new Bottleneck({
+            maxConcurrent: 1,
+            minTime: MS_IN_SECOND / 3,
+        }).wrap(this.send.bind(this));
 
         this.getTransactionReceiptsAlchemy = new Bottleneck({
             maxConcurrent: 1,
@@ -125,28 +161,51 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
     }
 
     private getProvider(endpoint: string) {
-        const provider = providers[endpoint] ?? new JsonRpcProvider(endpoint, this.chainId);
+        const provider = providers[endpoint] || new JsonRpcProvider(endpoint, this.chainId);
         provider.pollingInterval = this.pollingInterval;
         providers[endpoint] = provider;
         return provider;
     }
 
-    public async isERC20(address: string): Promise<boolean> {
+    public async isContract(
+        address: string,
+        blockNumber: string = 'latest',
+    ): Promise<boolean> {
+        const result = await this.send(
+            'eth_getCode',
+            [address, blockNumber],
+        );
+        return result !== HEX_NONE;
+    }
+
+    public async getERC20(address: string): Promise<ERC20 | null> {
         const contract = new Contract(
             address,
             erc20ABI,
-            this,
+            this.#proxy,
         );
 
         try {
-            const [symbol, decimals] = await Promise.all([
+            const { chainId } = this;
+            const [symbol, decimals, totalSupply] = await Promise.all([
                 contract.symbol(),
                 contract.decimals(),
+                contract.totalSupply(),
             ]);
-            return !!symbol && !!decimals;
+            const isValidERC20 = !!symbol && !!decimals && !!totalSupply;
+            if (isValidERC20) {
+                return {
+                    chainId,
+                    address,
+                    symbol,
+                    decimals,
+                    totalSupply,
+                };
+            }
+            return null;
         } catch (err) {
             // Not an ERC-20 token.
-            return false;
+            return null;
         }
     }
 
@@ -154,7 +213,7 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         if (this.isAlchemy) {
             return this.getTransactionReceiptsAlchemy(blockNumber);
         }
-        return this._provider.send(
+        return this.send(
             'eth_getBlockReceipts',
             [blockNumber],
         );
@@ -167,36 +226,59 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
             'alchemy_getTransactionReceipts',
             [{ blockNumber }],
         );
-        return result?.receipts ?? null;
+        return result?.receipts || null;
+    }
+
+    public async send<T>(
+        method: string,
+        params: unknown[],
+    ): Promise<T> {
+        return Web3RpcProvider.tracer.startActiveSpan(`rpc.send.${method}`, async (span) => {
+            try {
+                const res = await this._provider.send(method, params);
+                if (!res) {
+                    throw new Error('Empty response');
+                }
+                return res;
+            } finally {
+                span.end();
+            }
+        });
     }
 
     private async sendNoBatch<T>(
         method: string,
         params: unknown[],
     ): Promise<T | null> {
-        const { url } = this._provider._getConnection();
-        const body = JSON.stringify({
-            jsonrpc: '2.0',
-            method,
-            params,
-            id: this.nextId,
+        return Web3RpcProvider.tracer.startActiveSpan(`rpc.send.${method}`, async (span) => {
+            try {
+                const { url } = this._provider._getConnection();
+                const body = JSON.stringify({
+                    jsonrpc: '2.0',
+                    method,
+                    params,
+                    id: this.nextId,
+                });
+
+                const result = await axios.post(
+                    url,
+                    body,
+                    {
+                        headers: {
+                            'Content-Type': 'application/json;',
+                        },
+                    },
+                );
+
+                const error = result?.data?.error;
+                if (error) {
+                    throw new Error(error.message);
+                }
+
+                return result?.data?.result || null;
+            } finally {
+                span.end();
+            }
         });
-
-        const result = await axios.post(
-            url,
-            body,
-            {
-                headers: {
-                    'Content-Type': 'application/json;',
-                },
-            },
-        );
-
-        const error = result?.data?.error;
-        if (error) {
-            throw new Error(error.message);
-        }
-
-        return result?.data?.result ?? null;
     }
 }

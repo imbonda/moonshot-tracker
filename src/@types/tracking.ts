@@ -1,41 +1,53 @@
+// Internal.
+import type { DexToolsTokenInsights, DexToolsAuditInsights } from './dex-tools';
+
 export interface TaskData {
     taskId: string,
     state: string,
+    active: boolean,
     repetitions: {
         count: number,
         repeat?: number,
         interval?: number,
         deadline?: Date,
     },
-    retries: {
-        maxTime: number,
-        retryMaxTime: number,
+    // @not-supported
+    retries?: {
+        maxTime?: number,
+        retryMaxTime?: number,
     },
+    delay?: number,
+    daemon?: boolean,
+    config?: Record<string, unknown>,
+    probationDeadline?: Date,
     scheduledExecutionTime?: Date,
 }
 
 export interface PipelineStage {
+    stageId: string,
     state: string,
     taskIds: TaskData['taskId'][],
     prerequisiteTasks: TaskData['taskId'][],
 }
 
+export type TrackingPipeline = PipelineStage[];
+
 export interface TrackedToken {
     uuid: string,
     chainId: number,
     address: string,
-    pipeline: PipelineStage[],
+    tracking: boolean,
+    pipeline: TrackingPipeline,
     tasks: Record<TaskData['taskId'], TaskData>,
-    insights: {
-        project?: {
-            marketCap: number,
-            links: {
-                telegram: string,
-                twitter: string,
-            }
-        },
+    insights: null | {
+        dextools?: DexToolsTokenInsights,
+        audit?: DexToolsAuditInsights,
     },
+    halted: boolean,
+    aborted: boolean,
+    completed: boolean,
     currentStageIndex: number,
     scheduledExecutionTime: Date,
     latestExecutionTime?: Date,
+    schedulerLockExpirationTime?: Date,
 }

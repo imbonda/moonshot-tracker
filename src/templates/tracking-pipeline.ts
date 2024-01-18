@@ -3,27 +3,50 @@ import type { TrackedToken } from '../@types/tracking';
 import { StageState, TaskState, TaskId } from '../services/tracking/static';
 
 export const TASKS_TEMPLATE: TrackedToken['tasks'] = {
-    // TODO: fill in tasks data, i.e.:
-    // [TaskId.XXX]: {
-    //     taskId: TaskId.XXX,
-    //     state: TaskState.PENDING,
-    //     repetitions: {
-    //         count: 0,
-    //         repeat: 999,
-    //         interval: 1000,
-    //         deadline: new Date(),
-    //     },
-    //     retries: {
-    //         maxTime: 10,
-    //         retryMaxTime: 60,
-    //     },
-    // },
+    [TaskId.DEX_TOOLS_SCRAPER]: {
+        taskId: TaskId.DEX_TOOLS_SCRAPER,
+        state: TaskState.ACTIVATED,
+        active: true,
+        repetitions: {
+            count: 0,
+            interval: 30 * 60, // 30 minutes.
+            repeat: 340, // ~ 1 week.
+        },
+        daemon: true,
+    },
+    [TaskId.AUDIT_CHECK]: {
+        taskId: TaskId.AUDIT_CHECK,
+        state: TaskState.ACTIVATED,
+        active: true,
+        repetitions: {
+            count: 0,
+            // Lazy task does not schedule tracking.
+            interval: undefined,
+        },
+        daemon: true,
+    },
+    [TaskId.CREDIBILITY_CHECK]: {
+        taskId: TaskId.CREDIBILITY_CHECK,
+        state: TaskState.ACTIVATED,
+        active: true,
+        repetitions: {
+            count: 0,
+            // Lazy task does not schedule tracking.
+            interval: undefined,
+        },
+        daemon: true,
+    },
 };
 
 export const PIPELINE_TEMPLATE: TrackedToken['pipeline'] = [
     {
+        stageId: 'stage1',
         state: StageState.UNLOCKED,
-        taskIds: [],
+        taskIds: [
+            TaskId.DEX_TOOLS_SCRAPER,
+            TaskId.AUDIT_CHECK,
+            TaskId.CREDIBILITY_CHECK,
+        ],
         prerequisiteTasks: [],
     },
 ];

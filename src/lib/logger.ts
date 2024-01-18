@@ -33,7 +33,7 @@ const loggerConfig = {
                     } catch (_err) {
                         metaStr = '';
                     }
-                    const stackTrace = (err?.stack ?? stack) ? `\r\n${err?.stack ?? stack}` : '';
+                    const stackTrace = (err?.stack || stack) ? `\r\n${err?.stack || stack}` : '';
                     return `[${level.toUpperCase()}] ${timestamp} [${process.pid}]: [${loggerName}] ${message}${metaStr}${stackTrace}`;
                 },
             ),
@@ -58,9 +58,9 @@ export class Logger extends LoggerClass() {
         },
     };
 
-    constructor(name: string) {
+    constructor(name: string, extra: Record<string, unknown> = {}) {
         super();
-        this._logger = baseLogger.child({ loggerName: name });
+        this._logger = baseLogger.child({ loggerName: name, ...extra });
         return new Proxy(this, this.handler);
     }
 }

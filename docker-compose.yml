@@ -1,0 +1,72 @@
+version: "3.9"
+
+x-common-variables: &common-variables
+    LOGGER_SILENT: false
+    LOGGER_LEVEL: info
+    NODE_ENV: 'prod'
+
+x-logging: &logging
+    driver: "json-file"
+    options:
+        max-size: "100m"
+        max-file: "1"
+
+services:
+    monitor-eth:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        env_file:
+            - .env
+        environment:
+            <<: *common-variables
+            CHAIN_ID: 1
+        logging:
+            <<: *logging
+        command: ["node", "-r", "./build/src/lib/tracer.js", "./build/src/main.js", "--service", "monitor"]
+        restart: unless-stopped
+    
+    monitor-bsc:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        env_file:
+            - .env
+        environment:
+            <<: *common-variables
+            CHAIN_ID: 56
+        logging:
+            <<: *logging
+        command: ["node", "-r", "./build/src/lib/tracer.js", "./build/src/main.js", "--service", "monitor"]
+        restart: unless-stopped
+
+    scheduler:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        env_file:
+            - .env
+        environment:
+            <<: *common-variables
+        logging:
+            <<: *logging
+        command: ["node", "-r", "./build/src/lib/tracer.js", "./build/src/main.js", "--service", "scheduler"]
+        restart: unless-stopped
+    
+    agent:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        deploy:
+            replicas: 4
+        env_file:
+            - .env
+        environment:
+            <<: *common-variables
+        logging:
+            <<: *logging
+        cap_add:
+            # Required for puppeteer to run the browser in sandbox mode.
+            - SYS_ADMIN
+        command: ["node", "-r", "./build/src/lib/tracer.js", "./build/src/main.js", "--service", "agent"]
+        restart: unless-stopped

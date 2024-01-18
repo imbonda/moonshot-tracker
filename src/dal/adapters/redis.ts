@@ -1,15 +1,17 @@
 // Builtin.
+import { parse } from 'url';
 import v8 from 'v8';
 // 3rd party.
-import Redis from 'ioredis';
+import Redis, { RedisOptions } from 'ioredis';
 // Internal.
-import { dbConfig } from '../../config';
+import { dbConfig, serviceConfig } from '../../config';
 import { safe } from '../../lib/decorators';
 import { Logger } from '../../lib/logger';
-import { isEmpty } from '../../lib/utils';
+import { exponentialBackoff, isEmpty } from '../../lib/utils';
+import { MS_IN_SECOND } from '../../lib/constants';
 
 export class RedisAdapter {
-    private client!: Redis;
+    private _client!: Redis;
 
     private logger: Logger;
 
@@ -17,8 +19,28 @@ export class RedisAdapter {
         this.logger = new Logger(this.constructor.name);
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    public get options(): RedisOptions {
+        const { auth, hostname, port } = parse(dbConfig.REDIS_URL);
+        const [username, password] = (auth || '').split(':');
+        return {
+            host: hostname!,
+            port: parseInt(port!),
+            ...(auth && { username, password }),
+            retryStrategy: (times: number) => exponentialBackoff(
+                times,
+                { maxDelay: 10 * MS_IN_SECOND },
+            ),
+            connectionName: serviceConfig.DESCRIPTION,
+        };
+    }
+
+    public get client(): Redis {
+        return this._client;
+    }
+
     public async connect(): Promise<void> {
-        this.client = new Redis(dbConfig.REDIS_URL);
+        this._client = new Redis(this.options);
 
         return new Promise((resolve, reject) => {
             // Register connection callbacks.
@@ -41,24 +63,24 @@ export class RedisAdapter {
     }
 
     @safe()
-    public async get(
+    public async get<T>(
         key: string,
         options?: {
             // Redis hashes are record types structured as collections of field-value pairs.
             hashKey?: string,
             deserialize?: boolean,
         },
-    ): Promise<unknown | null> {
+    ): Promise<T | null> {
         if (this.client.status !== 'ready') {
             return null;
         }
 
-        const deserialize = options?.deserialize ?? true;
+        const deserialize = options?.deserialize || true;
         if (!deserialize) {
             const output = options?.hashKey
                 ? await this.client.hget(options.hashKey, key)
                 : await this.client.get(key);
-            return output;
+            return output as T;
         }
 
         const output = options?.hashKey
@@ -68,22 +90,22 @@ export class RedisAdapter {
     }
 
     @safe()
-    public async getAll(
+    public async getAll<T>(
         hashKey: string,
         options?: {
             deserialize?: boolean,
         },
-    ): Promise<Record<string, unknown> | null> {
+    ): Promise<Record<string, T> | null> {
         if (this.client.status !== 'ready') {
             return null;
         }
 
-        const deserialize = options?.deserialize ?? true;
+        const deserialize = options?.deserialize || true;
         if (!deserialize) {
             const result = await this.client.hgetall(hashKey);
             return isEmpty(result)
                 ? null
-                : result;
+                : result as Record<string, T>;
         }
 
         const result = await this.client.hgetallBuffer(hashKey);
@@ -105,12 +127,12 @@ export class RedisAdapter {
             serialize?: boolean,
             ttlSeconds?: number
         },
-    ) {
+    ): Promise<void> {
         if (this.client.status !== 'ready') {
             return;
         }
 
-        const serialize = options?.serialize ?? true;
+        const serialize = options?.serialize || true;
         const data = serialize
             ? v8.serialize(value)
             : value as string | number | Buffer;
@@ -141,12 +163,12 @@ export class RedisAdapter {
             serialize?: boolean,
             ttlSeconds?: number
         },
-    ) {
+    ): Promise<void> {
         if (this.client.status !== 'ready') {
             return;
         }
 
-        const serialize = options?.serialize ?? true;
+        const serialize = options?.serialize || true;
         const keyDataMap = keyValues.reduce(
             (accum, { key, value }) => {
                 accum[key] = serialize
@@ -174,5 +196,10 @@ export class RedisAdapter {
         }
 
         await pipeline.exec();
+    }
+
+    @safe()
+    public async delete(...keys: string[]) {
+        await this.client.del(...keys);
     }
 }

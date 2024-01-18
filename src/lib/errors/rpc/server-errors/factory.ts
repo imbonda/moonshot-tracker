@@ -6,7 +6,7 @@ import { UnsupportedMethodError } from './unsupported-method';
 const RE_EXECUTION_REVERTED = /^(execution reverted)/i;
 const RE_UNSUPPORTED_METHOD = /^(the method [\w_]+ does not exist\/is not available)/i;
 
-export function resolveRpcServerError(err: RawServerError) {
+export function rpcServerErrorFactory(err: RawServerError) {
     const message = err.error?.message;
 
     if (RE_EXECUTION_REVERTED.test(message)) {

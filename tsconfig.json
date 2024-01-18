@@ -13,8 +13,9 @@
     },
     "include": [
         "ecosystem.config.js",
-        "src/**/*.ts",
-        "src/**/*.d.ts"
+        "puppeteer.config.cjs",
+        "src",
+        "tests",
     ],
     "exclude": [
         "build",

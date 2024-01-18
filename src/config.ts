@@ -3,7 +3,7 @@ import path from 'path';
 // 3rd party.
 import dotenv from 'dotenv';
 // Internal.
-import { ChainId } from './lib/constants';
+import { CHAIN_IDS, CHAIN_NAMES } from './lib/constants';
 
 export const nodeEnv = process.env.NODE_ENV?.toLowerCase();
 
@@ -15,30 +15,35 @@ dotenv.config({ path: path.join(__dirname, '..', dotEnvFilename()) });
  * Mode.
  */
 export const envConfig = {
-    IS_DEBUG: nodeEnv === 'debug',
-    IS_PROD: nodeEnv === 'production',
+    IS_DEV: nodeEnv === 'dev',
+    IS_PROD: nodeEnv === 'prod',
 };
 
 /**
  * DB.
  */
 export const dbConfig = {
-    MONGO_URL: process.env.MONGO_URL as string,
-    REDIS_URL: process.env.REDIS_URL as string,
+    MONGO_URL: process.env.MONGO_URL!,
+    REDIS_URL: process.env.REDIS_URL!,
 };
 
 /**
  * Web3.
  */
+const CHAIN_ID = parseInt(process.env.CHAIN_ID!);
+const CHAIN_NAME = CHAIN_NAMES[CHAIN_ID]!;
+
 export const web3Config = {
-    CHAIN_ID: parseInt(process.env.CHAIN_ID as string),
+    CHAIN_ID,
+    CHAIN_NAME,
     RPC_CONFIG_BY_CHAIN: Object.fromEntries(
-        Object.values(ChainId).map((chainId) => [
+        CHAIN_IDS.map((chainId) => [
             chainId,
             {
-                endpoints: JSON.parse(process.env[`${chainId}_RPC_ENDPOINTS`] ?? process.env.RPC_ENDPOINTS ?? '[]'),
-                pollingInterval: parseInt(process.env[`${chainId}_RPC_POLLING_INTERVAL_MS`] ?? process.env.RPC_POLLING_INTERVAL_MS ?? '4000'),
-                isAlchemy: (process.env[`${chainId}_RPC_IS_ALCHEMY`] ?? process.env.RPC_IS_ALCHEMY) === 'true',
+                endpoints: JSON.parse(process.env[`${chainId}_RPC_ENDPOINTS`]! || '[]'),
+                avgBlockTime: parseInt(process.env[`${chainId}_RPC_AVG_BLOCK_TIME_MS`]!),
+                pollingInterval: parseInt(process.env[`${chainId}_RPC_POLLING_INTERVAL_MS`]!),
+                isAlchemy: (process.env[`${chainId}_RPC_IS_ALCHEMY`]!) === 'true',
             },
         ]),
     ),
@@ -49,16 +54,16 @@ export const web3Config = {
  */
 export const ipcConfig = {
     mq: {
-        URL: process.env.MQ_URL as string,
-        EXCHANGE: process.env.MQ_EXCHANGE as string,
-        TRACKING_QUEUE: process.env.MQ_TRACKING_QUEUE as string,
+        URL: process.env.MQ_URL!,
+        EXCHANGE: process.env.MQ_EXCHANGE!,
+        TRACKING_QUEUE: process.env.MQ_TRACKING_QUEUE!,
     },
     pubsub: {
-        URL: process.env.PUBSUB_URL as string,
-        TOKEN_EVENTS: process.env.PUBSUB_TOKEN_EVENTS as string,
+        URL: process.env.PUBSUB_URL!,
+        TOKEN_EVENTS: process.env.PUBSUB_TOKEN_EVENTS!,
     },
     rpc: {
-        URL: process.env.RPC_URL as string,
+        URL: process.env.RPC_URL!,
     },
 };
 
@@ -67,17 +72,38 @@ export const ipcConfig = {
  */
 export const logConfig = {
     SILENT: process.env.LOGGER_SILENT?.toLocaleLowerCase() === 'true',
-    LEVEL: process.env.LOGGER_LEVEL?.toLocaleLowerCase() ?? 'debug',
+    LEVEL: process.env.LOGGER_LEVEL?.toLocaleLowerCase() || 'debug',
 };
 
 /**
  * Opentelemetry.
  */
 export const opentelemetryConfig = {
-    EXPORTER_API_KEY: process.env.OTEL_EXPORTER_API_KEY as string,
-    EXPORTER_API_KEY_NAME: process.env.OTEL_EXPORTER_API_KEY_NAME as string,
-    EXPORTER_TRACES_ENDPOINT: process.env.OTEL_EXPORTER_TRACES_ENDPOINT as string,
-    SAMPLE_RATE: parseInt(process.env.OTEL_SAMPLE_RATE ?? '1'),
+    EXPORTER_API_KEY: process.env.OTEL_EXPORTER_API_KEY!,
+    EXPORTER_API_KEY_NAME: process.env.OTEL_EXPORTER_API_KEY_NAME!,
+    EXPORTER_TRACES_ENDPOINT: process.env.OTEL_EXPORTER_TRACES_ENDPOINT!,
+    SAMPLE_RATE: parseInt(process.env.OTEL_SAMPLE_RATE || '1'),
+};
+
+/**
+ * Social.
+ */
+export const telegramConfig = {
+    BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN!,
+    NOTIFICATIONS_CHAT_ID: process.env.TELEGRAM_NOTIFICATIONS_CHAT_ID!,
+};
+
+/**
+ * Service identifiers.
+ */
+const args = process.argv;
+const serviceNameIndex = args.findIndex((arg) => ['-s', '--service'].includes(arg)) + 1;
+const serviceName = args[serviceNameIndex];
+const serviceDescription = `${serviceName}${CHAIN_NAME ? `-${CHAIN_NAME}` : ''}`;
+
+export const serviceConfig = {
+    NAME: serviceName,
+    DESCRIPTION: serviceDescription,
 };
 
 function validateSubConfig(subConfig: Record<string, unknown>) {

@@ -30,7 +30,7 @@ export function parseTransfer(log: Log): {
 } | null {
     try {
         let parsedTransfer = uniswapV2PairInterface.parseLog(log as never);
-        parsedTransfer ??= uniswapV3PoolInterface.parseLog(log as never);
+        parsedTransfer ||= uniswapV3PoolInterface.parseLog(log as never);
         const isLPTokenTransfer = parsedTransfer?.name === 'Transfer';
 
         if (!isLPTokenTransfer) {
