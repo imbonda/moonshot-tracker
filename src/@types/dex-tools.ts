@@ -3,6 +3,8 @@ import type { Modify, WithRequired, valueof } from './generics';
 
 export type AuditProvider = 'goplus' | 'hapi' | 'quickintel' | 'tokensniffer' | 'dextools' | 'honeypotis';
 
+export type RiskLevel = 'low' | 'medium' | 'high' | string;
+
 export interface TokenSnifferAuditTest {
     id: string | 'testForInadequateInitialLiquidity' | 'testForInadeqateLiquidityLockedOrBurned',
     description: string,
@@ -47,6 +49,7 @@ export interface RawAudit {
     transfer_pausable?: string | number | boolean,
     trust_list?: string | number | boolean,
     tests?: TokenSnifferAuditTest[],
+    riskLevel?: RiskLevel,
     updatedResult?: boolean,
 }
 
@@ -165,6 +168,7 @@ export interface Audit {
     is_proxy?: boolean,
     owner_percent?: number,
     creator_percent?: number,
+    riskLevel?: RiskLevel,
 }
 
 export interface EnrichedAudit extends Audit {

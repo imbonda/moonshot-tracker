@@ -46,6 +46,7 @@ export enum AudicCheck {
     PROXY = 'is_proxy',
     OWNER_PERCENT = 'owner_percent',
     CREATOR_PERCENT = 'creator_percent',
+    RISK_LEVEL = 'riskLevel',
 }
 
 export const AUDIT_CHECKS: (keyof Audit)[] = Object.values(AudicCheck);
