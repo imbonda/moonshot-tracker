@@ -61,7 +61,7 @@ export function formatUSD(value: number, nanStringValue: string = ''): string {
     return `$${prettyNumber(value)}`;
 }
 
-const NUMBER_EMOJI_MAP: Record<number, string> = {
+const DIGIT_TO_EMOJI: Record<number, string> = {
     0: '0️⃣',
     1: '1️⃣',
     2: '2️⃣',
@@ -77,8 +77,20 @@ const NUMBER_EMOJI_MAP: Record<number, string> = {
 export function emojifyNumber(positive: number): string {
     const wholeNumber = Math.trunc(positive);
     if (!wholeNumber) {
-        return NUMBER_EMOJI_MAP[0];
+        return DIGIT_TO_EMOJI[0];
     }
 
-    return `${wholeNumber}`.split('').map((digit) => NUMBER_EMOJI_MAP[Number(digit)]).join('');
+    return `${wholeNumber}`.split('').map((digit) => DIGIT_TO_EMOJI[Number(digit)]).join('');
+}
+
+const RISK_LEVEL_TO_EMOJI = {
+    low: '🟢',
+    medium: '🟠',
+    high: '🔴',
+    default: '⚪️',
+};
+
+export function emojifyRiskLevel(riskLevel?: string): string {
+    return RISK_LEVEL_TO_EMOJI[riskLevel as keyof typeof RISK_LEVEL_TO_EMOJI]
+        || RISK_LEVEL_TO_EMOJI.default;
 }

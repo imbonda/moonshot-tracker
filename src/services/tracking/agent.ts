@@ -8,7 +8,7 @@ import {
     ChannelAck, ChannelReject, Message, QueueConsumer,
 } from '../../ipc/message-queue/consumer';
 import { telegram } from '../../lib/notifications/telegram';
-import { emojifyNumber, formatUSD } from '../../lib/utils';
+import { emojifyNumber, emojifyRiskLevel, formatUSD } from '../../lib/utils';
 import { Service } from '../service';
 import { PipelineExecutor } from './executors/pipeline';
 
@@ -83,8 +83,11 @@ export class TrackingAgent extends Service {
         const explorerLink = dextoolsInsights.topPair.url;
         const NAN_STRING = 'U/A';
 
+        const credibilityInsights = token.insights!.credibility;
+        const riskLevel = credibilityInsights?.riskLevel;
+
         return `🚀✨<b>Moonshot Token</b>🚀✨${emojifyNumber(dextScore)}\n`
-            + `${name} [${symbol}]\n`
+            + `${emojifyRiskLevel(riskLevel)}${name} [${symbol}]${emojifyRiskLevel(riskLevel)}\n`
             + '\n'
             + `Mktcap: ${formatUSD(mcap, NAN_STRING)}\n`
             + `Fully Diluted: ${formatUSD(fdv, NAN_STRING)}\n`

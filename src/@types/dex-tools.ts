@@ -235,8 +235,3 @@ export type AuditMatrix = {
 };
 
 export type RedFlags = Record<keyof AuditMatrix, valueof<AuditMatrix>>;
-
-export interface DexToolsAuditInsights {
-    auditMatrix: AuditMatrix,
-    redFlags: RedFlags,
-}
