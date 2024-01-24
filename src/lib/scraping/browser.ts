@@ -3,6 +3,7 @@ import type { Browser as PBrowser, Page } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import stealthPlugin from 'puppeteer-extra-plugin-stealth';
 // Internal.
+import { scrapingConfig } from '../../config';
 import { safe } from '../decorators';
 import { Logger } from '../logger';
 import { tracer, type Tracer } from './static';
@@ -69,6 +70,7 @@ export class Browser {
                         // https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#tips
                         '--disable-dev-shm-usage',
                     ],
+                    protocolTimeout: scrapingConfig.BROKEN_PAGE_TIMEOUT_MS,
                 });
             } finally {
                 span.end();
