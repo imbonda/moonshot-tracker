@@ -41,11 +41,13 @@ export function resolveChainId(chain: string): number | undefined {
 export enum AudicCheck {
     CONTRACT_VERIFIED = 'is_open_source',
     HONEYPOT = 'is_honeypot',
+    PROXY = 'is_proxy',
+    POTENTIAL_SCAM = 'is_potentially_scam',
     BUY_TAX = 'buy_tax',
     SELL_TAX = 'sell_tax',
-    PROXY = 'is_proxy',
     OWNER_PERCENT = 'owner_percent',
     CREATOR_PERCENT = 'creator_percent',
+    RISK_LEVEL = 'riskLevel',
 }
 
 export const AUDIT_CHECKS: (keyof Audit)[] = Object.values(AudicCheck);

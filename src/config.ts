@@ -94,6 +94,15 @@ export const telegramConfig = {
 };
 
 /**
+ * Scraping.
+ */
+export const scrapingConfig = {
+    BROKEN_PAGE_TIMEOUT_MS: process.env.SCRAPING_BROKEN_PAGE_TIMEOUT_MS
+        ? parseInt(process.env.SCRAPING_BROKEN_PAGE_TIMEOUT_MS!)
+        : undefined,
+};
+
+/**
  * Service identifiers.
  */
 const args = process.argv;

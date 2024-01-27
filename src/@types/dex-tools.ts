@@ -3,6 +3,8 @@ import type { Modify, WithRequired, valueof } from './generics';
 
 export type AuditProvider = 'goplus' | 'hapi' | 'quickintel' | 'tokensniffer' | 'dextools' | 'honeypotis';
 
+export type RiskLevel = 'low' | 'medium' | 'high' | string;
+
 export interface TokenSnifferAuditTest {
     id: string | 'testForInadequateInitialLiquidity' | 'testForInadeqateLiquidityLockedOrBurned',
     description: string,
@@ -32,6 +34,7 @@ export interface RawAudit {
     is_open_source?: string | number | boolean,
     is_proxy?: string | number | boolean,
     is_whitelisted?: string | number | boolean,
+    is_potentially_scam?: string | number | boolean,
     lp_holder_count?: number,
     lp_total_supply?: number,
     owner_balance?: number,
@@ -47,6 +50,7 @@ export interface RawAudit {
     transfer_pausable?: string | number | boolean,
     trust_list?: string | number | boolean,
     tests?: TokenSnifferAuditTest[],
+    riskLevel?: RiskLevel,
     updatedResult?: boolean,
 }
 
@@ -160,11 +164,13 @@ export type TaxValueRange = {
 export interface Audit {
     is_open_source?: boolean,
     is_honeypot?: boolean,
+    is_proxy?: boolean,
+    is_potentially_scam?: boolean,
     buy_tax?: number | TaxValueRange,
     sell_tax?: number | TaxValueRange,
-    is_proxy?: boolean,
     owner_percent?: number,
     creator_percent?: number,
+    riskLevel?: RiskLevel,
 }
 
 export interface EnrichedAudit extends Audit {
@@ -231,8 +237,3 @@ export type AuditMatrix = {
 };
 
 export type RedFlags = Record<keyof AuditMatrix, valueof<AuditMatrix>>;
-
-export interface DexToolsAuditInsights {
-    auditMatrix: AuditMatrix,
-    redFlags: RedFlags,
-}

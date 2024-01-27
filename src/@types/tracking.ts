@@ -1,5 +1,6 @@
 // Internal.
-import type { DexToolsTokenInsights, DexToolsAuditInsights } from './dex-tools';
+import type { DexToolsTokenInsights } from './dex-tools';
+import type { CredibilityInsights, DexToolsAuditInsights } from './insights';
 
 export interface TaskData {
     taskId: string,
@@ -42,6 +43,7 @@ export interface TrackedToken {
     insights: null | {
         dextools?: DexToolsTokenInsights,
         audit?: DexToolsAuditInsights,
+        credibility?: CredibilityInsights,
     },
     halted: boolean,
     aborted: boolean,

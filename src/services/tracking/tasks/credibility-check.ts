@@ -1,8 +1,9 @@
 // Internal.
-import type { DexToolsAuditInsights, DexToolsTokenInsights } from '../../../@types/dex-tools';
+import type { DexToolsTokenInsights, RiskLevel } from '../../../@types/dex-tools';
+import type { DexToolsAuditInsights } from '../../../@types/insights';
 import { AudicCheck } from '../../../lib/scraping/dex-tools/utils';
 import { ContextExecutor } from '../executors/context';
-import { TaskExecutor } from '../executors/task';
+import { InsightsKey, TaskExecutor, TaskInsights } from '../executors/task';
 import { TaskId } from '../static';
 
 type CredibilityCheckConfig = {
@@ -12,6 +13,8 @@ type CredibilityCheckConfig = {
 };
 
 export class CredibilityCheck extends TaskExecutor {
+    private riskLevel?: RiskLevel;
+
     protected async run(context: ContextExecutor): Promise<void> {
         const [dexToolsInsights, auditInsights] = await Promise.all([
             context.getLatestTaskInsightsUnwrapped(TaskId.DEX_TOOLS_SCRAPER),
@@ -25,6 +28,8 @@ export class CredibilityCheck extends TaskExecutor {
             return;
         }
 
+        this.setRiskLevel(auditInsights);
+
         const isCredibleCommunity = this.isCredibleCommunity(dexToolsInsights);
         const isCredibleLiquidity = this.isEnoughLiquidityLockedOrBurned(dexToolsInsights);
         const isCredibleOwnership = this.isDistributedOwnership(auditInsights);
@@ -36,6 +41,26 @@ export class CredibilityCheck extends TaskExecutor {
         if (isCredible) {
             this.setCompleted();
         }
+    }
+
+    private setRiskLevel(insights?: DexToolsAuditInsights | null): void {
+        const RISK_LEVEL_TO_VALUE = {
+            low: 0,
+            medium: 1,
+            high: 2,
+        };
+        const riskLevels = insights?.auditMatrix?.riskLevel;
+        const highestRiskLevel = Object.values(riskLevels || {}).reduce((highest, level) => {
+            if (!highest) {
+                return level;
+            }
+            const highestValue = RISK_LEVEL_TO_VALUE[highest as keyof typeof RISK_LEVEL_TO_VALUE];
+            const value = RISK_LEVEL_TO_VALUE[level as keyof typeof RISK_LEVEL_TO_VALUE];
+            return value > highestValue
+                ? level
+                : highest;
+        }, undefined);
+        this.riskLevel = highestRiskLevel;
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -83,5 +108,19 @@ export class CredibilityCheck extends TaskExecutor {
         const defaultValue = 70;
         const threshold = (this.config as CredibilityCheckConfig)?.scoreThreshold;
         return threshold || defaultValue;
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    public get insightsKey(): InsightsKey {
+        return 'credibility';
+    }
+
+    public get insights(): TaskInsights {
+        const { riskLevel } = this;
+        return {
+            [this.insightsKey]: {
+                riskLevel,
+            },
+        };
     }
 }

@@ -16,8 +16,9 @@ type AuditPredicate = (value: boolean | number) => boolean
 
 const RED_FLAG_PREDICATES = {
     [AudicCheck.CONTRACT_VERIFIED]: (isVerified: boolean) => isVerified === false,
-    [AudicCheck.PROXY]: (isProxy: boolean) => isProxy === true,
     [AudicCheck.HONEYPOT]: (isHoneypot: boolean) => isHoneypot === true,
+    [AudicCheck.PROXY]: (isProxy: boolean) => isProxy === true,
+    [AudicCheck.POTENTIAL_SCAM]: (isPotentiallyScam: boolean) => isPotentiallyScam === true,
     [AudicCheck.BUY_TAX]: (tax: number | TaxValueRange) => {
         const threshold = 0.2;
         return ((tax as TaxValueRange)?.max || (tax as number)) >= threshold;
