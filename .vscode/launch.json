@@ -19,6 +19,8 @@
                 // Ensure ts-node is loaded before trying to execute.
                 "--require",
                 "ts-node/register",
+                "-r",
+                "./src/lib/tracer.ts",
             ],
             "args": [
                 "-s",
@@ -47,6 +49,8 @@
                 // Ensure ts-node is loaded before trying to execute.
                 "--require",
                 "ts-node/register",
+                "-r",
+                "./src/lib/tracer.ts",
             ],
             "args": [
                 "-s",
@@ -75,6 +79,8 @@
                 // Ensure ts-node is loaded before trying to execute.
                 "--require",
                 "ts-node/register",
+                "-r",
+                "./src/lib/tracer.ts",
             ],
             "args": [
                 "-s",
@@ -102,6 +108,8 @@
                 // Ensure ts-node is loaded before trying to execute.
                 "--require",
                 "ts-node/register",
+                "-r",
+                "./src/lib/tracer.ts",
             ],
             "args": [
                 "-s",

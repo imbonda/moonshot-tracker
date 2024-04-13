@@ -12,16 +12,16 @@ export interface TaskData {
         interval?: number,
         deadline?: Date,
     },
-    // @not-supported
-    retries?: {
-        maxTime?: number,
-        retryMaxTime?: number,
-    },
     delay?: number,
     daemon?: boolean,
     config?: Record<string, unknown>,
     probationDeadline?: Date,
     scheduledExecutionTime?: Date,
+    // @not-supported
+    retries?: {
+        maxTime?: number,
+        retryMaxTime?: number,
+    },
 }
 
 export interface PipelineStage {
