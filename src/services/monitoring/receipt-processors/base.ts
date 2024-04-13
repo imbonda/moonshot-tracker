@@ -1,7 +1,7 @@
 // 3rd party.
 import type { Log, TransactionReceipt } from 'ethers';
 // Internal.
-import { Web3RpcProvider } from '../../../lib/adapters/rpc-provider';
+import type { Web3RpcProvider } from '../../../lib/adapters/rpc-provider';
 import { Logger } from '../../../lib/logger';
 import { MonitorCache } from '../cache';
 

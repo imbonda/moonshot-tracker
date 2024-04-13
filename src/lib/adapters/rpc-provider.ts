@@ -250,7 +250,7 @@ export class Web3RpcProvider extends JsonRpcProviderClass() {
         method: string,
         params: unknown[],
     ): Promise<T | null> {
-        return Web3RpcProvider.tracer.startActiveSpan(`rpc.send.${method}`, async (span) => {
+        return Web3RpcProvider.tracer.startActiveSpan(`rpc.sendNoBatch.${method}`, async (span) => {
             try {
                 const { url } = this._provider._getConnection();
                 const body = JSON.stringify({

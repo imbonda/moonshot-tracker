@@ -13,8 +13,10 @@ export class DEXToolsScraper extends TaskExecutor {
         const result = await scraper.fetchTokenInsights(chainId, tokenAddress);
 
         if (!result) {
+            this.logger.info('Fetched empty token insights');
             return;
         }
+        this.logger.info('Fetched token insights');
 
         this.tokenInsights = result;
         // Setting task state to be completed so that the pipeline can continue.
