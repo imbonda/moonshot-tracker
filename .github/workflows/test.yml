@@ -32,7 +32,7 @@ jobs:
           - 6379:6379
 
     steps:
-       - name: Load environment variables from .env.test
+      - name: Load environment variables from .env.test
         shell: bash
         run: |
           set -a
