@@ -1,0 +1,34 @@
+name: "Run test suite"
+
+on:
+  pull_request:
+    branches:
+      - "main"
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Cache the node_modules directory to improve build times
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the project
+        run: npm run build
+
+      - name: Run the tests
+        run: npm run test
