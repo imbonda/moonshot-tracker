@@ -32,10 +32,12 @@ jobs:
           - 6379:6379
 
     steps:
-      - name: Load .env file
-        uses: arthurhdyz/dotenv-action@v1
-        with:
-          file: .env.test
+       - name: Load environment variables from .env.test
+        shell: bash
+        run: |
+          set -a
+          source .env.test
+          set +a
 
       - name: Checkout the code
         uses: actions/checkout@v2
