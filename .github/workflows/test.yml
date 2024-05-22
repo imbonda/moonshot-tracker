@@ -40,10 +40,8 @@ jobs:
       - name: List files in the root directory (debugging)
         run: ls -al
 
-      - name: Load environment variables from .env.test
-        uses: actionshub/dotenv@v2
-        with:
-          filename: .env.test
+      - name: Rename .env.test to .env
+        run: mv .env.test .env
 
       - name: Cache the node_modules directory to improve build times
         uses: actions/cache@v2
