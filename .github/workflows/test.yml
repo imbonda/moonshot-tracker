@@ -13,10 +13,10 @@ jobs:
       mongo:
         image: mongo
         options: >-
-          --health-cmd "echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+          --health-cmd "echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27017/test --quiet"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
         ports:
           - 27017:27017
 
