@@ -41,11 +41,9 @@ jobs:
         run: ls -al
 
       - name: Load environment variables from .env.test
-        shell: bash
-        run: |
-          set -a
-          source .env.test
-          set +a
+        uses: actionshub/dotenv@v2
+        with:
+          filename: .env.test
 
       - name: Cache the node_modules directory to improve build times
         uses: actions/cache@v2
